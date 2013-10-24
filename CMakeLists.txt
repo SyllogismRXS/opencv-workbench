@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 project (opencv_workbench)
 
 set(OPENCV_WORKBENCH_VERSION_MAJOR "0")
@@ -60,5 +60,16 @@ file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${OPENCV_WORKBENCH_SRC_DIR} src/*.h)
 foreach(I ${INCLUDE_FILES})
   configure_file(${OPENCV_WORKBENCH_SRC_DIR}/${I} ${OPENCV_WORKBENCH_INC_DIR}/opencv_workbench/${I} @ONLY)
 endforeach()
+
+# Find Qt and add headers and definitions
+FIND_PACKAGE(Qt4 REQUIRED)
+INCLUDE(${QT_USE_FILE})
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+
+message("=======================")
+message(${QT_USE_FILE})
+message(${QT_INCLUDE_DIR})
+
+include_directories(${QT_INCLUDE_DIR})
 
 add_subdirectory(src)
