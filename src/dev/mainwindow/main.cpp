@@ -38,49 +38,14 @@
  **
  ****************************************************************************/
 
-#include <QtGui>
-#include <QResource>
-
-// OpenCV headers
-#include <cv.h>
-#include <highgui.h>
-
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/contrib/contrib.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <QApplication>
 
 #include "imageviewform.h"
 
-using std::cout;
-using std::endl;
-
-ImageViewForm::ImageViewForm(QWidget *parent)
-     : QWidget(parent)
+int main(int argc, char *argv[])
 {
-     ui.setupUi(this);
-
-     QResource res(":/resources/emacs.jpg");
-
-     //cout << res.absoluteFilePath() << endl;
-
-     //cv::Mat cv_image;
-     //cv_image = cv::imread(res.absoluteFilePath(), CV_LOAD_IMAGE_COLOR);
-
-     //cv::imshow("image", cv_image);
-
-     QImage image(":/resources/emacs.jpg");
-     
-     ui.image_frame->setPixmap(QPixmap::fromImage(image));
-     ui.image_frame->adjustSize();
+     QApplication app(argc, argv);
+     ImageViewForm imageview;
+     imageview.show();
+     return app.exec();
 }
-
-//void ImageViewForm::on_inputSpinBox1_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox2->value()));
-//}
-//
-//void ImageViewForm::on_inputSpinBox2_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox1->value()));
-//}

@@ -38,8 +38,8 @@
  **
  ****************************************************************************/
 
-#include <QtGui>
-#include <QResource>
+#ifndef IMAGEVIEWFORM_H
+#define IMAGEVIEWFORM_H
 
 // OpenCV headers
 #include <cv.h>
@@ -50,37 +50,51 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "imageviewform.h"
+#include "ui_imageviewform.h"
 
-using std::cout;
-using std::endl;
-
-ImageViewForm::ImageViewForm(QWidget *parent)
-     : QWidget(parent)
+class ImageViewForm : public QMainWindow
 {
-     ui.setupUi(this);
+     Q_OBJECT
 
-     QResource res(":/resources/emacs.jpg");
+     public:
 
-     //cout << res.absoluteFilePath() << endl;
+     typedef enum{
+          img = 0,
+          avi,
+          mp4,
+          wmv,
+          usb_cam,
+          sonar
+     }Media_t;
 
-     //cv::Mat cv_image;
-     //cv_image = cv::imread(res.absoluteFilePath(), CV_LOAD_IMAGE_COLOR);
 
-     //cv::imshow("image", cv_image);
+     ImageViewForm(QMainWindow *parent = 0);
 
-     QImage image(":/resources/emacs.jpg");
-     
-     ui.image_frame->setPixmap(QPixmap::fromImage(image));
-     ui.image_frame->adjustSize();
-}
+     private slots:
+     //void on_inputSpinBox1_valueChanged(int value);
+     //void on_inputSpinBox2_valueChanged(int value);
+     void about();
+     void open();
+     void save();
+     void timer_loop();
 
-//void ImageViewForm::on_inputSpinBox1_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox2->value()));
-//}
-//
-//void ImageViewForm::on_inputSpinBox2_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox1->value()));
-//}
+     void show_image(const cv::Mat &img);
+
+     QImage Mat2QImage(cv::Mat const& src);
+     cv::Mat QImage2Mat(QImage const& src);
+
+private:
+     Ui::ImageViewForm ui;
+
+     QTimer *timer_;
+
+     QImage q_image;
+     cv::Mat cv_image;     
+
+     Media_t media_type;
+
+     cv::VideoCapture vcap;
+
+};
+
+#endif

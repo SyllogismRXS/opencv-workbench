@@ -1,4 +1,4 @@
-set( APP_NAME imageview)
+set( APP_NAME mainwindow)
 
 file ( GLOB_RECURSE app_SOURCES *.cpp )
 file ( GLOB_RECURSE app_HEADERS *.h )
