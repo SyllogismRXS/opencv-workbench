@@ -1,4 +1,4 @@
-set( APP_NAME mainwindow)
+set( APP_NAME cut_widget)
 
 file ( GLOB_RECURSE app_SOURCES *.cpp )
 file ( GLOB_RECURSE app_HEADERS *.h )
@@ -12,8 +12,13 @@ QT4_ADD_RESOURCES(app_RESOURCES_RCC ${app_RESOURCES})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-message("====>")
-message(${CMAKE_CURRENT_BINARY_DIR})
+ADD_LIBRARY( ${APP_NAME}lib SHARED
+  ${app_SOURCES}
+  ${app_HEADERS_MOC}
+  ${app_FORMS_HEADERS}
+  ${app_RESOURCES_RCC}
+)
+
 
 add_executable(${APP_NAME} 
   ${app_SOURCES}
@@ -26,5 +31,4 @@ target_link_libraries(${APP_NAME}
   ${QT_LIBRARIES}
   ${OpenCV_LIBS}
   opencv-workbench-utils
-  cut_widgetlib
   )

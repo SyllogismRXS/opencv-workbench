@@ -40,17 +40,17 @@
 
 #include <QApplication>
 
-#include "imageviewform.h"
+#include "cut.h"
 
 int main(int argc, char *argv[])
 {
      QApplication app(argc, argv);
 
-     app.setApplicationName("opencv-workbench");
+     app.setApplicationName("Cut Video");
      app.setOrganizationName("DeMarco");
      app.setOrganizationDomain("kevindemarco.com");
 
-     ImageViewForm imageview;
-     imageview.show();
+     CutForm form;
+     form.show();
      return app.exec();
 }

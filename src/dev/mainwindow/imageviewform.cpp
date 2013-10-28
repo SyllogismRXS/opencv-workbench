@@ -40,6 +40,7 @@
 
 #include <QtGui>
 #include <QResource>
+#include <QSettings>
 
 #include "imageviewform.h"
 
@@ -51,53 +52,134 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
 {
      ui.setupUi(this);
 
-     QResource res(":/resources/emacs.jpg");
+     readSettings();
 
-     //cout << res.absoluteFilePath() << endl;
-
-     //cv::Mat cv_image;
-     //cv_image = cv::imread(res.absoluteFilePath(), CV_LOAD_IMAGE_COLOR);
-
-     //cv::imshow("image", cv_image);
-     
-     //QImage image(":/resources/emacs.jpg");
-     //
-     //ui.image_frame->setPixmap(QPixmap::fromImage(image));
-     //ui.image_frame->adjustSize();
-
-     //connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(&ImageViewForm::menu_about()));
-     
+     state_ = none;
+          
      connect(ui.actionOpen, SIGNAL(triggered()), this, SLOT(open()));
      connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(save()));
      connect(ui.actionQuit, SIGNAL(triggered()), this, SLOT(close()));
-
      connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(about()));
+     
+     connect(ui.actionCut, SIGNAL(triggered()), this, SLOT(cut()));
 
+     connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
+     connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
+     connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
+
+     connect(ui.play_button, SIGNAL(released()), this, SLOT(toggle_play()));   
+     connect(ui.rewind_button, SIGNAL(released()), this, SLOT(divide_frame_rate()));
+     connect(ui.forward_button, SIGNAL(released()), this, SLOT(double_frame_rate()));
+
+     
+
+     // Keyboard shortcuts
+     // Note: Get deleted automatically when program closes.
+     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
+     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
+     new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(toggle_play()));
+     new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(divide_frame_rate()));
+     new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(double_frame_rate()));
+     
      timer_ = new QTimer(this);
-     timer_->setInterval(10);
-     timer_->start();
 
      connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));
 }
 
-void ImageViewForm::timer_loop()
+void ImageViewForm::cut()
 {
-     if ( !cv_image.empty() ) {
+     cut_dialog_ = new QDialog(this);     
+     cut_ = new CutForm(cut_dialog_);
+     cut_dialog_->show();
+     cut_->show();
+     //cut_ = new CutForm(this);
+     //cut_ = new CutForm(this);
+     cout << "Cut" << endl;
+     //cut_->show();
+}
 
-          if (media_type == mp4 || media_type == wmv) {
-               if (vcap.isOpened()) {
-                    vcap.read(cv_image);
-                    show_image(cv_image);
-               }
-          }
+void ImageViewForm::set_frame_num_from_slider(int frame_num)
+{
+     this->set_frame_num(frame_num);     
+}
 
-          //cv::Mat temp = cv::Mat::zeros(cv_image.rows, cv_image.cols, cv_image.type());          
-          //cv::addWeighted( cv_image, 0.5, temp, 0.5, 0.0, cv_image);
-          //show_image(cv_image);
+void ImageViewForm::set_frame_num(int frame_num) 
+{
+     if (state_ == paused) {
+          stream_.set_frame_number(frame_num);
+          this->draw();
      }
 }
 
-void ImageViewForm::show_image(const cv::Mat &img)
+void ImageViewForm::play()
+{
+     timer_->start();
+     state_ = playing;
+     ui.play_button->setIcon(QIcon(":/resources/pause.png"));
+}
+
+void ImageViewForm::pause()
+{
+     timer_->stop();
+     state_ = paused;
+     ui.play_button->setIcon(QIcon(":/resources/play.png"));
+}
+
+void ImageViewForm::set_fps(double fps)
+{
+     fps_ = fps;
+     ui.fps_spinbox->setValue(fps_);
+     timer_->setInterval(1000.0/fps_);     
+}
+
+void ImageViewForm::double_frame_rate()
+{
+     this->set_fps(fps_*2.0);
+}
+
+void ImageViewForm::divide_frame_rate()
+{
+     this->set_fps(fps_/2.0);
+}
+
+
+void ImageViewForm::closeEvent(QCloseEvent *event)
+{
+     this->writeSettings();
+}
+
+void ImageViewForm::toggle_play()
+{
+     if (state_ == playing) {
+          this->pause();          
+     } else if (state_ == paused) {          
+          this->set_fps(fps_);
+          this->play();          
+     }
+}
+
+void ImageViewForm::timer_loop()
+{
+     if (stream_.isOpened()) {
+          this->draw();
+     }
+}
+
+void ImageViewForm::draw()
+{
+     // Set all appropriate GUI elements on each frame
+     ui.frame_slider->setValue(stream_.get_frame_number());
+     ui.frame_num_spinbox->setValue(stream_.get_frame_number());
+
+     if(stream_.read(cv_image)) {
+          this->draw_image(cv_image);
+     } else { 
+          this->pause();
+          this->set_frame_num(0);
+     }
+}
+
+void ImageViewForm::draw_image(const cv::Mat &img)
 {
      q_image = Mat2QImage(cv_image);
      ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
@@ -105,39 +187,45 @@ void ImageViewForm::show_image(const cv::Mat &img)
 }
 
 void ImageViewForm::open()
-{
-     QString fileName = QFileDialog::getOpenFileName(this,
-                                                     tr("Open File"), QDir::currentPath());
+{    
+     // If the prev_open_path variable is set, use it, otherwise, use
+     // the current directory.
+     QString dir = QDir::currentPath();
+     if (prev_open_path_ != "") {
+          dir = prev_open_path_;
+     }
+
+     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), dir);    
+
      if (!fileName.isEmpty()) {
+          // Save the previously open directory
+          prev_open_path_ = QFileInfo(fileName).path();         
+
           std::string fn = fileName.toStdString();
 
-          if (fn.substr(fn.find_last_of(".") + 1) == "son") {
-               media_type = sonar;               
-          } else if (fn.substr(fn.find_last_of(".") + 1) == "avi") {
-               media_type = avi;
-               vcap.open(fn);
-               vcap.read(cv_image);
-               show_image(cv_image);
-          } else if (fn.substr(fn.find_last_of(".") + 1) == "mp4") {
-               media_type = mp4;
-               vcap.open(fn);
-               if (vcap.isOpened()) {
-                    vcap.read(cv_image);
-                    show_image(cv_image);
-               }
-          } else if (fn.substr(fn.find_last_of(".") + 1) == "wmv") {
-               media_type = wmv;
-               vcap.open(fn);
-               if (vcap.isOpened()) {
-                    vcap.read(cv_image);
-                    show_image(cv_image);
-               }
-          } else {
-               media_type = img;
-               cv_image = cv::imread(fileName.toStdString(), CV_LOAD_IMAGE_COLOR);
-               show_image(cv_image);
+          if (stream_.isOpened()) {
+               stream_.release();
           }
-     }     
+          
+          syllo::Status status = stream_.open(fn);          
+          if (status == syllo::Success && stream_.isOpened()) {
+               
+               this->set_frame_num(0);
+               
+               // set slider range
+               ui.frame_slider->setRange(1,stream_.get_frame_count());
+               ui.frame_num_spinbox->setRange(1,stream_.get_frame_count());
+               ui.total_frames_spinbox->setValue(stream_.get_frame_count());
+               ui.filename_label->setText(QFileInfo(fileName).fileName());
+               fps_ = stream_.get_fps();
+               ui.fps_spinbox->setValue(fps_);
+               
+               stream_.read(cv_image);
+               draw_image(cv_image);
+               
+               state_ = paused;
+          }
+     }
 }
 
 void ImageViewForm::save()
@@ -170,12 +258,33 @@ cv::Mat ImageViewForm::QImage2Mat(QImage const& src)
      return result;
 }
 
-//void ImageViewForm::on_inputSpinBox1_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox2->value()));
-//}
-//
-//void ImageViewForm::on_inputSpinBox2_valueChanged(int value)
-//{
-//     //ui.outputWidget->setText(QString::number(value + ui.inputSpinBox1->value()));
-//}
+void ImageViewForm::writeSettings()
+{
+     QSettings settings;
+
+     // Window size and position
+     settings.beginGroup("MainWindow");
+     settings.setValue("size", size());
+     settings.setValue("pos", pos());
+
+     // Previously opened directory
+     settings.setValue("prev_open_path", prev_open_path_);
+     
+     settings.endGroup();
+}
+
+void ImageViewForm::readSettings()
+{
+     QSettings settings;
+     
+     settings.beginGroup("MainWindow");
+     
+     // Window size
+     resize(settings.value("size", QSize(400, 400)).toSize());
+     move(settings.value("pos", QPoint(200, 200)).toPoint());
+
+     // Previously opened directory
+     prev_open_path_ = settings.value("prev_open_path").toString();
+
+     settings.endGroup();
+}

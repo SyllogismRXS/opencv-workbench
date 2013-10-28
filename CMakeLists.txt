@@ -55,6 +55,8 @@ INSTALL(DIRECTORY ${OPENCV_WORKBENCH_INC_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX
 ## let cmake know where the headers are
 include_directories(${OPENCV_WORKBENCH_INC_DIR})
 
+include_directories(${OPENCV_WORKBENCH_BUILD_DIR}/src/dev)
+
 ## copy to opencv_workbench/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${OPENCV_WORKBENCH_SRC_DIR} src/*.h)
 foreach(I ${INCLUDE_FILES})

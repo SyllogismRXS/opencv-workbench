@@ -38,19 +38,37 @@
  **
  ****************************************************************************/
 
-#include <QApplication>
+#ifndef CUTFORM_H
+#define CUTFORM_H
 
-#include "imageviewform.h"
+// OpenCV headers
+#include <cv.h>
+#include <highgui.h>
 
-int main(int argc, char *argv[])
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <cut/ui_cut_widget.h>
+
+class CutForm : public QWidget
 {
-     QApplication app(argc, argv);
+     Q_OBJECT
 
-     app.setApplicationName("opencv-workbench");
-     app.setOrganizationName("DeMarco");
-     app.setOrganizationDomain("kevindemarco.com");
+     public:
 
-     ImageViewForm imageview;
-     imageview.show();
-     return app.exec();
-}
+     CutForm(QWidget *parent = 0);
+
+     private slots:
+     
+private:
+     Ui::CutForm ui;
+
+     void readSettings();
+     void writeSettings();
+
+     QString m_sSettingsFile;
+};
+
+#endif

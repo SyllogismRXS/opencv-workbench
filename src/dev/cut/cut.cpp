@@ -38,19 +38,52 @@
  **
  ****************************************************************************/
 
-#include <QApplication>
+#include <QtGui>
+#include <QResource>
+#include <QSettings>
 
-#include "imageviewform.h"
+#include "cut.h"
 
-int main(int argc, char *argv[])
+using std::cout;
+using std::endl;
+
+CutForm::CutForm(QWidget *parent)
+     : QWidget(parent)
 {
-     QApplication app(argc, argv);
+     ui.setupUi(this);
 
-     app.setApplicationName("opencv-workbench");
-     app.setOrganizationName("DeMarco");
-     app.setOrganizationDomain("kevindemarco.com");
+     readSettings();
 
-     ImageViewForm imageview;
-     imageview.show();
-     return app.exec();
+     //cout << parent->parent->fps_ << endl;
+}
+
+void CutForm::writeSettings()
+{
+     QSettings settings;
+
+     //// Window size and position
+     //settings.beginGroup("MainWindow");
+     //settings.setValue("size", size());
+     //settings.setValue("pos", pos());
+     //
+     //// Previously opened directory
+     //settings.setValue("prev_open_path", prev_open_path_);
+     //
+     //settings.endGroup();
+}
+
+void CutForm::readSettings()
+{
+     //QSettings settings;
+     //
+     //settings.beginGroup("MainWindow");
+     //
+     //// Window size
+     //resize(settings.value("size", QSize(400, 400)).toSize());
+     //move(settings.value("pos", QPoint(200, 200)).toPoint());
+     //
+     //// Previously opened directory
+     //prev_open_path_ = settings.value("prev_open_path").toString();
+     //
+     //settings.endGroup();
 }

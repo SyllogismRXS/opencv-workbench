@@ -52,6 +52,9 @@
 
 #include "ui_imageviewform.h"
 
+#include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/dev/cut/cut.h>
+
 class ImageViewForm : public QMainWindow
 {
      Q_OBJECT
@@ -67,18 +70,36 @@ class ImageViewForm : public QMainWindow
           sonar
      }Media_t;
 
+     typedef enum{
+          none = 0,
+          paused,
+          playing,
+     }State_t;
 
      ImageViewForm(QMainWindow *parent = 0);
 
      private slots:
-     //void on_inputSpinBox1_valueChanged(int value);
-     //void on_inputSpinBox2_valueChanged(int value);
      void about();
      void open();
      void save();
      void timer_loop();
+     
+     void toggle_play();
 
-     void show_image(const cv::Mat &img);
+     void draw();
+     void play();
+     void pause();
+
+     void draw_image(const cv::Mat &img);
+
+     void double_frame_rate();
+     void divide_frame_rate();
+
+     void set_fps(double fps);
+     void set_frame_num(int frame_num);
+     void set_frame_num_from_slider(int frame_num);
+
+     void cut();
 
      QImage Mat2QImage(cv::Mat const& src);
      cv::Mat QImage2Mat(QImage const& src);
@@ -91,9 +112,24 @@ private:
      QImage q_image;
      cv::Mat cv_image;     
 
-     Media_t media_type;
+     syllo::Stream stream_;
 
-     cv::VideoCapture vcap;
+     void readSettings();
+     void writeSettings();
+
+     QString m_sSettingsFile;
+     QString prev_open_path_;     
+     
+
+protected:
+
+     QDialog * cut_dialog_;
+     CutForm *cut_;
+
+     State_t state_;
+     double fps_;
+     
+     void closeEvent(QCloseEvent *event);
 
 };
 

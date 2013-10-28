@@ -1,5 +1,10 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/emacs.jpg</file>
+        <file>resources/play.png</file>
+        <file>resources/stop.png</file>
+        <file>resources/pause.png</file>
+        <file>resources/fast-forward.png</file>
+        <file>resources/rewind.png</file>
     </qresource>
 </RCC>
