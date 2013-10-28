@@ -56,19 +56,34 @@ class CutForm : public QWidget
 {
      Q_OBJECT
 
-     public:
+public:
 
      CutForm(QWidget *parent = 0);
 
-     private slots:
-     
+     int get_start_frame();
+     int get_end_frame();
+     QString get_filename();
+     void set_min_max(int min, int max);
+
+signals:
+     void export_video();
+
+private slots:    
+     void emit_export();
+
 private:
      Ui::CutForm ui;
+     
+     QString filename_;
 
      void readSettings();
      void writeSettings();
 
      QString m_sSettingsFile;
+
+     int min_;
+     int max_;
+
 };
 
 #endif

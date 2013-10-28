@@ -31,10 +31,10 @@
      </widget>
     </item>
     <item row="1" column="1">
-     <widget class="QSpinBox" name="spinBox_2"/>
+     <widget class="QSpinBox" name="end_frame_spinbox"/>
     </item>
     <item row="0" column="1">
-     <widget class="QSpinBox" name="spinBox"/>
+     <widget class="QSpinBox" name="start_frame_spinbox"/>
     </item>
     <item row="1" column="0">
      <widget class="QLabel" name="label_2">

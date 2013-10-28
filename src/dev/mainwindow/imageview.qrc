@@ -6,5 +6,7 @@
         <file>resources/pause.png</file>
         <file>resources/fast-forward.png</file>
         <file>resources/rewind.png</file>
+        <file>resources/record.png</file>
+        <file>resources/record_enable.png</file>
     </qresource>
 </RCC>

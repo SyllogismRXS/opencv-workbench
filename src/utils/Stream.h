@@ -24,18 +24,58 @@ namespace syllo
 	  SonarType = 3
      }Stream_t;
 
+     typedef enum{
+          Recorded = 0,
+          Live = 1
+     }Live_t;
+
+     typedef enum{
+          AVI = 0,
+          MP4,
+          MPEG_1,
+          MOTION_JPG
+     }Codec_t;
+
      class Stream {
      protected:
 	  cv::VideoCapture vcap;
+          cv::VideoWriter *output_;
+          int output_count_;
+          int end_frame_;
 	  sonar::Sonar sonar;
 	  Stream_t type;
+          Live_t live_;
+          cv::Mat frame_;
      public:
+
+          int select_codec(Codec_t codec)
+          {
+               switch(codec) {
+               case AVI:
+                    return CV_FOURCC('M','J','P','G');
+                    //return CV_FOURCC('I', 'Y', 'U', 'V');
+                    break;
+               case MP4:
+                    return CV_FOURCC('X', 'V', 'I', 'D');
+                    break;
+               case MPEG_1:
+                    return CV_FOURCC('P','I','M','1');
+                    break;
+               case MOTION_JPG:
+                    return CV_FOURCC('M','J','P','G');
+                    break;
+               default:
+                    return CV_FOURCC('I', 'Y', 'U', 'V');
+               }
+          }
+
           Status open(int num)
 	  {
 	       vcap.open(num);
 	       vcap.set(CV_CAP_PROP_FRAME_WIDTH, 480);
 	       vcap.set(CV_CAP_PROP_FRAME_HEIGHT, 640);
 	       type = CameraType;
+               live_ = Live;
 
                if (vcap.isOpened()) {
                     return Success;
@@ -54,13 +94,16 @@ namespace syllo
 		    sonar.setRange(0,45);
 		    sonar.init();
 		    type = SonarType;
+                    live_ = Recorded;
                     return Success;
 	       } else if ( ext == "AVI" || 
                            ext == "WMV" ||
                            ext == "MOV" || 
-                           ext == "MP4") {
+                           ext == "MP4" ||
+                           ext == "MPG") {
 		    vcap.open( fn );
 		    type = MovieType;
+                    live_ = Recorded;
                     return Success;
 	       } else {
                     cout << "File: " << fn << endl;
@@ -69,6 +112,15 @@ namespace syllo
 	       }   
 	  }
        
+          bool isLive()
+          {
+               if ( live_ == Live) {
+                    return true;
+               } else {
+                    return false;
+               }
+          }
+
 	  bool isOpened()
 	  {
 	       if (type == SonarType) {
@@ -83,7 +135,9 @@ namespace syllo
 	       if(type == SonarType) {
 		    return sonar.getNextSonarImage(frame);
 	       } else {
-		    return vcap.read(frame);
+                    bool status = vcap.read(frame_);
+                    frame = frame_;
+		    return status;
 	       }
 	  }
 
@@ -110,7 +164,8 @@ namespace syllo
 		    return vcap.get(CV_CAP_PROP_FPS);
 		    break;
 	       case CameraType:
-		    return 0;
+                    return 15;
+		    //return vcap.get(CV_CAP_PROP_FPS);
 		    break;
                case SonarType:
                     return 0;
@@ -158,6 +213,7 @@ namespace syllo
                     vcap.release();
                     break;
 	       case CameraType:
+                    vcap.release();
                     break;
                case SonarType:
                     break;
@@ -177,7 +233,7 @@ namespace syllo
 		    return vcap.get(CV_CAP_PROP_FRAME_WIDTH);
 		    break;
                case SonarType:
-                    sonar.width();
+                    return sonar.width();
                     break;
 	       default:
 		    return -1;
@@ -200,6 +256,156 @@ namespace syllo
 		    return -1;
 	       }
 	  }
+
+          int get_codec()
+	  {
+	       switch (type) {
+	       case MovieType:
+		    return vcap.get(CV_CAP_PROP_FOURCC);
+		    break;
+	       case CameraType:
+		    return CV_FOURCC('M','J','P','G');
+		    break;
+               case SonarType:
+                    return CV_FOURCC('M','J','P','G');
+                    break;
+	       default:
+		    return -1;
+	       }
+	  }
+
+          Status export_video(std::string filename, int start_frame, int end_frame)
+          {
+               cv::VideoWriter output;
+               
+               // Get the video size
+               cv::Size size = cv::Size((int) this->width(),    // Acquire input size
+                                        (int) this->height());
+               
+               std::string ext = filename.substr(filename.find_last_of(".") + 1);
+               std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
+
+               int codec;
+               if (ext == "MPG") {
+                    codec = select_codec(MP4);
+               } else if (ext == "AVI") {
+                    codec = select_codec(AVI);
+               } else if (ext == "MP4") {
+                    codec = select_codec(MP4);
+               } else {
+                    codec = select_codec(AVI);
+               }
+
+               // Open the output video file:
+               output.open(filename, codec, this->get_fps(), size, true);
+               
+               if (!output.isOpened()) {
+                    cout << "Error: Couldn't open output file: " << filename << endl;
+                    return Failure;
+               }
+
+               // Set starting frame:
+               this->set_frame_number(start_frame);
+               
+               // Loop through video until the defined end frame;
+               for(int i = start_frame; i <= end_frame ; i++) {
+                    // Get the next frame
+                    cv::Mat frame;
+                    this->read(frame);
+                    
+                    // Check if the frame is empty
+                    if (frame.empty()) { 
+                         break;
+                    }
+
+                    // Write the frame
+                    output.write(frame);
+               }               
+               return Success;
+          }
+
+          Status setup_export_video(std::string filename, int start_frame, int end_frame)
+          {
+               // Get the video size
+               cv::Size size = cv::Size((int) this->width(),    // Acquire input size
+                                        (int) this->height());
+               
+               std::string ext = filename.substr(filename.find_last_of(".") + 1);
+               std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
+
+               int codec;
+               if (ext == "MPG") {
+                    codec = select_codec(MP4);
+               } else if (ext == "AVI") {
+                    codec = select_codec(AVI);
+               } else if (ext == "MP4") {
+                    codec = select_codec(MP4);
+               } else {
+                    codec = select_codec(AVI);
+               }
+
+               // Open the output video file:
+               //output_ = new VideoWriter;
+               //output_->open(filename, codec, this->get_fps(), size, true);
+               output_ = new cv::VideoWriter(filename, codec, this->get_fps(), size, true);
+               
+               if (!output_->isOpened()) {
+                    cout << "Error: Couldn't create output file: " << filename << endl;
+                    return Failure;
+               }
+
+               // Set starting frame:
+               this->set_frame_number(start_frame);               
+               output_count_ = start_frame;
+               end_frame_ = end_frame;
+               return Success;
+          }
+
+          int step_video_export()
+          {
+               if(output_count_ >= end_frame_) {
+                    delete output_;
+                    return 0;
+               }
+               
+               // Get the next frame
+               cv::Mat frame;
+               this->read(frame);
+                    
+               // Check if the frame is empty
+               if (frame.empty()) { 
+                    delete output_;
+                    return 0;
+               }
+
+               // Write the frame
+               output_->write(frame);
+
+               output_count_++;
+
+               return 1;
+          }
+
+          int step_camera_record()
+          {
+               if (!frame_.empty() && output_ != NULL) {
+                    output_->write(frame_);
+                    return 1;
+               }
+               return 0;
+          }
+
+          int stop_camera_record()
+          {
+               if (output_ != NULL) {
+                    delete output_;
+                    return 0;
+               } else {
+                    cout << "Tried to delete output_ when it wasn't instantiated" << endl;
+                    return 1;
+               }               
+               
+          }
      };
     
 }

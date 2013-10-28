@@ -74,6 +74,8 @@ class ImageViewForm : public QMainWindow
           none = 0,
           paused,
           playing,
+          recording,
+          not_recording
      }State_t;
 
      ImageViewForm(QMainWindow *parent = 0);
@@ -81,6 +83,7 @@ class ImageViewForm : public QMainWindow
      private slots:
      void about();
      void open();
+     void open_camera();
      void save();
      void timer_loop();
      
@@ -89,6 +92,7 @@ class ImageViewForm : public QMainWindow
      void draw();
      void play();
      void pause();
+     void record();
 
      void draw_image(const cv::Mat &img);
 
@@ -99,7 +103,10 @@ class ImageViewForm : public QMainWindow
      void set_frame_num(int frame_num);
      void set_frame_num_from_slider(int frame_num);
 
+     void set_cam_id(int id);
+
      void cut();
+     void export_video_frames();
 
      QImage Mat2QImage(cv::Mat const& src);
      cv::Mat QImage2Mat(QImage const& src);
@@ -120,13 +127,13 @@ private:
      QString m_sSettingsFile;
      QString prev_open_path_;     
      
-
 protected:
 
      QDialog * cut_dialog_;
      CutForm *cut_;
 
      State_t state_;
+     State_t record_state_;
      double fps_;
      
      void closeEvent(QCloseEvent *event);
