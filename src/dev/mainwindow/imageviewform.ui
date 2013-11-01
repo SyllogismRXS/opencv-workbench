@@ -93,6 +93,20 @@
          <item row="2" column="1">
           <widget class="QSpinBox" name="cam_id_spinbox"/>
          </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Enable Chain</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="enable_chain_checkbox">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
@@ -249,6 +263,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionOpen_Camera"/>
     <addaction name="actionSave"/>
+    <addaction name="actionLoad_Config"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -264,8 +279,15 @@
     <addaction name="actionCut"/>
     <addaction name="actionRecord"/>
    </widget>
+   <widget class="QMenu" name="menuProcess">
+    <property name="title">
+     <string>Process</string>
+    </property>
+    <addaction name="actionFace_Detect"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
+   <addaction name="menuProcess"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -302,6 +324,16 @@
   <action name="actionRecord">
    <property name="text">
     <string>Record</string>
+   </property>
+  </action>
+  <action name="actionFace_Detect">
+   <property name="text">
+    <string>Face Detect</string>
+   </property>
+  </action>
+  <action name="actionLoad_Config">
+   <property name="text">
+    <string>Load Config</string>
    </property>
   </action>
  </widget>

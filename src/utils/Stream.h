@@ -1,6 +1,8 @@
 #ifndef STREAM_H_
 #define STREAM_H_
 
+#include <cv.h>
+
 #include <iostream>
 #include <algorithm>
 #include <string>

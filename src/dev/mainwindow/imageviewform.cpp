@@ -56,8 +56,14 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
 
      state_ = none;
      record_state_ = not_recording;
+     enable_chain_ = false;
+
+     if (prev_config_file_ != "") {
+          chain_.LoadFile(prev_config_file_.toStdString());
+     }
 
      connect(ui.actionOpen, SIGNAL(triggered()), this, SLOT(open()));
+     connect(ui.actionLoad_Config, SIGNAL(triggered()), this, SLOT(load_config()));
      connect(ui.actionOpen_Camera, SIGNAL(triggered()), this, SLOT(open_camera()));
      connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(save()));
      connect(ui.actionQuit, SIGNAL(triggered()), this, SLOT(close()));
@@ -76,9 +82,12 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      
      connect(ui.cam_id_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_cam_id(int)));
 
+     connect(ui.enable_chain_checkbox, SIGNAL(stateChanged(int)), this, SLOT(enable_chain(int)));
+
      // Keyboard shortcuts
      // Note: Get deleted automatically when program closes.
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
+     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_C), this, SLOT(open_camera()));
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
      new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(toggle_play()));
      new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(divide_frame_rate()));
@@ -89,6 +98,15 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      timer_ = new QTimer(this);
 
      connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));
+}
+
+void ImageViewForm::enable_chain(int state)
+{
+     if (state == Qt::Checked) {
+          enable_chain_ = true;
+     } else {
+          enable_chain_ = false;
+     }
 }
 
 void ImageViewForm::set_cam_id(int id)
@@ -261,6 +279,11 @@ void ImageViewForm::draw()
      }
      
      if(stream_.read(cv_image)) {
+          // Send stream image through 
+          // computer vision processing chain
+          if (enable_chain_) {
+               chain_.Process(cv_image, cv_image);
+          }
           this->draw_image(cv_image);
      } else {
           this->pause();
@@ -296,6 +319,28 @@ void ImageViewForm::open_camera()
 
           this->set_fps(29);
           this->play();
+     }
+}
+
+void ImageViewForm::load_config()
+{
+     // If the prev_open_path variable is set, use it, otherwise, use
+     // the current directory.
+     QString dir = QDir::currentPath();
+     if (prev_load_config_path_ != "") {
+          dir = prev_load_config_path_;
+     }
+
+     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Config File"), dir);
+
+     if (!fileName.isEmpty()) {
+          // Save the previously open directory
+          prev_load_config_path_ = QFileInfo(fileName).path();         
+
+          prev_config_file_ = fileName;
+
+          std::string fn = fileName.toStdString();          
+          chain_.LoadFile(fn);
      }
 }
 
@@ -383,7 +428,9 @@ void ImageViewForm::writeSettings()
 
      // Previously opened directory
      settings.setValue("prev_open_path", prev_open_path_);
-     
+     settings.setValue("prev_load_config_path", prev_load_config_path_);
+     settings.setValue("prev_config_file", prev_config_file_);
+
      settings.endGroup();
 }
 
@@ -397,8 +444,10 @@ void ImageViewForm::readSettings()
      resize(settings.value("size", QSize(400, 400)).toSize());
      move(settings.value("pos", QPoint(200, 200)).toPoint());
 
-     // Previously opened directory
+     // Previously opened directories
      prev_open_path_ = settings.value("prev_open_path").toString();
+     prev_load_config_path_ = settings.value("prev_load_config_path").toString();
+     prev_config_file_ = settings.value("prev_config_file", "").toString();
 
      settings.endGroup();
 }

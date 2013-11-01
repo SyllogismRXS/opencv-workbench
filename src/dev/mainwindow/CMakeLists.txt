@@ -27,4 +27,7 @@ target_link_libraries(${APP_NAME}
   ${OpenCV_LIBS}
   opencv-workbench-utils
   cut_widgetlib
+  opencv-built-in
+  chain
+  ${YAMLCPP_LIBRARY}
   )

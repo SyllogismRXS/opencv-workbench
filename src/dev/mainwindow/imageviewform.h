@@ -53,7 +53,9 @@
 #include "ui_imageviewform.h"
 
 #include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/syllo/Chain.h>
 #include <opencv_workbench/dev/cut/cut.h>
+
 
 class ImageViewForm : public QMainWindow
 {
@@ -83,6 +85,7 @@ class ImageViewForm : public QMainWindow
      private slots:
      void about();
      void open();
+     void load_config();
      void open_camera();
      void save();
      void timer_loop();
@@ -108,6 +111,8 @@ class ImageViewForm : public QMainWindow
      void cut();
      void export_video_frames();
 
+     void enable_chain(int state);
+
      QImage Mat2QImage(cv::Mat const& src);
      cv::Mat QImage2Mat(QImage const& src);
 
@@ -126,7 +131,10 @@ private:
 
      QString m_sSettingsFile;
      QString prev_open_path_;     
+     QString prev_load_config_path_;
      
+     QString prev_config_file_;
+
 protected:
 
      QDialog * cut_dialog_;
@@ -136,6 +144,9 @@ protected:
      State_t record_state_;
      double fps_;
      
+     syllo::Chain chain_;     
+     bool enable_chain_;
+
      void closeEvent(QCloseEvent *event);
 
 };
