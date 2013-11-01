@@ -1,0 +1,12 @@
+# Computer Vision Chai
+Algorithms:
+- 
+  name: Threshold
+  value: 200
+- 
+  name: Erode
+  type: ellipse
+- 
+  name: Dilate
+- 
+  name: Blob
