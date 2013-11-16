@@ -12,7 +12,6 @@ QT4_ADD_RESOURCES(app_RESOURCES_RCC ${app_RESOURCES})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-message("====>")
 message(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(${APP_NAME} 

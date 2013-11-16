@@ -1,4 +1,8 @@
+
 #!/bin/bash
+
+# You'll want to remove the following programs first...
+# sudo apt-get remove ffmpeg x264 libx264-dev
 
 mkdir ./build -p
 pushd build >& /dev/null

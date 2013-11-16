@@ -3,6 +3,11 @@
 
 #include <cv.h>
 
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -54,34 +59,34 @@ namespace syllo
           {
                switch(codec) {
                case AVI:
-                    return CV_FOURCC('M','J','P','G');
-                    //return CV_FOURCC('I', 'Y', 'U', 'V');
+                    return cv::VideoWriter::fourcc('M','J','P','G');
+                    //return cv::VideoWriter::fourcc('I', 'Y', 'U', 'V');
                     break;
                case MP4:
-                    return CV_FOURCC('X', 'V', 'I', 'D');
+                    return cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
                     break;
                case MPEG_1:
-                    return CV_FOURCC('P','I','M','1');
+                    return cv::VideoWriter::fourcc('P','I','M','1');
                     break;
                case MOTION_JPG:
-                    return CV_FOURCC('M','J','P','G');
+                    return cv::VideoWriter::fourcc('M','J','P','G');
                     break;
                default:
-                    return CV_FOURCC('I', 'Y', 'U', 'V');
+                    return cv::VideoWriter::fourcc('I', 'Y', 'U', 'V');
                }
           }
 
           Status open(int num)
 	  {
 	       vcap.open(num);
-	       vcap.set(CV_CAP_PROP_FRAME_WIDTH, 480);
-	       vcap.set(CV_CAP_PROP_FRAME_HEIGHT, 640);
+	       vcap.set(cv::CAP_PROP_FRAME_WIDTH, 480);
+	       vcap.set(cv::CAP_PROP_FRAME_HEIGHT, 640);
 	       type = CameraType;
                live_ = Live;
 
                if (vcap.isOpened()) {
                     return Success;
-               } else {
+               } else {                    
                     return Failure;
                }
 	  }
@@ -97,8 +102,7 @@ namespace syllo
 		    sonar.init();
 		    type = SonarType;
                     live_ = Recorded;
-                    return Success;
-	       } else if ( ext == "AVI" || 
+               } else if ( ext == "AVI" || 
                            ext == "WMV" ||
                            ext == "MOV" || 
                            ext == "MP4" ||
@@ -106,12 +110,18 @@ namespace syllo
 		    vcap.open( fn );
 		    type = MovieType;
                     live_ = Recorded;
-                    return Success;
-	       } else {
+               } else {
                     cout << "File: " << fn << endl;
 		    cout << "Invalid file extension: " << ext << endl;
 		    return Failure;
-	       }   
+	       }
+
+               if (vcap.isOpened()) {
+                    return Success;
+               } else {
+                    cout << "Failed to open: " << fn  << endl;
+                    return Failure;
+               }   
 	  }
        
           bool isLive()
@@ -147,7 +157,7 @@ namespace syllo
           {
                switch (type) {
 	       case MovieType:
-		    return vcap.get(CV_CAP_PROP_FRAME_COUNT);
+		    return vcap.get(cv::CAP_PROP_FRAME_COUNT);
 		    break;
 	       case CameraType:
 		    return 0;
@@ -163,11 +173,11 @@ namespace syllo
           {
                switch (type) {
 	       case MovieType:
-		    return vcap.get(CV_CAP_PROP_FPS);
+		    return vcap.get(cv::CAP_PROP_FPS);
 		    break;
 	       case CameraType:
                     return 15;
-		    //return vcap.get(CV_CAP_PROP_FPS);
+		    //return vcap.get(cv::CAP_PROP_FPS);
 		    break;
                case SonarType:
                     return 0;
@@ -180,7 +190,7 @@ namespace syllo
           {
                switch (type) {
 	       case MovieType:
-                    return vcap.get(CV_CAP_PROP_POS_FRAMES);
+                    return vcap.get(cv::CAP_PROP_POS_FRAMES);
 		    break;
 	       case CameraType:
 		    return 0;
@@ -196,7 +206,7 @@ namespace syllo
           {
                switch (type) {
 	       case MovieType:
-                    vcap.set(CV_CAP_PROP_POS_FRAMES, frame_num);
+                    vcap.set(cv::CAP_PROP_POS_FRAMES, frame_num);
                     break;
 	       case CameraType:
                     break;
@@ -229,10 +239,10 @@ namespace syllo
 	  {
 	       switch (type) {
 	       case MovieType:
-		    return vcap.get(CV_CAP_PROP_FRAME_WIDTH);
+		    return vcap.get(cv::CAP_PROP_FRAME_WIDTH);
 		    break;
 	       case CameraType:
-		    return vcap.get(CV_CAP_PROP_FRAME_WIDTH);
+		    return vcap.get(cv::CAP_PROP_FRAME_WIDTH);
 		    break;
                case SonarType:
                     return sonar.width();
@@ -246,10 +256,10 @@ namespace syllo
 	  {
 	       switch (type) {
 	       case MovieType:
-		    return vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
+		    return vcap.get(cv::CAP_PROP_FRAME_HEIGHT);
 		    break;
 	       case CameraType:
-		    return vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
+		    return vcap.get(cv::CAP_PROP_FRAME_HEIGHT);
 		    break;
                case SonarType:
                     return sonar.height();
@@ -263,13 +273,13 @@ namespace syllo
 	  {
 	       switch (type) {
 	       case MovieType:
-		    return vcap.get(CV_CAP_PROP_FOURCC);
+		    return vcap.get(cv::CAP_PROP_FOURCC);
 		    break;
 	       case CameraType:
-		    return CV_FOURCC('M','J','P','G');
+		    return cv::VideoWriter::fourcc('M','J','P','G');
 		    break;
                case SonarType:
-                    return CV_FOURCC('M','J','P','G');
+                    return cv::VideoWriter::fourcc('M','J','P','G');
                     break;
 	       default:
 		    return -1;

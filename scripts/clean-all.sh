@@ -6,6 +6,6 @@ pushd ../ >& /dev/null
 ./clean.sh
 
 # Clean third-party-build
-#rm -rf third-party-build
+rm -rf third-party-build
 
 popd >& /dev/null

@@ -76,7 +76,15 @@ include_directories(${QT_INCLUDE_DIR})
 
 # Find OpenCV
 find_package (OpenCV REQUIRED )
+
+if (OpenCV_FOUND)
+message("=======================")
+message("OpenCV Found")
+message("Directories:")
+message("${OpenCV_INCLUDE_DIRS}")
 include_directories(${OpenCV_INCLUDE_DIRS})
+message("-----------------------")
+endif (OpenCV_FOUND)
 
 # Find Yaml-Cpp
 find_package(YamlCpp REQUIRED)

@@ -118,7 +118,7 @@ int main(int argc, const char *argv[]) {
         // At this point you have the position of the faces in
         // faces. Now we'll get the faces, make a prediction and
         // annotate it in the video. Cool or what?
-        for(int i = 0; i < faces.size(); i++) {
+        for(unsigned int i = 0; i < faces.size(); i++) {
             // Process face by face:
             Rect face_i = faces[i];
             // Crop the face from the image. So simple with OpenCV C++:
