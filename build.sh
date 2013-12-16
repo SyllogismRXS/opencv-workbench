@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # You'll want to remove the following programs first...

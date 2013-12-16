@@ -22,9 +22,10 @@ namespace syllo {
 
      int Chain::LoadFile(const std::string &filename)
      {
+#if 0
           config_ = YAML::LoadFile(filename);
 
-#if 0
+
           YAML::Node algorithms = config_["Algorithms"];
           if (algorithms.IsSequence()) {
                cout << "A sequence was found!" << endl;               
