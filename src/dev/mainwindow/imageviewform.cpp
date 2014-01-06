@@ -233,7 +233,7 @@ void ImageViewForm::set_fps(double fps)
 {
      fps_ = fps;
      ui.fps_spinbox->setValue(fps_);
-     timer_->setInterval(1000.0/fps_);     
+     timer_->setInterval(1000.0/fps_);
 }
 
 void ImageViewForm::double_frame_rate()

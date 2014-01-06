@@ -32,7 +32,8 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QLabel" name="image_frame">
+          <!-- <widget class="QLabel" name="image_frame"> -->
+          <widget class="ClickableLabel" name="image_frame">
            <property name="text">
             <string>Open an image or video</string>
            </property>

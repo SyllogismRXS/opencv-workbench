@@ -1,0 +1,18 @@
+#set( LIB_NAME syllo-widget )
+#PROJECT (myclickablelabel CXX C)
+
+set( LIB_NAME myclickablelabel )
+
+file( GLOB SRCS *.cpp)
+file( GLOB HDRS *.h)
+
+ADD_LIBRARY( ${LIB_NAME} SHARED
+#ADD_LIBRARY( ${LIB_NAME} STATIC
+  ${SRCS}
+)
+
+SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${QT_DEFINITIONS} -DQDESIGNER_EXPORT_WIDGETS -DQT_PLUGIN -DQT_NO_DEBUG -DQT_SHARED")
+
+target_link_libraries(${LIB_NAME} 
+  ${QT_LIBRARIES}
+  )

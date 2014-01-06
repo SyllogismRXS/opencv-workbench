@@ -57,6 +57,8 @@ include_directories(${OPENCV_WORKBENCH_INC_DIR})
 
 include_directories(${OPENCV_WORKBENCH_BUILD_DIR}/src/dev)
 
+include_directories(${OPENCV_WORKBENCH_INC_DIR}/opencv_workbench/syllo-widgets)
+
 ## copy to opencv_workbench/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${OPENCV_WORKBENCH_SRC_DIR} src/*.h)
 foreach(I ${INCLUDE_FILES})

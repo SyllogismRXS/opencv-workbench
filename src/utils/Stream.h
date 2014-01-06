@@ -26,9 +26,10 @@ namespace syllo
 
      typedef enum{
 	  NoneType = 0,
-	  CameraType = 1,
-	  MovieType = 2,
-	  SonarType = 3
+	  CameraType,
+	  MovieType,
+	  SonarType,
+          ImageType
      }Stream_t;
 
      typedef enum{
@@ -52,7 +53,9 @@ namespace syllo
 	  sonar::Sonar sonar;
 	  Stream_t type;
           Live_t live_;
-          cv::Mat frame_;
+          cv::Mat frame_;          
+          std::string img_fn_;
+          bool valid_img_;
      public:
 
           int select_codec(Codec_t codec)
@@ -100,6 +103,8 @@ namespace syllo
 	  
 	  Status open(std::string fn) 
 	  {
+               Status status = Failure;
+
                std::string ext = fn.substr(fn.find_last_of(".") + 1);
                std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
 
@@ -109,6 +114,7 @@ namespace syllo
 		    sonar.init();
 		    type = SonarType;
                     live_ = Recorded;
+                    status = Success; //TODO: need check
                } else if ( ext == "AVI" || 
                            ext == "WMV" ||
                            ext == "MOV" || 
@@ -117,18 +123,34 @@ namespace syllo
 		    vcap.open( fn );
 		    type = MovieType;
                     live_ = Recorded;
+
+                    if (vcap.isOpened()) {
+                         status = Success;
+                    } else {
+                         cout << "Failed to open: " << fn  << endl;
+                         status = Failure;
+                    }
+               } else if ( ext == "JPG") {
+                    type = ImageType;
+                    img_fn_ = fn;
+
+                    cv::Mat check;
+                    check = cv::imread(img_fn_, CV_LOAD_IMAGE_COLOR);
+
+                    // imread returns cv::Mat.data == NULL if invalid image
+                    if (check.data != NULL) {                         
+                         valid_img_ = true;
+                         status = Success;
+                    } else {
+                         valid_img_ = false;
+                         status = Failure;
+                    }
                } else {
                     cout << "File: " << fn << endl;
 		    cout << "Invalid file extension: " << ext << endl;
-		    return Failure;
+		    status = Failure;
 	       }
-
-               if (vcap.isOpened()) {
-                    return Success;
-               } else {
-                    cout << "Failed to open: " << fn  << endl;
-                    return Failure;
-               }   
+               return status;                  
 	  }
        
           bool isLive()
@@ -142,22 +164,31 @@ namespace syllo
 
 	  bool isOpened()
 	  {
+               bool status = false;
+               
 	       if (type == SonarType) {
-		    return true;
-	       } else {
-		    return vcap.isOpened();
-	       }
+		    status = true;
+	       } else if (type == MovieType){
+		    status = vcap.isOpened();
+	       } else if (type == ImageType) {
+                    status = valid_img_;
+               }
+               return status;
 	  }
 
 	  bool read(cv::Mat &frame) 
 	  {
+               bool status = false;
 	       if(type == SonarType) {
-		    return sonar.getNextSonarImage(frame);
-	       } else {
-                    bool status = vcap.read(frame_);
-                    frame = frame_;
-		    return status;
+		    status = sonar.getNextSonarImage(frame);
+               } else if (type == ImageType) {
+                    frame = cv::imread(img_fn_, CV_LOAD_IMAGE_COLOR);
+		    status = true;
+               } else if (type == MovieType){
+                    status = vcap.read(frame_);
+                    frame = frame_;		    
 	       }
+               return status;
 	  }
 
           int get_frame_count()
@@ -190,6 +221,8 @@ namespace syllo
 		    break;
                case SonarType:
                     return 0;
+               case ImageType:
+                    return 10000; // update image every 10 seconds
 	       default:
 		    return -1;
 	       }
