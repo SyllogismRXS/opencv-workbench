@@ -38,8 +38,8 @@
  **
  ****************************************************************************/
 
-#ifndef IMAGEVIEWFORM_H
-#define IMAGEVIEWFORM_H
+#ifndef SCUBAFACELABEL_H
+#define SCUBAFACELABEL_H
 
 // OpenCV headers
 #include <cv.h>
@@ -50,127 +50,38 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "ui_imageviewform.h"
+#include <scuba_face_label/ui_scuba_face_label.h>
 
-#include <opencv_workbench/utils/Stream.h>
-#include <opencv_workbench/syllo/Chain.h>
-#include <opencv_workbench/dev/cut/cut.h>
-#include <opencv_workbench/dev/scuba_face_label/scuba_face_label.h>
-
-
-class ImageViewForm : public QMainWindow
+class ScubaFaceLabel : public QWidget
 {
      Q_OBJECT
 
-     public:
+public:
+     ScubaFaceLabel(QWidget *parent = 0);
+     QString input_dir();
+     QString output_dir();
+     void set_input_dir(QString dir);
+     void set_output_dir(QString dir);
 
-     typedef enum{
-          img = 0,
-          avi,
-          mp4,
-          wmv,
-          usb_cam,
-          sonar
-     }Media_t;
+signals:
+     void start_labeling();
 
-     typedef enum{
-          none = 0,
-          paused,
-          playing,
-          recording,
-          not_recording
-     }State_t;
-
-     ImageViewForm(QMainWindow *parent = 0);
-
-     private slots:
-     void about();
-     void open();
-     void open_media(QString fileName);
-     void load_config();
-     void open_camera();
-     void save();
-     void timer_loop();
-     void mousePressed(QPoint p);
-     void mouseReleased(QPoint p);
-     void mouseMoved(QPoint p);
-
-     void space_bar();
-
-     void draw();
-     void play();
-     void pause();
-     void record();
-
-     void draw_image(const cv::Mat &img);
-
-     void double_frame_rate();
-     void divide_frame_rate();
-
-     void set_fps(double fps);
-     void set_frame_num(int frame_num);
-     void set_frame_num_from_slider(int frame_num);
-
-     void set_cam_id(int id);
-
-     void cut();
-     void export_video_frames();
-     void start_scuba_face_labeling();
-     void scuba_face_label();
-
-     QImage Mat2QImage(cv::Mat const& src);
-     cv::Mat QImage2Mat(QImage const& src);
+private slots:    
+     void select_input_dir();
+     void select_output_dir();
+     void emit_start_labeling();
 
 private:
-     Ui::ImageViewForm ui;
+     Ui::ScubaFaceLabel ui;
+     QString input_dir_;
+     QString output_dir_;
 
-     QTimer *timer_;
-
-     QImage q_image;
-     //cv::Mat cv_image;     
-
-     syllo::Stream stream_;
 
      void readSettings();
      void writeSettings();
 
      QString m_sSettingsFile;
-     QString prev_open_path_;     
-     QString prev_load_config_path_;
-     
-     QString prev_config_file_;
 
-protected:
-
-     QDialog * cut_dialog_;
-     CutForm *cut_;
-
-     QDialog * scuba_face_label_dialog_;
-     ScubaFaceLabel *scuba_face_label_;
-
-     State_t state_;
-     State_t record_state_;
-     double fps_;
-     
-     syllo::Chain chain_;     
-     
-     void closeEvent(QCloseEvent *event);
-
-     bool label_in_prog_;
-     QString input_dir_;
-     QString output_dir_;
-     QStringList files_;
-     int cur_file_;
-
-     cv::Mat curr_image_;
-     cv::Mat visible_img_;
-
-     bool mouse_dragging_;
-     QPoint first_click_;
-     QPoint second_click_;
-     QPoint mouse_loc_;
-
-     bool moving_second_pt_;
 };
 
 #endif

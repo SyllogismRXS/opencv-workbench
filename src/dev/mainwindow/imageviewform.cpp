@@ -56,7 +56,13 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
 
      state_ = none;
      record_state_ = not_recording;
-     enable_chain_ = false;
+     
+     label_in_prog_ = false;
+
+     mouse_dragging_ = false;
+     
+     first_click_ = QPoint(-1,-1);
+     second_click_ = QPoint(-1,-1);
 
      if (prev_config_file_ != "") {
           chain_.LoadFile(prev_config_file_.toStdString());
@@ -70,26 +76,28 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(about()));
      
      connect(ui.actionCut, SIGNAL(triggered()), this, SLOT(cut()));
+     connect(ui.actionScuba_Face_Label, SIGNAL(triggered()), this, SLOT(scuba_face_label()));
      connect(ui.actionRecord, SIGNAL(triggered()), this, SLOT(record()));    
 
      connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
      connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
      connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
 
-     connect(ui.play_button, SIGNAL(released()), this, SLOT(toggle_play()));   
+     connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
      connect(ui.rewind_button, SIGNAL(released()), this, SLOT(divide_frame_rate()));
      connect(ui.forward_button, SIGNAL(released()), this, SLOT(double_frame_rate()));
      
      connect(ui.cam_id_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_cam_id(int)));
 
-     connect(ui.enable_chain_checkbox, SIGNAL(stateChanged(int)), this, SLOT(enable_chain(int)));
-
+     connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
+     connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));
+     
      // Keyboard shortcuts
      // Note: Get deleted automatically when program closes.
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_C), this, SLOT(open_camera()));
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
-     new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(toggle_play()));
+     new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(space_bar()));
      new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(divide_frame_rate()));
      new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(double_frame_rate()));
      
@@ -100,13 +108,54 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));
 }
 
-void ImageViewForm::enable_chain(int state)
+void ImageViewForm::mousePressed(QPoint p)
 {
-     if (state == Qt::Checked) {
-          enable_chain_ = true;
-     } else {
-          enable_chain_ = false;
+     if (!mouse_dragging_) {
+          // check to see if the user wants to adjust the rectangle
+          if (first_click_.x() != -1) {               
+               if (abs(p.x()-first_click_.x()) < 20 && 
+                   // user clicks near first click
+                   abs(p.y()-first_click_.y()) < 20) {
+                    moving_second_pt_ = false;                    
+               } else if (abs(p.x()-second_click_.x()) < 20 && 
+                          abs(p.y()-second_click_.y()) < 20) {
+                    // user clicks near second click
+                    moving_second_pt_ = true;
+               } else {
+                    // user doesn't click near either
+                    first_click_ = p;
+                    moving_second_pt_ = true;
+               }
+          } else {
+               first_click_ = p;
+               moving_second_pt_ = true;
+          }          
+          
+          mouse_dragging_ = true;
+          connect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));
+     }           
+}
+
+void ImageViewForm::mouseMoved(QPoint p)
+{
+     mouse_loc_ = p;
+     //cout << "X: " << p.x() << endl;
+     //cout << "Y: " << p.y() << endl;
+}
+
+void ImageViewForm::mouseReleased(QPoint p)
+{
+     if (mouse_dragging_) {
+          if (moving_second_pt_) {
+               second_click_ = p;
+          } else {
+               first_click_ = p;
+          }          
+          mouse_dragging_ = false;
+          disconnect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));
      }
+     //cout << "X: " << p.x() << endl;
+     //cout << "Y: " << p.y() << endl;
 }
 
 void ImageViewForm::set_cam_id(int id)
@@ -114,6 +163,43 @@ void ImageViewForm::set_cam_id(int id)
      if (stream_.isLive()) {
           this->open_camera();
      }
+}
+
+void ImageViewForm::scuba_face_label()
+{
+     scuba_face_label_dialog_ = new QDialog(this);
+     scuba_face_label_ = new ScubaFaceLabel(scuba_face_label_dialog_);
+     
+     scuba_face_label_->set_input_dir(input_dir_);
+     scuba_face_label_->set_output_dir(output_dir_);
+
+     connect(scuba_face_label_, SIGNAL(start_labeling()), this, SLOT(start_scuba_face_labeling()));
+     
+     scuba_face_label_dialog_->show();
+     scuba_face_label_->show();
+}
+
+void ImageViewForm::start_scuba_face_labeling()
+{
+     input_dir_ = scuba_face_label_->input_dir();
+     output_dir_ = scuba_face_label_->output_dir();
+
+     //cout << "input:" << input_dir_.toUtf8().constData() << endl;
+
+     delete scuba_face_label_;
+     delete scuba_face_label_dialog_;
+
+     label_in_prog_ = true;
+     files_ = QDir(input_dir_).entryList(QStringList("*"), 
+                                         QDir::Files | QDir::NoSymLinks);
+     cur_file_ = 0;
+
+     //for (int i = 0; i < files_.size(); ++i) {
+     //     cout << files_.at(i).toLocal8Bit().constData() << endl;
+     //}
+     cout << "opening file: " << files_.at(cur_file_).toStdString() << endl;
+     open_media(input_dir_ + "/" + files_.at(cur_file_));
+     cur_file_++;
 }
 
 void ImageViewForm::cut()
@@ -252,19 +338,55 @@ void ImageViewForm::closeEvent(QCloseEvent *event)
      this->writeSettings();
 }
 
-void ImageViewForm::toggle_play()
+void ImageViewForm::space_bar()
 {
-     if (state_ == playing) {
-          this->pause();          
-     } else if (state_ == paused) {          
-          this->set_fps(fps_);
-          this->play();          
+     if (label_in_prog_) {
+          // save file to output:          
+          QString output_fn = output_dir_ + "/" + ui.filename_label->text();
+          int x = first_click_.x();
+          int y = first_click_.y();
+          int width = second_click_.x() - first_click_.x();
+          int height = second_click_.y() - first_click_.y();
+
+          cout << "x: " << x << endl;
+          cout << "y: " << y << endl;
+          cout << "width: " << width << endl;
+          cout << "height: " << height << endl;
+
+          cv::Rect myRect(x, y, width, height);          
+          chain_.crop_image(visible_img_, visible_img_, myRect);
+          chain_.save_image(output_fn.toStdString(), visible_img_);
+
+          if (cur_file_ < files_.size()) {
+               cout << "opening file: " << files_.at(cur_file_).toStdString() << endl;
+               open_media(input_dir_ + "/" + files_.at(cur_file_));
+               cur_file_++;
+          } else {
+               // all done
+               cur_file_++;
+               label_in_prog_ = false;
+          }                    
+     } else {
+          if (state_ == playing) {
+               this->pause();          
+          } else if (state_ == paused) {          
+               this->set_fps(fps_);
+               this->play();          
+          }
      }
 }
 
 void ImageViewForm::timer_loop()
 {
      if (stream_.isOpened()) {
+          if (stream_.type() != syllo::ImageType) {
+               if (stream_.read(curr_image_)) {
+                    
+               } else {
+                    this->pause();
+                    this->set_frame_num(0);
+               }
+          }
           this->draw();
      }
 }
@@ -278,17 +400,31 @@ void ImageViewForm::draw()
           ui.frame_num_spinbox->setValue(stream_.get_frame_number());
      }
      
-     if(stream_.read(cv_image)) {
-          // Send stream image through 
-          // computer vision processing chain
-          if (enable_chain_) {
-               chain_.Process(cv_image, cv_image);
+     //if (ui.enable_chain_checkbox) {
+     //     chain_.process(curr_image_, visible_img_);          
+     //} else {
+     //     visible_img_ = curr_image_;
+     //}
+     visible_img_ = curr_image_.clone();
+
+     if (mouse_dragging_) {
+          cv::Point pt1;
+          cv::Point pt2;
+          if (moving_second_pt_) {
+               pt1 = cv::Point(first_click_.x(), first_click_.y());
+               pt2 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
+          } else {
+               pt1 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
+               pt2 = cv::Point(second_click_.x(), second_click_.y());
           }
-          this->draw_image(cv_image);
+          chain_.draw_rectangle(visible_img_, visible_img_, pt1, pt2);
+          
      } else {
-          this->pause();
-          this->set_frame_num(0);
+          chain_.draw_rectangle(visible_img_, visible_img_,cv::Point(first_click_.x(), first_click_.y()), 
+                                cv::Point(second_click_.x(),second_click_.y()));
      }
+
+     this->draw_image(visible_img_);     
 
      if (record_state_ == recording) {
           stream_.step_camera_record();
@@ -297,7 +433,7 @@ void ImageViewForm::draw()
 
 void ImageViewForm::draw_image(const cv::Mat &img)
 {
-     q_image = Mat2QImage(cv_image);
+     q_image = Mat2QImage(img);
      ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
      ui.image_frame->adjustSize();
 }
@@ -312,8 +448,8 @@ void ImageViewForm::open_camera()
      if (status == syllo::Success && stream_.isOpened()) {
                
           this->set_frame_num(0);                                   
-          stream_.read(cv_image);
-          this->draw_image(cv_image);               
+          stream_.read(curr_image_);          
+          this->draw_image(curr_image_);               
 
           ui.filename_label->setText("Camera");
 
@@ -354,16 +490,16 @@ void ImageViewForm::open()
      }
 
      QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), dir);
+     open_media(fileName);
+}
 
+void ImageViewForm::open_media(QString fileName)
+{
      if (!fileName.isEmpty()) {
           // Save the previously open directory
           prev_open_path_ = QFileInfo(fileName).path();         
 
           std::string fn = fileName.toStdString();
-
-          if (stream_.isOpened()) {
-               stream_.release();
-          }
           
           syllo::Status status = stream_.open(fn);          
           if (status == syllo::Success && stream_.isOpened()) {
@@ -379,10 +515,22 @@ void ImageViewForm::open()
                fps_ = stream_.get_fps();
                this->set_fps(fps_);
                
-               stream_.read(cv_image);
-               draw_image(cv_image);
-               
-               state_ = paused;
+               if (stream_.read(curr_image_)) {
+
+                    // one time processing:
+                    chain_.process(curr_image_, curr_image_);
+
+                    this->draw();
+
+                    if (stream_.type() == syllo::ImageType) {
+                         this->play();
+                    } else {
+                         this->pause();
+                    }                    
+               } else {
+                    this->pause();
+                    this->set_frame_num(0);
+               }
           }
      }
 }
@@ -430,6 +578,9 @@ void ImageViewForm::writeSettings()
      settings.setValue("prev_open_path", prev_open_path_);
      settings.setValue("prev_load_config_path", prev_load_config_path_);
      settings.setValue("prev_config_file", prev_config_file_);
+     
+     settings.setValue("scuba_face_input_dir", input_dir_);
+     settings.setValue("scuba_face_output_dir", output_dir_);
 
      settings.endGroup();
 }
@@ -448,6 +599,9 @@ void ImageViewForm::readSettings()
      prev_open_path_ = settings.value("prev_open_path").toString();
      prev_load_config_path_ = settings.value("prev_load_config_path").toString();
      prev_config_file_ = settings.value("prev_config_file", "").toString();
-
+     
+     input_dir_ = settings.value("scuba_face_input_dir").toString();
+     output_dir_ = settings.value("scuba_face_output_dir").toString();
+     
      settings.endGroup();
 }

@@ -70,9 +70,9 @@ FIND_PACKAGE(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 
-message("=======================")
-message(${QT_USE_FILE})
-message(${QT_INCLUDE_DIR})
+#message("=======================")
+#message(${QT_USE_FILE})
+#message(${QT_INCLUDE_DIR})
 
 include_directories(${QT_INCLUDE_DIR})
 

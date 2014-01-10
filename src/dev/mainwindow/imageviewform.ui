@@ -32,9 +32,8 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <!-- <widget class="QLabel" name="image_frame"> -->
-          <widget class="ClickableLabel" name="image_frame">
-           <property name="text">
+          <widget class="ClickableLabel" name="image_frame" native="true">
+           <property name="text" stdset="0">
             <string>Open an image or video</string>
            </property>
           </widget>
@@ -105,6 +104,9 @@
           <widget class="QCheckBox" name="enable_chain_checkbox">
            <property name="text">
             <string/>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -285,6 +287,7 @@
      <string>Process</string>
     </property>
     <addaction name="actionFace_Detect"/>
+    <addaction name="actionScuba_Face_Label"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
@@ -337,7 +340,19 @@
     <string>Load Config</string>
    </property>
   </action>
+  <action name="actionScuba_Face_Label">
+   <property name="text">
+    <string>Scuba Face Label</string>
+   </property>
+  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ClickableLabel</class>
+   <extends>QWidget</extends>
+   <header>clickablelabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="imageview.qrc"/>
  </resources>

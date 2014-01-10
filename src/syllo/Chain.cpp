@@ -91,11 +91,37 @@ namespace syllo {
      }
 
 
-     int Chain::Process(const cv::Mat &src, cv::Mat &dest)
+     int Chain::process(const cv::Mat &src, cv::Mat &dest)
      {
           //cv::threshold(src, dest, 200, 255, cv::THRESH_TOZERO);
-          cv::Mat input = src;
-          this->DetectFace(input, dest);
+          double scale = 0.15;
+          cv::resize(src,dest,cv::Size(0,0),scale,scale,cv::INTER_NEAREST);
+          //cv::Mat input = src;
+          //this->DetectFace(input, dest);
+          return 0;
+     }
+
+     int Chain::draw_rectangle(const cv::Mat &src, cv::Mat &dest, 
+                               cv::Point pt1, cv::Point pt2)
+     {
+          dest = src;
+          cv::rectangle(dest,pt1,pt2,cv::Scalar(0,0,255),1,8,0);
+          return 0;
+     }
+     
+     int Chain::crop_image(const cv::Mat &src, cv::Mat &dest, cv::Rect rect)
+     {
+          dest = cv::Mat(src, rect);
+          return 0;
+     }
+
+     int Chain::save_image(const std::string &fn, const cv::Mat &img)
+     {
+          std::vector<int> compression_params;
+          compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+          compression_params.push_back(9);
+
+          cv::imwrite(fn,img, compression_params);
           return 0;
      }
 }
