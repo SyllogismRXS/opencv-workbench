@@ -54,8 +54,14 @@
 
 //#include <ipl.h>
 
-#include "cv.h"
-#include "highgui.h"
+//#include "cv.h"
+//#include "highgui.h"
+#include <cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 
 /* Calculates coefficients of perspective transformation
  * which maps <quad> into rectangle ((0,0), (w,0), (w,h), (h,0)):

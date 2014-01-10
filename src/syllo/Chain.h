@@ -4,7 +4,7 @@
 /// @file Chain.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-01-09 22:58:29 syllogismrxs>
+/// Time-stamp: <2014-01-10 16:18:34 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 01 Nov 2013
@@ -64,7 +64,8 @@ namespace syllo{
           int process(const cv::Mat &src, cv::Mat &dest);
           int draw_rectangle(const cv::Mat &src, cv::Mat &dest, 
                              cv::Point pt1, cv::Point pt2);
-
+          
+          int gray_and_equalize(const cv::Mat &src, cv::Mat &dest);
 
           int crop_image(const cv::Mat &src, cv::Mat &dest, cv::Rect rect);
           int save_image(const std::string &fn, const cv::Mat &img);

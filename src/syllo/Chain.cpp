@@ -124,4 +124,16 @@ namespace syllo {
           cv::imwrite(fn,img, compression_params);
           return 0;
      }
+     
+     int Chain::gray_and_equalize(const cv::Mat &src, cv::Mat &dest)
+     {
+          /// Convert to grayscale
+          cv::cvtColor( src, dest, CV_BGR2GRAY );
+
+          /// Apply Histogram Equalization
+          cv::equalizeHist( dest, dest );
+
+          return 0;
+     }
+
 }

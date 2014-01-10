@@ -42,10 +42,17 @@
 #ifndef __CVCOMMON_H_
 #define __CVCOMMON_H_
 
-#include "opencv2/core.hpp"
+#include <cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
-#include "cxcore.h"
-#include "cv.h"
+
+//#include "opencv2/core.hpp"
+
+//#include "cxcore.h"
+//#include "cv.h"
 #include "cxmisc.h"
 
 #define __BEGIN__ __CV_BEGIN__

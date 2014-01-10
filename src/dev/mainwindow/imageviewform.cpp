@@ -355,6 +355,7 @@ void ImageViewForm::space_bar()
 
           cv::Rect myRect(x, y, width, height);          
           chain_.crop_image(visible_img_, visible_img_, myRect);
+          chain_.gray_and_equalize(visible_img_, visible_img_);
           chain_.save_image(output_fn.toStdString(), visible_img_);
 
           if (cur_file_ < files_.size()) {
