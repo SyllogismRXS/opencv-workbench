@@ -60,6 +60,9 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      label_in_prog_ = false;
 
      mouse_dragging_ = false;
+
+     moving_second_pt_ = false;
+     moving_box_ = false;
      
      first_click_ = QPoint(-1,-1);
      second_click_ = QPoint(-1,-1);
@@ -67,6 +70,8 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      if (prev_config_file_ != "") {
           chain_.LoadFile(prev_config_file_.toStdString());
      }
+     
+     chain_.LoadFile("blank"); //TODO: handle correctly
 
      connect(ui.actionOpen, SIGNAL(triggered()), this, SLOT(open()));
      connect(ui.actionLoad_Config, SIGNAL(triggered()), this, SLOT(load_config()));
@@ -121,6 +126,10 @@ void ImageViewForm::mousePressed(QPoint p)
                           abs(p.y()-second_click_.y()) < 20) {
                     // user clicks near second click
                     moving_second_pt_ = true;
+               //} else if (p.x() > first_click_.x() && p.x() < second_click_.x() && p.y() > first_click_.y() && p.y() < second_click_.y()) {
+               //     // user clicked inside of box
+               //     moving_box_ = true;
+               //     moving_second_pt_ = false;
                } else {
                     // user doesn't click near either
                     first_click_ = p;
@@ -148,6 +157,8 @@ void ImageViewForm::mouseReleased(QPoint p)
      if (mouse_dragging_) {
           if (moving_second_pt_) {
                second_click_ = p;
+          } else if (moving_box_) {
+               
           } else {
                first_click_ = p;
           }          
@@ -297,7 +308,7 @@ void ImageViewForm::set_frame_num(int frame_num)
 {
      if (state_ == paused) {
           stream_.set_frame_number(frame_num);
-          this->draw();
+          //this->draw();
      }
 }
 
@@ -382,31 +393,31 @@ void ImageViewForm::timer_loop()
      if (stream_.isOpened()) {
           if (stream_.type() != syllo::ImageType) {
                if (stream_.read(curr_image_)) {
-                    
+                    this->draw();
                } else {
+                    cout << "Done" << endl;
                     this->pause();
                     this->set_frame_num(0);
                }
-          }
-          this->draw();
+          }          
      }
 }
 
 void ImageViewForm::draw()
 {
-     if (stream_.isLive()) {          
+     if (stream_.isLive()) {                    
      } else {
           // Set all appropriate GUI elements on each frame
           ui.frame_slider->setValue(stream_.get_frame_number());
           ui.frame_num_spinbox->setValue(stream_.get_frame_number());
      }
-     
-     //if (ui.enable_chain_checkbox) {
-     //     chain_.process(curr_image_, visible_img_);          
-     //} else {
-     //     visible_img_ = curr_image_;
-     //}
-     visible_img_ = curr_image_.clone();
+          
+     if (ui.enable_chain_checkbox) {
+          chain_.process(curr_image_, visible_img_);          
+     } else {
+          visible_img_ = curr_image_.clone();
+     }
+          
 
      if (mouse_dragging_) {
           cv::Point pt1;
@@ -483,6 +494,8 @@ void ImageViewForm::load_config()
 
 void ImageViewForm::open()
 {    
+     this->pause();
+
      // If the prev_open_path variable is set, use it, otherwise, use
      // the current directory.
      QString dir = QDir::currentPath();

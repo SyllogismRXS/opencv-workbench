@@ -4,7 +4,7 @@
 /// @file Chain.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-01-10 16:18:34 syllogismrxs>
+/// Time-stamp: <2014-01-14 12:58:57 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 01 Nov 2013
@@ -43,6 +43,17 @@
 
 #include <yaml-cpp/yaml.h>
 
+typedef struct ObjectPos
+{
+    float x;
+    float y;
+    float width;
+    int found;    /* for reference */
+    int neghbors;
+} ObjectPos;
+
+
+
 namespace syllo{
      
      class Chain {
@@ -56,6 +67,10 @@ namespace syllo{
           cv::CascadeClassifier face_cascade;
           cv::CascadeClassifier eyes_cascade;          
           cv::RNG *rng;
+
+          CvHaarClassifierCascade* cascade;
+          CvMemStorage* storage;
+          CvSeq* objects;
 
      public:
           Chain();

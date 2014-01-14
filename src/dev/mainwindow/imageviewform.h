@@ -171,6 +171,7 @@ protected:
      QPoint mouse_loc_;
 
      bool moving_second_pt_;
+     bool moving_box_;
 };
 
 #endif
