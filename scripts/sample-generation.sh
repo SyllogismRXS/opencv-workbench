@@ -13,8 +13,8 @@
 #
 # 
 
-WIDTH=60
-HEIGHT=60
+WIDTH=40
+HEIGHT=40
 NPOS=500
 
 # Create samples description file for positive images
