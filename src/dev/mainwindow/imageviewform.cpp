@@ -412,7 +412,7 @@ void ImageViewForm::draw()
           ui.frame_num_spinbox->setValue(stream_.get_frame_number());
      }
           
-     if (ui.enable_chain_checkbox) {
+     if (ui.enable_chain_checkbox->isChecked()) {
           chain_.process(curr_image_, visible_img_);          
      } else {
           visible_img_ = curr_image_.clone();

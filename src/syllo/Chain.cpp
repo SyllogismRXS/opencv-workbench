@@ -41,7 +41,8 @@ namespace syllo {
 #endif
 
           //cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( width, height ) );
-          cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( 0,0 ) );
+          //cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( 0,0 ) );
+          cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing-2/haarcascade.xml", cvSize( 0,0 ) );
           if( cascade == NULL )
           {
                printf( "Unable to load classifier\n" );
