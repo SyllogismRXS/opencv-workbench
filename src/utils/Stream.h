@@ -50,7 +50,7 @@ namespace syllo
           cv::VideoWriter *output_;
           int output_count_;
           int end_frame_;
-	  sonar::Sonar sonar;
+	  Sonar sonar;
 	  Stream_t type_;
           Live_t live_;
           cv::Mat frame_;          
@@ -124,10 +124,15 @@ namespace syllo
                std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
                
                if ( ext == "SON") {
-		    sonar.setSonarFile(fn);
-		    sonar.setRange(0,45);
-		    sonar.init();
-		    type_ = SonarType;
+                    sonar.set_mode(Sonar::sonar_file);
+                    sonar.set_input_son_filename(fn);
+                    sonar.set_data_mode(Sonar::image);
+                    sonar.set_color_map("/home/syllogismrxs/repos/sonar-processing/bvtsdk/colormaps/jet.cmap");
+                    sonar.set_save_directory("/tmp/workbench_sonar_log");                    
+                    sonar.init();
+                    sonar.set_range(0,45);
+                    
+                    type_ = SonarType;
                     live_ = Recorded;
                     status = Success; //TODO: need check
                } else if ( ext == "AVI" || 
@@ -211,7 +216,11 @@ namespace syllo
 	  {               
                bool status = false;
 	       if(type_ == SonarType) {
-		    status = sonar.getNextSonarImage(frame);
+                    Sonar::Status_t sonar_stat;
+		    sonar_stat = sonar.getNextSonarImage(frame);
+                    if (sonar_stat == Sonar::Success) {
+                         status = true;
+                    }
                } else if (type_ == ImageType) {
                     frame = cv::imread(img_fn_, CV_LOAD_IMAGE_COLOR);
 		    status = true;
@@ -250,7 +259,7 @@ namespace syllo
 		    //return vcap.get(CV_CAP_PROP_FPS);
 		    break;
                case SonarType:
-                    return 0;
+                    return 15;
                case ImageType:
                     return 15; // update image every 10 seconds
 	       default:

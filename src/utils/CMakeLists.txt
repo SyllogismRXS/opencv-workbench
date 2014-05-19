@@ -6,4 +6,7 @@ ADD_LIBRARY( ${LIB_NAME} SHARED
         Sonar.cpp        
 )
 
-target_link_libraries(${LIB_NAME} ${OpenCV_LIBS})
+target_link_libraries(${LIB_NAME} 
+  ${OpenCV_LIBS} 
+  ${BLUEVIEW_SDK_LIBS}
+  )

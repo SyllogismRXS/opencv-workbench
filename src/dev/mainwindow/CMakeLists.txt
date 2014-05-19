@@ -41,3 +41,9 @@ target_link_libraries(${APP_NAME}
   chain  
   ${YAMLCPP_LIBRARY}
   )
+
+if (DEFINED BLUEVIEW_SDK_LIBS)
+  target_link_libraries(${APP_NAME}
+    ${BLUEVIEW_SDK_LIBS}
+    )
+endif()

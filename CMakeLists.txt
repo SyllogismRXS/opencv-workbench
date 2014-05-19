@@ -92,4 +92,21 @@ endif (OpenCV_FOUND)
 find_package(YamlCpp REQUIRED)
 include_directories(${YAMLCPP_INCLUDE_DIR})
 
+# Determine if the BLUEVIEW_SDK_ROOT has been set
+message("==================================")
+if (DEFINED ENV{BLUEVIEW_SDK_ROOT})  
+  message("Found Blueview SDK at:")
+  message("$ENV{BLUEVIEW_SDK_ROOT}")  
+  # Include the BLUEVIW SDK header files
+  include_directories($ENV{BLUEVIEW_SDK_ROOT}/include)
+  # Set the Blueview SDK libraries
+  set(BLUEVIEW_SDK_LIBS $ENV{BLUEVIEW_SDK_ROOT}/lib/libbvtsdk.so)
+else()
+  message("WARNING: Can't find the BlueView SDK")
+  message("Set the BLUEVIEW_SDK_ROOT environment variable in your .bashrc")
+  message("if you require the blueview library")  
+  #return() # exit quietly if sdk not found
+endif()
+
 add_subdirectory(src)
+add_subdirectory(share)

@@ -78,7 +78,7 @@ namespace larks {
           void computeLARK(const int rows, const int cols, const int wsize, Mat& sC11, Mat& sC12, Mat& sC22, array_type1& temp);
 
      };
-
+     
      class Saliency
      {
      public:
@@ -87,7 +87,7 @@ namespace larks {
           void computeSaliency(const array_type1& LARK, const int wsize, const int psize, Mat& SaliencyMap);
 
      };
-
+ 
 
      class LARKFeatureTemplates
      {
@@ -134,7 +134,7 @@ namespace larks {
 
 
 
-     class LARKs : public Detector, public Trainable
+     class LARKs //: public Detector, public Trainable
      {
 
 

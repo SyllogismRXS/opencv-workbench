@@ -54,4 +54,5 @@ add_executable(${APP_NAME_3}
 
 target_link_libraries(${APP_NAME_3} 
   ${OpenCV_LIBS}
+  m
   )

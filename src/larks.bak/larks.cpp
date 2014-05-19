@@ -60,19 +60,19 @@
 
 using namespace cv;
 
-REGISTER_TYPE_CONVERSION(recognition_pipeline::Rect, cv::Rect,
-                         (x,x)
-                         (y,y)
-                         (width,width)
-                         (height,height)
-     )
-
-REGISTER_TYPE_CONVERSION(recognition_pipeline::Detection, larks::LARKs,
-                         (label,name)
-                         (score,score)
-                         (mask.roi,roi)
-                         (mask.mask,mask)
-     )
+//REGISTER_TYPE_CONVERSION(recognition_pipeline::Rect, cv::Rect,
+//                         (x,x)
+//                         (y,y)
+//                         (width,width)
+//                         (height,height)
+//     )
+//
+//REGISTER_TYPE_CONVERSION(recognition_pipeline::Detection, larks::LARKs,
+//                         (label,name)
+//                         (score,score)
+//                         (mask.roi,roi)
+//                         (mask.mask,mask)
+//     )
 
 
 namespace larks
@@ -81,8 +81,6 @@ namespace larks
      void Larkcomputation::computeCovariance(const Mat& gray, int wsize, const int dfactor, Mat& sC11, Mat& sC12, Mat& sC22)
      {
           double t = (double) getTickCount();
-
-
 
           int rsize = 2;
           Mat_<float> gray1(gray.rows + rsize * 2, gray.cols + rsize * 2);
@@ -165,9 +163,6 @@ namespace larks
           integral(GX_2, GX_2integral);
           integral(GY_2, GY_2integral);
           integral(GXY, GXY_integral);
-
-
-
 
           int row_count1 = 0;
           int col_count1 = 0;
@@ -939,82 +934,83 @@ namespace larks
  * @param data Training data instance
  */
 
-     void LARKs::trainInstance(const std::string& name, const recognition_pipeline::TrainingData& data)
-     {
-
-
-          ROS_INFO("LARKs: training instance: %s", name.c_str());
-
-          cv::Mat img_gray;
-          // compute the gradient summary image
-          cv::Mat img = data.image;
-
-          if(img.channels() != 1)
-          {
-               cv::cvtColor(img, img_gray, CV_BGR2GRAY);
-          }
-          else
-          {
-               img_gray = img;
-          }
-
-//    Mat drawImg(data.image,data.roi);
-//    bitwise_not(drawImg,drawImg,data.mask);
-
-          cv::Rect roi;
-          cv::Mat mask;
-          convert(data.roi,roi);
-          convert(data.mask,mask);
-
-
-          LARKFeatureTemplates crt_tpl;
-
-          if (index == 0)
-          {
-               crt_tpl.computeFeatures(img_gray,roi,mask, index, crt_tpl.pca, crt_tpl.cols);
-               models.push_back(crt_tpl);
-               index++;
-               printf("has ");
-          }
-          else
-          {
-               std::cout << "models.size()" << models.size() << std::endl;
-               crt_tpl.computeFeatures(img_gray,roi,mask, index, models[0].pca, models[0].cols);
-               float max_score = 0.0;
-               for (unsigned int i = 0; i < models.size(); i++)
-               {
-                    float score = crt_tpl.MatrixCosineMeasure(models[i].QF,models[i].M, crt_tpl.QF, crt_tpl.M);
-                    ROS_INFO("score= %f",score);
-                    if (score > max_score)
-                         max_score = score;
-               }
-
-
-               /*BOOST_FOREACH(LARKFeatureTemplates& tpl, models) {
-                 float score = tpl.MatrixCosineMeasure(crt_tpl.QF, crt_tpl.M);
-
-                 if (score > 0.4) {
-                 found = true;
-                 }
-                 }*/
-
-               if (max_score < 0.4) {
-                    printf("has ");
-                    models.push_back(crt_tpl);
-                    index++;
-               } else {
-                    printf("still has ");
-               }
-          }
-          printf("%d templates\n",index);
-
-
-          cv::imshow("trainingImage", img_gray(roi));
-          cv::waitKey(10);
-
-
-
-     }
+/// 
+///      void LARKs::trainInstance(const std::string& name, const recognition_pipeline::TrainingData& data)
+///      {
+/// 
+/// 
+///           ROS_INFO("LARKs: training instance: %s", name.c_str());
+/// 
+///           cv::Mat img_gray;
+///           // compute the gradient summary image
+///           cv::Mat img = data.image;
+/// 
+///           if(img.channels() != 1)
+///           {
+///                cv::cvtColor(img, img_gray, CV_BGR2GRAY);
+///           }
+///           else
+///           {
+///                img_gray = img;
+///           }
+/// 
+/// //    Mat drawImg(data.image,data.roi);
+/// //    bitwise_not(drawImg,drawImg,data.mask);
+/// 
+///           cv::Rect roi;
+///           cv::Mat mask;
+///           convert(data.roi,roi);
+///           convert(data.mask,mask);
+/// 
+/// 
+///           LARKFeatureTemplates crt_tpl;
+/// 
+///           if (index == 0)
+///           {
+///                crt_tpl.computeFeatures(img_gray,roi,mask, index, crt_tpl.pca, crt_tpl.cols);
+///                models.push_back(crt_tpl);
+///                index++;
+///                printf("has ");
+///           }
+///           else
+///           {
+///                std::cout << "models.size()" << models.size() << std::endl;
+///                crt_tpl.computeFeatures(img_gray,roi,mask, index, models[0].pca, models[0].cols);
+///                float max_score = 0.0;
+///                for (unsigned int i = 0; i < models.size(); i++)
+///                {
+///                     float score = crt_tpl.MatrixCosineMeasure(models[i].QF,models[i].M, crt_tpl.QF, crt_tpl.M);
+///                     ROS_INFO("score= %f",score);
+///                     if (score > max_score)
+///                          max_score = score;
+///                }
+/// 
+/// 
+///                /*BOOST_FOREACH(LARKFeatureTemplates& tpl, models) {
+///                  float score = tpl.MatrixCosineMeasure(crt_tpl.QF, crt_tpl.M);
+/// 
+///                  if (score > 0.4) {
+///                  found = true;
+///                  }
+///                  }*/
+/// 
+///                if (max_score < 0.4) {
+///                     printf("has ");
+///                     models.push_back(crt_tpl);
+///                     index++;
+///                } else {
+///                     printf("still has ");
+///                }
+///           }
+///           printf("%d templates\n",index);
+/// 
+/// 
+///           cv::imshow("trainingImage", img_gray(roi));
+///           cv::waitKey(10);
+/// 
+/// 
+/// 
+///      }
 
 /**
  * Saves a trained model.

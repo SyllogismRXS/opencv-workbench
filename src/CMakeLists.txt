@@ -4,4 +4,5 @@ add_subdirectory(dev)
 add_subdirectory(utils)
 add_subdirectory(syllo-widgets)
 add_subdirectory(tools)
+add_subdirectory(LARKS)
 
