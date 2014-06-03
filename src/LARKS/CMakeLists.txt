@@ -6,5 +6,7 @@ ADD_LIBRARY( ${LIB_NAME} SHARED
 
 target_link_libraries(${LIB_NAME} 
   ${OpenCV_LIBS} 
+  boost_filesystem
+  boost_system
 )
 
