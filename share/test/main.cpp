@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
      }
        
      larks.trainInstance("fin",fin_query);
-     //larks.endTraining("fin");
+     larks.endTraining("fin");
 /// 
 ///      larks.loadModels();
 /// 

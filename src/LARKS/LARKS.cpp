@@ -209,14 +209,14 @@ namespace larks {
      void Larkcomputation::computeLARK(const int rows, const int cols, const 
                                        int wsize, cv::Mat& sC11, cv::Mat& sC12,
                                        cv::Mat& sC22, array_type1& temp)
-     {
-          // Extend border
+     {          
           double t = (double) cv::getTickCount();
           int rsize = (wsize - 1) / 2;
           cv::Mat_<float> C11(rows, cols);
           cv::Mat_<float> C12(rows, cols);
           cv::Mat_<float> C22(rows, cols);
           
+          // Extend border
           cv::resize(sC11, C11, C11.size(), 0, 0, cv::INTER_LANCZOS4);
           cv::resize(sC12, C12, C12.size(), 0, 0, cv::INTER_LANCZOS4);
           cv::resize(sC22, C22, C22.size(), 0, 0, cv::INTER_LANCZOS4);
@@ -231,11 +231,11 @@ namespace larks {
 
           // Spatial distance computation          
           cv::Mat XX = cv::Mat::zeros(1, wsize, CV_32FC1);
-          for (int i = -rsize; i <= rsize; i++)
+          for (int i = -rsize; i <= rsize; i++) {
                XX.at<float> (i + rsize) = i;
+          }
 
-          cv::Mat_<double> X2 = repeat(XX, wsize, 1);
-
+          cv::Mat_<double> X2 = cv::repeat(XX, wsize, 1);
           cv::Mat_<double> X1 = X2.t();
           
           cv::Mat_<float> X12 = 2 * X1.mul(X2);
@@ -460,6 +460,7 @@ namespace larks {
                      cv::INTER_LANCZOS4);          
 
           if (index != 0) {
+               cout << "=====> Index not equal to 0" << endl;
                double factor = static_cast<double>( cols1)/ static_cast<double>(img.cols);
                img1.create(cv::Size(cols1, round(img.rows*factor) ), CV_8U);
                M1.create(cv::Size(cols1, round(img.rows*factor) ), CV_8U);
@@ -475,9 +476,9 @@ namespace larks {
 
           cv::Mat sC11, sC12, sC22;          
           
-          LARK.computeCovariance(img, wsize, dfactor, sC11, sC12, sC22);          
+          LARK.computeCovariance(img, wsize, dfactor, sC11, sC12, sC22);
           array_type1 query_temp(boost::extents[wsize * wsize]);
-          
+
           int rows = img.rows;
           cols_ = img.cols;
                     
@@ -496,54 +497,49 @@ namespace larks {
           
           cv::Mat queryfeature(rows*cols_, maxComponents,CV_32F);          
 
-          if (index == 0)
-          {
+          if (index == 0) {
                cv::Mat featureset_mask;
-               featureset_mask.create(rows*cols_, wsize * wsize, CV_32F);
-               
+               featureset_mask.create(rows*cols_, wsize * wsize, CV_32F);               
 
                int valid_points = 0;
-               for (int cnt = 0; cnt < wsize * wsize; cnt++)
-               {
+               for (int cnt = 0; cnt < wsize * wsize; cnt++) {
                     valid_points = 0;
 
-                    for (int i = 0; i < rows; i++)
-                         for (int j = 0; j < cols_; j++)
-                         {
-
-                              if (M_.at<unsigned char> (i, j) > 0)
-                              {
+                    for (int i = 0; i < rows; i++) {
+                         for (int j = 0; j < cols_; j++) {
+                              if (M_.at<unsigned char> (i, j) > 0) {
                                    featureset_mask.at<float> (valid_points, cnt)
                                         = query_temp[cnt].at<float> (i, j);
                                    valid_points++;
                               }
-
-
                          }
-
+                    }
                }
+               cout << "Valid Points: " << valid_points << endl;
 
                pca_(featureset_mask(cv::Range(0, valid_points - 1), 
                                    cv::Range(0, wsize * wsize)), cv::Mat(), 
                    CV_PCA_DATA_AS_ROW, maxComponents);
 
                cv::Mat eigenvectors = pca_.eigenvectors;
-
                cv::Mat eigenvalues = pca_.eigenvalues;
 
-
                for (int i = 0; i < eigenvalues.rows; i++) {
-                    std::cout << eigenvalues.at<float> (i, 0) << std::endl;
+                    std::cout << "Eigen Value #" << i << ": " << 
+                         eigenvalues.at<float> (i, 0) << std::endl;
                }
 
                for (int i = 0; i < maxComponents; i++) {
                     cv::Mat eigenImage(wsize, wsize, CV_32F);
                     cv::Mat eigenImage1(wsize * 10, wsize * 10, CV_32F);
-                    for (int m = 0; m < wsize; m++)
+                    for (int m = 0; m < wsize; m++) {
                          for (int n = 0; n < wsize; n++) {
                               eigenImage.at<float> (m, n)
                                    = eigenvectors.at<float> (i, m * wsize + n);
                          }
+                    }
+
+                    // Resize and display each eigen image
                     resize(eigenImage, eigenImage1, cv::Size(), 10, 10,
                            cv::INTER_LANCZOS4);
                     std::stringstream kkk;
@@ -552,60 +548,42 @@ namespace larks {
                     cv::namedWindow(kkk.str(), 1);
                     cv::imshow(kkk.str(), eigenImage1 * 10);
 
-                    //namedWindow("queryfeature",1);
-                    //		imshow("queryfeature",QF[i]*10);
+                    //cv::imshow("queryfeature",QF_[i]*10);
 
                }
 
-
-               for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols_; j++)
-                    {
+               for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols_; j++) {
                          cv::Mat vec = featureset.row(i* cols_ + j);
                          cv::Mat coeffs = queryfeature.row(i*cols_ + j);
                          pca_.project(vec, coeffs);
                     }
-          }
-          else
-          {
-
-               for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols_; j++)
-                    {
+               }
+          } else {
+               for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols_; j++) {
                          cv::Mat vec = featureset.row(i* cols_ + j);
                          cv::Mat coeffs = queryfeature.row(i*cols_ + j);
                          pca1.project(vec, coeffs);
                     }
-
+               }
           }
-
-
 
           QF_.resize(boost::extents[maxComponents]);
 
-          for (int cnt = 0; cnt < maxComponents; cnt++)
-          {
+          for (int cnt = 0; cnt < maxComponents; cnt++) {
                QF_[cnt].create(rows, cols_, CV_32F);
-               for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols_; j++)
-                    {
-
-                         QF_[cnt].at<float> (i, j) = queryfeature.at<float> (i* cols_ + j, cnt);
+               for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols_; j++) {
+                         QF_[cnt].at<float> (i, j) = 
+                              queryfeature.at<float> (i* cols_ + j, cnt);
                     }
-
-               //waitKey(30);
-
-
+               }
           }
-
-
-
      }
 
      float LARKFeatureTemplates::MatrixCosineMeasure(array_type1& QF1, cv::Mat M1, array_type1& QF, cv::Mat& M)
      {
-
-
           int maxComponents = QF1.shape()[0];
 
           int Newrow = QF[0].rows < QF1[0].rows ? QF[0].rows : QF1[0].rows;
@@ -719,12 +697,9 @@ namespace larks {
                     printf("still has ");
                }
           }
-          printf("%d templates\n",index);
- 
-          cv::imshow("trainingImage", img_gray(roi));
-          cv::waitKey(10);
+          printf("%d templates\n", index);
+          cv::imshow("trainingImage", img_gray(roi));      
      }
-
 
      void LARKS::detect(cv::Mat &image)
      {
@@ -1692,77 +1667,69 @@ namespace larks {
                }
           }
 
-          cout << "valid_points " << valid_points << endl;
+          cout << "TT.Training: valid_points: " << valid_points << endl;
 
           pca(query_featureset_mask(cv::Range(0, valid_points - 1), 
                                     cv::Range(0, wsize * wsize)), cv::Mat(), 
               CV_PCA_DATA_AS_ROW,
               maxComponents);
+
           array_type2 queryfeature(boost::extents[numTemplate][numRotation]);
 
-          int skip[] = { 5,5, 5, 4 };
+          int skip[] = {5,5,5,4};
           
           array_type3 QF1(boost::extents[numTemplate][numRotation][maxComponents]);
 
-          for (int tem = 0; tem < numTemplate; tem++)
-               for (int rot = 0; rot < numRotation; rot++)
-               {
+          for (int tem = 0; tem < numTemplate; tem++) {
+               for (int rot = 0; rot < numRotation; rot++) {
                     queryfeature[tem][rot].create(query[tem][rot].rows*query[tem][rot].cols, maxComponents,CV_32F);
-                    for (int i = 0; i < query_mask[tem][rot].rows; i++)
-                         for (int j = 0; j < query_mask[tem][rot].cols; j++)
-                         {
+                    for (int i = 0; i < query_mask[tem][rot].rows; i++) {
+                         for (int j = 0; j < query_mask[tem][rot].cols; j++) {
                               cv::Mat vec = query_featureset[tem][rot].row(i* query[tem][rot].cols + j);
                               cv::Mat coeffs = queryfeature[tem][rot].row(i*query[tem][rot].cols + j);
                               pca.project(vec, coeffs);
                          }
+                    }
 
-                    for (int cnt = 0; cnt < maxComponents; cnt++)
-                    {
+                    for (int cnt = 0; cnt < maxComponents; cnt++) {
                          QF[tem][rot][cnt].create(query_mask[tem][rot].rows, query_mask[tem][rot].cols,
                                                   CV_32F);
                          double factor = static_cast<double>( query_mask[0][0].cols)/ static_cast<double>(query_mask[tem][rot].cols);
 
                          QF1[tem][rot][cnt].create(cv::Size(query_mask[0][0].cols, round(query_mask[tem][rot].rows*factor) ), CV_32F);
 
-                         for (int i = 0; i < query_mask[tem][rot].rows; i++)
-                              for (int j = 0; j < query_mask[tem][rot].cols; j++)
-                              {
-                                   if (!binaryfeaturemode)
-                                   {
+                         for (int i = 0; i < query_mask[tem][rot].rows; i++) {
+                              for (int j = 0; j < query_mask[tem][rot].cols; j++) {
+                                   if (!binaryfeaturemode) {
 					QF[tem][rot][cnt].at<float> (i, j)
                                              = queryfeature[tem][rot].at<float> (i
                                                                                  * query_mask[tem][rot].cols + j, cnt);
-                                   }
-                                   else
-                                   {
+                                   } else {
 					QF[tem][rot][cnt].at<float> (i, j) = 1 / (1
                                                                                   + exp(-coeff * queryfeature[tem][rot].at<float> (i
                                                                                                                                    * query_mask[tem][rot].cols + j, cnt))) - 0.5;
                                    }
                               }
-
+                         }
                          resize(QF[tem][rot][cnt], QF1[tem][rot][cnt], QF1[tem][rot][cnt].size(), 0,0, cv::INTER_LANCZOS4);
-
                     }
 
-                    for (int m = 0; m < numScale; m++)
-                    {
+                    for (int m = 0; m < numScale; m++) {
                          QF_norm[tem][rot][m] = 0;
 
-                         for (int i = 0; i < query_mask[tem][rot].rows; i = i + skip[m])
-                              for (int j = 0; j < query_mask[tem][rot].cols; j = j + skip[m])
-                                   for (int cnt = 0; cnt < queryfeature[tem][rot].cols; cnt++)
-                                   {
-
-                                        if (query_mask[tem][rot].at<unsigned char> (i, j) > 10)
-                                        {
+                         for (int i = 0; i < query_mask[tem][rot].rows; i = i + skip[m]) {
+                              for (int j = 0; j < query_mask[tem][rot].cols; j = j + skip[m]) {
+                                   for (int cnt = 0; cnt < queryfeature[tem][rot].cols; cnt++){
+                                        if (query_mask[tem][rot].at<unsigned char> (i, j) > 10) {
                                              QF_norm[tem][rot][m] += pow(QF[tem][rot][cnt].at<float> (i, j), 2);
                                         }
                                    }
-                         
+                              }
+                         }                         
                          QF_norm[tem][rot][m] = sqrt(QF_norm[tem][rot][m]);
                     }
                }
+          }
 
           int minRow = 640;
           for (int tem = 0; tem < numTemplate; tem++) {
@@ -1778,13 +1745,12 @@ namespace larks {
                     for (int cnt = 0; cnt < maxComponents; cnt++) {
                          for (int i = 0; i < minRow; i++) {
                               for (int j = 0; j < query_mask[0][0].cols; j++) {
-                                   QF2.at<float>(tem,rot*maxComponents*minRow*query_mask[0][0].cols + cnt*minRow*query_mask[0][0].cols + i*query_mask[0][0].cols )  = QF1[tem][rot][cnt].at<float>(i,j);
+                                   QF2.at<float>(tem,rot*maxComponents*minRow*query_mask[0][0].cols + cnt*minRow*query_mask[0][0].cols + i*query_mask[0][0].cols ) = QF1[tem][rot][cnt].at<float>(i,j);
                               }
                          }
                     }
                }
           }
-
 
           cv::TermCriteria criteria;
           criteria.type = 5;
