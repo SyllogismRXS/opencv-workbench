@@ -47,7 +47,7 @@
 #include <map>
 
 #include <boost/serialization/nvp.hpp>
-#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/split_member.hpp> 
 //#include <opencv_workbench/recognition_pipeline/algorithms/serialization_support.h>
 
 namespace larks {

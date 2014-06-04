@@ -436,12 +436,16 @@ namespace larks {
           //imshow("Saliency", Saliency1);
      }
 
-     void LARKFeatureTemplates::computeFeatures(const cv::Mat &whole_gray, const cv::Rect & roi, const cv::Mat & mask, int index, cv::PCA& pca1, int cols1)
+     void LARKFeatureTemplates::computeFeatures(const cv::Mat &whole_gray, 
+                                                const cv::Rect & roi, 
+                                                const cv::Mat & mask, 
+                                                int index, cv::PCA& pca1, 
+                                                int cols1)
      {
           cv::Mat objImg(whole_gray, roi);
 
-          objImg.copyTo(img);
-          mask.copyTo(mas);
+          objImg.copyTo(img_);
+          mask.copyTo(mas_);
 
           int wsize = 5;
           float downfactor = 0.9;
@@ -452,18 +456,17 @@ namespace larks {
 
           cv::resize(objImg, img, cv::Size(), downfactor, downfactor, 
                      cv::INTER_LANCZOS4);
-          cv::resize(mask, M, cv::Size(), downfactor, downfactor, 
+          cv::resize(mask, M_, cv::Size(), downfactor, downfactor, 
                      cv::INTER_LANCZOS4);          
 
-          if (index != 0)
-          {
+          if (index != 0) {
                double factor = static_cast<double>( cols1)/ static_cast<double>(img.cols);
                img1.create(cv::Size(cols1, round(img.rows*factor) ), CV_8U);
                M1.create(cv::Size(cols1, round(img.rows*factor) ), CV_8U);
                resize(img, img1, img1.size(), 0,0, cv::INTER_LANCZOS4);
-               resize(M, M1, M.size(), 0,0, cv::INTER_LANCZOS4);
-               M.release();
-               M1.copyTo(M);
+               resize(M_, M1, M_.size(), 0,0, cv::INTER_LANCZOS4);
+               M_.release();
+               M1.copyTo(M_);
                img.release();
                img1.copyTo(img);
           }
@@ -476,27 +479,27 @@ namespace larks {
           array_type1 query_temp(boost::extents[wsize * wsize]);
           
           int rows = img.rows;
-          cols = img.cols;
+          cols_ = img.cols;
                     
           LARK.computeLARK(img.rows, img.cols, wsize, sC11, sC12, sC22, 
                            query_temp);          
 
-          cv::Mat featureset(rows*cols, wsize*wsize, CV_32F);
+          cv::Mat featureset(rows*cols_, wsize*wsize, CV_32F);
           for (int cnt = 0; cnt < wsize * wsize; cnt++) {
                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
-                         featureset.at<float>(i*cols+j,cnt) = 
+                    for (int j = 0; j < cols_; j++) {
+                         featureset.at<float>(i*cols_+j,cnt) = 
                               query_temp[cnt].at<float>(i,j);
                     }
                }
           }
           
-          cv::Mat queryfeature(rows*cols, maxComponents,CV_32F);          
+          cv::Mat queryfeature(rows*cols_, maxComponents,CV_32F);          
 
           if (index == 0)
           {
                cv::Mat featureset_mask;
-               featureset_mask.create(rows*cols, wsize * wsize, CV_32F);
+               featureset_mask.create(rows*cols_, wsize * wsize, CV_32F);
                
 
                int valid_points = 0;
@@ -505,10 +508,10 @@ namespace larks {
                     valid_points = 0;
 
                     for (int i = 0; i < rows; i++)
-                         for (int j = 0; j < cols; j++)
+                         for (int j = 0; j < cols_; j++)
                          {
 
-                              if (M.at<unsigned char> (i, j) > 0)
+                              if (M_.at<unsigned char> (i, j) > 0)
                               {
                                    featureset_mask.at<float> (valid_points, cnt)
                                         = query_temp[cnt].at<float> (i, j);
@@ -520,13 +523,13 @@ namespace larks {
 
                }
 
-               pca(featureset_mask(cv::Range(0, valid_points - 1), 
+               pca_(featureset_mask(cv::Range(0, valid_points - 1), 
                                    cv::Range(0, wsize * wsize)), cv::Mat(), 
                    CV_PCA_DATA_AS_ROW, maxComponents);
 
-               cv::Mat eigenvectors = pca.eigenvectors;
+               cv::Mat eigenvectors = pca_.eigenvectors;
 
-               cv::Mat eigenvalues = pca.eigenvalues;
+               cv::Mat eigenvalues = pca_.eigenvalues;
 
 
                for (int i = 0; i < eigenvalues.rows; i++) {
@@ -556,21 +559,21 @@ namespace larks {
 
 
                for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols; j++)
+                    for (int j = 0; j < cols_; j++)
                     {
-                         cv::Mat vec = featureset.row(i* cols + j);
-                         cv::Mat coeffs = queryfeature.row(i*cols + j);
-                         pca.project(vec, coeffs);
+                         cv::Mat vec = featureset.row(i* cols_ + j);
+                         cv::Mat coeffs = queryfeature.row(i*cols_ + j);
+                         pca_.project(vec, coeffs);
                     }
           }
           else
           {
 
                for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols; j++)
+                    for (int j = 0; j < cols_; j++)
                     {
-                         cv::Mat vec = featureset.row(i* cols + j);
-                         cv::Mat coeffs = queryfeature.row(i*cols + j);
+                         cv::Mat vec = featureset.row(i* cols_ + j);
+                         cv::Mat coeffs = queryfeature.row(i*cols_ + j);
                          pca1.project(vec, coeffs);
                     }
 
@@ -578,16 +581,16 @@ namespace larks {
 
 
 
-          QF.resize(boost::extents[maxComponents]);
+          QF_.resize(boost::extents[maxComponents]);
 
           for (int cnt = 0; cnt < maxComponents; cnt++)
           {
-               QF[cnt].create(rows, cols, CV_32F);
+               QF_[cnt].create(rows, cols_, CV_32F);
                for (int i = 0; i < rows; i++)
-                    for (int j = 0; j < cols; j++)
+                    for (int j = 0; j < cols_; j++)
                     {
 
-                         QF[cnt].at<float> (i, j) = queryfeature.at<float> (i* cols + j, cnt);
+                         QF_[cnt].at<float> (i, j) = queryfeature.at<float> (i* cols_ + j, cnt);
                     }
 
                //waitKey(30);
@@ -682,16 +685,18 @@ namespace larks {
           LARKFeatureTemplates crt_tpl;
  
           if (index == 0) {
-               crt_tpl.computeFeatures(img_gray,roi,mask, index, crt_tpl.pca, crt_tpl.cols);
+               crt_tpl.computeFeatures(img_gray, roi, mask, index, crt_tpl.pca_, 
+                                       crt_tpl.cols_);
                models.push_back(crt_tpl);
                index++;
                printf("has ");
           } else {
                std::cout << "models.size()" << models.size() << std::endl;
-               crt_tpl.computeFeatures(img_gray,roi,mask, index, models[0].pca, models[0].cols);
+               crt_tpl.computeFeatures(img_gray,roi,mask, index, models[0].pca_, 
+                                       models[0].cols_);
                float max_score = 0.0;
                for (unsigned int i = 0; i < models.size(); i++) {
-                    float score = crt_tpl.MatrixCosineMeasure(models[i].QF,models[i].M, crt_tpl.QF, crt_tpl.M);
+                    float score = crt_tpl.MatrixCosineMeasure(models[i].QF_,models[i].M_, crt_tpl.QF_, crt_tpl.M_);
                     cout << "score= " << score << endl;
                     if (score > max_score) {
                          max_score = score;
@@ -1630,8 +1635,8 @@ namespace larks {
           // Take each model, pull it out, resize based on factor
           for (unsigned int i = 0; i < models.size(); i++) {
                cv::Mat img, mask;
-               models[i].img.copyTo(img);
-               models[i].mas.copyTo(mask);
+               models[i].img_.copyTo(img);
+               models[i].mas_.copyTo(mask);
                cv::resize(img, query[i][0], cv::Size(), factor, factor, cv::INTER_LANCZOS4);
                cv::resize(mask, query_mask[i][0], cv::Size(), factor, factor, cv::INTER_LANCZOS4);
           }

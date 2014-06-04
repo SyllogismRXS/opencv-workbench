@@ -7,42 +7,42 @@ using std::endl;
 int main(int argc, char *argv[])
 {
 
-     cv::Mat query;
-     query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/query.png", CV_LOAD_IMAGE_COLOR);
+     larks::LARKS larks;
+     larks.startTraining();
 
-     if (!query.data) {
-          cout <<  "Could not open or find the image" << std::endl ;
-          return -1;
-     }
-
+//     cv::Mat query;
+//     query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/query.png", CV_LOAD_IMAGE_COLOR);
+//
+//     if (!query.data) {
+//          cout <<  "Could not open or find the image" << std::endl ;
+//          return -1;
+//     }
+//     larks.trainInstance("scuba_face",query);
+//     larks.endTraining("scuba_face");
+     
 
      cv::Mat fin_query;
      fin_query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/fin.png", CV_LOAD_IMAGE_COLOR);
-
+ 
      if (!fin_query.data) {
-          cout <<  "Could not open or find the image" << std::endl ;
+          cout <<  "Could not open or find the image" << std::endl;
           return -1;
      }
-
-     larks::LARKS larks;
-     larks.startTraining();
-     larks.trainInstance("scuba_face",query);
-     larks.endTraining("scuba_face");
-     
+       
      larks.trainInstance("fin",fin_query);
-     larks.endTraining("fin");
-
-     larks.loadModels();
-
-     cv::Mat swim_away;
-     swim_away = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/swim-away.png", CV_LOAD_IMAGE_COLOR);
-
-     if (!swim_away.data) {
-          cout <<  "Could not open or find the image" << std::endl ;
-          return -1;
-     }    
-     
-     larks.detect(swim_away);
+     //larks.endTraining("fin");
+/// 
+///      larks.loadModels();
+/// 
+///      cv::Mat swim_away;
+///      swim_away = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/swim-away.png", CV_LOAD_IMAGE_COLOR);
+/// 
+///      if (!swim_away.data) {
+///           cout <<  "Could not open or find the image" << std::endl ;
+///           return -1;
+///      }    
+///      
+///      larks.detect(swim_away);
 
 ///     cv::Mat img_gray;
 ///     cv::cvtColor(query,img_gray,CV_RGB2GRAY);

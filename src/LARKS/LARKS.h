@@ -32,12 +32,12 @@ namespace larks
      {
      public:
 
-          cv::PCA pca;
-          array_type1 QF;
-          cv::Mat M;
-          int cols;
-          cv::Mat img;
-          cv::Mat mas;
+          cv::PCA pca_;
+          array_type1 QF_;
+          cv::Mat M_;
+          int cols_;
+          cv::Mat img_;
+          cv::Mat mas_;
 
           LARKFeatureTemplates() { };
           
@@ -249,14 +249,23 @@ namespace larks
                     }
 
                ar & label;
-
+               
           }
 
           // define serialize() using save() and load()
-          BOOST_SERIALIZATION_SPLIT_MEMBER();
+          //BOOST_SERIALIZATION_SPLIT_MEMBER(LARKS);
 
-          inline void set_num_models(int num_models) { num_models_ = num_models;	}
-          inline void set_models(std::vector<std::string> models, int num_models) { models_.resize(num_models); models_ = models;	}
+          inline void set_num_models(int num_models) 
+          { 
+               num_models_ = num_models; 
+          }
+
+          inline void set_models(std::vector<std::string> models, 
+                                 int num_models) 
+          { 
+               models_.resize(num_models); models_ = models;	
+          }
+          
           inline void set_threshold(std::vector<double> threshold, int num_models) { threshold_.resize(num_models); threshold_ = threshold;	}
 
 
