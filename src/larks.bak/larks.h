@@ -249,7 +249,7 @@ namespace larks {
                ar & maxComponents;
                ar & eigenvectors[id];
                ar & means[id];
-
+               
                std::cout << "numTemplate " << numTemplates[id] << std::endl;
 
                QFs[id].resize(boost::extents[numTemplates[id]][numRotation][maxComponents]);

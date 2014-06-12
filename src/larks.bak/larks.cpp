@@ -671,7 +671,7 @@ namespace larks
           criteria.type = 5;
 
           Mat* centers = new Mat[1];
-
+          
           kmeans(QF2, 2, labels, criteria, 1, KMEANS_PP_CENTERS, centers);
 
           array_type3 Cent(boost::extents[2][numRotation][maxComponents]);

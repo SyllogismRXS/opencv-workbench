@@ -140,13 +140,14 @@ namespace larks
           
           void trainInstance(const std::string& name, cv::Mat &img);
           void endTraining(const std::string& name);
-          //void loadModels(const std::vector<std::string>& models);
+          void loadModels(const std::vector<std::string>& models);
 
           void save_model(const std::string& name, 
-                                 const std::string& detector, 
-                                 const std::string& model_blob);
+                          const std::string& detector, 
+                          const std::string& model_blob);
 
-          void loadModels();
+          void Load(const std::string modelname, int id);
+          //void loadModels();
 
           void detect(cv::Mat &image);
 
@@ -266,7 +267,7 @@ namespace larks
                models_.resize(num_models); models_ = models;	
           }
           
-          inline void set_threshold(std::vector<double> threshold, int num_models) { threshold_.resize(num_models); threshold_ = threshold;	}
+          //inline void set_threshold(std::vector<double> threshold, int num_models) { threshold_.resize(num_models); threshold_ = threshold;	}
 
 
           int id;
@@ -294,7 +295,7 @@ namespace larks
           std::vector<float> Prev_max;
 
           std::vector<std::string> models_;
-          std::vector<double> threshold_;
+          //std::vector<double> threshold_;
 
           Larkcomputation LARK;
 
@@ -337,7 +338,7 @@ namespace larks
 
           std::vector<Point_type3> region_index;
           const char* modelname_;
-
+          
           array_type3 QF, QF1;
           std::vector<array_type3> QFs;
           array_type2 query_mask, query_mask1;
