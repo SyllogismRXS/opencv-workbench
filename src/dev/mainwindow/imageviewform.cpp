@@ -413,7 +413,7 @@ void ImageViewForm::draw()
      }
           
      if (ui.enable_chain_checkbox->isChecked()) {
-          chain_.process(curr_image_, visible_img_);          
+          //chain_.process(curr_image_, visible_img_);          
      } else {
           visible_img_ = curr_image_.clone();
      }
@@ -532,7 +532,7 @@ void ImageViewForm::open_media(QString fileName)
                if (stream_.read(curr_image_)) {
 
                     // one time processing:
-                    chain_.process(curr_image_, curr_image_);
+                    //chain_.process(curr_image_, curr_image_);
 
                     this->draw();
 

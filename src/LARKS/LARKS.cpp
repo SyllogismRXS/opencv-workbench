@@ -139,12 +139,12 @@ namespace larks {
                row_count1++;
           }
 
-          cout << "GXimg.size(): " << GXimg.size() << endl;
-          cout << "GXY.size(): " << GXY.size() << endl;
-          cout << "GXimg1.size(): " << GXimg1.size() << endl;
-
-          cout << "row_count1: " << row_count1 << endl;
-          cout << "col_count1: " << col_count1 << endl;
+          //cout << "GXimg.size(): " << GXimg.size() << endl;
+          //cout << "GXY.size(): " << GXY.size() << endl;
+          //cout << "GXimg1.size(): " << GXimg1.size() << endl;
+          //
+          //cout << "row_count1: " << row_count1 << endl;
+          //cout << "col_count1: " << col_count1 << endl;
 
           // Size the covariance matrices based on the 1 / dfactor scale
           sC11.create(row_count1, col_count1, CV_32FC1);
@@ -298,11 +298,11 @@ namespace larks {
                }
           }
 
-          cv::Mat LARK1(rows * 5, cols * 5, CV_64F);
-          cv::resize(LARK, LARK1, LARK1.size(), 0, 0, cv::INTER_LANCZOS4);
-          cv::namedWindow("LARK", CV_WINDOW_AUTOSIZE);
-          cv::imshow("LARK", LARK1*10);
-          cv::waitKey(0);
+          //cv::Mat LARK1(rows * 5, cols * 5, CV_64F);
+          //cv::resize(LARK, LARK1, LARK1.size(), 0, 0, cv::INTER_LANCZOS4);
+          //cv::namedWindow("LARK", CV_WINDOW_AUTOSIZE);
+          //cv::imshow("LARK", LARK1*10);
+          //cv::waitKey(0);
      }     
 
      void Saliency::ProtoObject(const cv::Mat &SaliencyMap, cv::Mat& thMap)
@@ -479,14 +479,14 @@ namespace larks {
           cv::resize(sC12, C12_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
           cv::resize(sC22, C22_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
 
-          cv::namedWindow("sC11",1);
-          cv::imshow("sC11",C11_upscale*10);
-          
-          cv::namedWindow("sC12",1);
-          cv::imshow("sC12",C12_upscale*10);
-          
-          cv::namedWindow("sC22",1);
-          cv::imshow("sC22",C22_upscale*10);
+          //cv::namedWindow("sC11",1);
+          //cv::imshow("sC11",C11_upscale*10);
+          //
+          //cv::namedWindow("sC12",1);
+          //cv::imshow("sC12",C12_upscale*10);
+          //
+          //cv::namedWindow("sC22",1);
+          //cv::imshow("sC22",C22_upscale*10);
 
           array_type1 query_temp(boost::extents[wsize * wsize]);
 
@@ -697,7 +697,7 @@ namespace larks {
                }
           }
           printf("%d templates\n", index);
-          cv::imshow("trainingImage", img_gray(roi));      
+          //cv::imshow("trainingImage", img_gray(roi));      
      }
 
      void LARKS::detect(cv::Mat &image)
@@ -858,7 +858,9 @@ namespace larks {
 
                std::vector<cv::Mat> RMs(num_models_);
                
-               double threshold = 0.1; // replaced threshold_[i]
+               double threshold = 0.3;
+               //double threshold = 0.2; // replaced threshold_[i]
+               //double threshold = 0.1; // replaced threshold_[i]
                //double threshold = 0.3; // replaced threshold_[i]
                for (int i = 0; i < num_models_; i++) {
                     if (Prev_max[i] < threshold) {
@@ -1239,10 +1241,7 @@ namespace larks {
                /// d.mask.roi.y = detectionpt[0].y;
                /// d.mask.roi.width = detectionpt[3].x - detectionpt[0].x + 1 ;
                /// d.mask.roi.height = detectionpt[3].y - detectionpt[0].y + 1;
-               cout << "==============================================" << endl;
-               cout << "Found object: " << obj << endl;               
-               cout << "Detect X: " << detectionpt[0].x << endl;
-               cout << "Detect Y: " << detectionpt[0].y << endl;
+               cout << "Found object - id: " << obj << " , position: (" << detectionpt[0].x << "," << detectionpt[0].y << ")" << endl;
                
                cv::rectangle(img1,cv::Point(detectionpt[0].x, 
                                             detectionpt[0].y), 
@@ -1809,25 +1808,21 @@ namespace larks {
 
           array_type3 Cent(boost::extents[2][numRotation][maxComponents]);
           
-          cout << "QFs.t().size: " << QF2.t().size() << endl;
-          cout << "Labels: size: " << labels.size() << endl;
-          for (int i = 0; i < labels.rows ; i++) {
-               if (labels.at<int>(i,0) != 0) {
-                    cout << "label: " << labels.at<int>(i,0) << endl;
-               }
-          }
-
+          //cout << "QFs.t().size: " << QF2.t().size() << endl;
+          //cout << "Labels: size: " << labels.size() << endl;
+          //for (int i = 0; i < labels.rows ; i++) {
+          //     if (labels.at<int>(i,0) != 0) {
+          //          cout << "label: " << labels.at<int>(i,0) << endl;
+          //     }
+          //}
 
           cv::Mat eigenvectors = pca.eigenvectors;
-
           cv::Mat eigenvalues = pca.eigenvalues;
 
-//	cout << "rows " << eigenvectors.rows << " cols " << eigenvectors.cols << endl;
-//		cout << "rows " << eigenvalues.rows << " cols "	<< eigenvalues.cols << endl;
-          for (int i = 0; i < eigenvalues.rows; i++) {
-               std::cout << "eigenvalues at " << i << ": " 
-                         << eigenvalues.at<float> (i, 0) << std::endl;
-          }
+          /// for (int i = 0; i < eigenvalues.rows; i++) {
+          ///      std::cout << "eigenvalues at " << i << ": " 
+          ///                << eigenvalues.at<float> (i, 0) << std::endl;
+          /// }
 
           for (int i = 0; i < maxComponents; i++) {
                cv::Mat eigenImage(wsize, wsize, CV_32F);
@@ -1843,11 +1838,9 @@ namespace larks {
                std::stringstream kkk;
                kkk << "eigen ";
                kkk << i;
-               cv::namedWindow(kkk.str(), 1);
-               cv::imshow(kkk.str(), eigenImage1 * 10);
-
-
-               cv::waitKey(3);
+               //cv::namedWindow(kkk.str(), 1);
+               //cv::imshow(kkk.str(), eigenImage1 * 10);
+               //cv::waitKey(3);
           }
      }
 
@@ -1938,8 +1931,8 @@ namespace larks {
 		
           fs1["eigenvectors"] >> eigenvectors[id];
 	
-          std::cout << "eigenvectors.rows " << eigenvectors[id].rows << std::endl;
-          std::cout << "eigenvectors.cols " << eigenvectors[id].cols << std::endl;
+          //std::cout << "eigenvectors.rows " << eigenvectors[id].rows << std::endl;
+          //std::cout << "eigenvectors.cols " << eigenvectors[id].cols << std::endl;
 	
           fs1["means"] >> means[id];
 	
@@ -1984,8 +1977,8 @@ namespace larks {
                     std::stringstream out;
                     out << "query_mask " << i << j;
                     fs1[out.str()] >> query_mask[i][j];
-                    cv::namedWindow("query_mask",1);
-                    cv::imshow("query_mask",query_mask[i][j]);
+                    //cv::namedWindow("query_mask",1);
+                    //cv::imshow("query_mask",query_mask[i][j]);
 	
                }
 
