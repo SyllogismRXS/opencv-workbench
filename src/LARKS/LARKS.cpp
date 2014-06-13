@@ -150,7 +150,7 @@ namespace larks {
           sC11.create(row_count1, col_count1, CV_32FC1);
           sC12.create(row_count1, col_count1, CV_32FC1);
           sC22.create(row_count1, col_count1, CV_32FC1);          
-
+          
           int row_count = 0;
           for (int i = 0; i < gray.rows; i = i + dfactor) {
                int col_count = 0;
@@ -298,11 +298,11 @@ namespace larks {
                }
           }
 
-          //cv::Mat LARK1(rows * 5, cols * 5, CV_64F);
-          //cv::resize(LARK, LARK1, LARK1.size(), 0, 0, cv::INTER_LANCZOS4);
-          //cv::namedWindow("LARK", CV_WINDOW_AUTOSIZE);
-          //cv::imshow("LARK", LARK1*10);
-          //cv::waitKey(0);
+          cv::Mat LARK1(rows * 5, cols * 5, CV_64F);
+          cv::resize(LARK, LARK1, LARK1.size(), 0, 0, cv::INTER_LANCZOS4);
+          cv::namedWindow("LARK", CV_WINDOW_AUTOSIZE);
+          cv::imshow("LARK", LARK1*10);
+          cv::waitKey(0);
      }     
 
      void Saliency::ProtoObject(const cv::Mat &SaliencyMap, cv::Mat& thMap)
@@ -474,11 +474,11 @@ namespace larks {
           
           LARK.computeCovariance(img, wsize, dfactor, sC11, sC12, sC22);
 
-          cv::Mat C11_upscale, C12_upscale, C22_upscale;
-          cv::resize(sC11, C11_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
-          cv::resize(sC12, C12_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
-          cv::resize(sC22, C22_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
-
+          //cv::Mat C11_upscale, C12_upscale, C22_upscale;
+          //cv::resize(sC11, C11_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
+          //cv::resize(sC12, C12_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
+          //cv::resize(sC22, C22_upscale, cv::Size(), 5, 5, cv::INTER_LANCZOS4);
+          //
           //cv::namedWindow("sC11",1);
           //cv::imshow("sC11",C11_upscale*10);
           //

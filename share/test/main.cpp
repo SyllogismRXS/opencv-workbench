@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
      //     return -1;
      //}
      
-     cv::VideoCapture cap("/home/syllogismrxs/Desktop/target.avi");
+     cv::VideoCapture cap("/home/syllogismrxs/Dropbox/video/target.avi");
      //cv::VideoCapture cap("/home/syllogismrxs/Desktop/fin-target.avi");
      if(!cap.isOpened()) {
           cout << "Failed to open target video" << endl;
@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
                break;
           }
           larks.detect(target);      
-          if(cv::waitKey(30) >= 0) break;
+          //if(cv::waitKey(30) >= 0) break;
+          break;
      }          
      
      cv::waitKey(0);
