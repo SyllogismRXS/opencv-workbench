@@ -37,6 +37,7 @@ target_link_libraries(${APP_NAME}
   opencv-workbench-utils
   cut_widgetlib
   scuba_face_labellib
+  video_object_labellib
   opencv-built-in
   chain  
   ${YAMLCPP_LIBRARY}

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
-    <height>471</height>
+    <width>950</width>
+    <height>842</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -114,6 +114,13 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="ClickableLabel" name="image_frame_2" native="true">
+         <property name="text" stdset="0">
+          <string>Open an image or video</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -258,7 +265,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>493</width>
+     <width>950</width>
      <height>25</height>
     </rect>
    </property>
@@ -291,6 +298,7 @@
     </property>
     <addaction name="actionFace_Detect"/>
     <addaction name="actionScuba_Face_Label"/>
+    <addaction name="actionVideo_Object_Label"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
@@ -346,6 +354,11 @@
   <action name="actionScuba_Face_Label">
    <property name="text">
     <string>Scuba Face Label</string>
+   </property>
+  </action>
+  <action name="actionVideo_Object_Label">
+   <property name="text">
+    <string>Video Object Label</string>
    </property>
   </action>
  </widget>

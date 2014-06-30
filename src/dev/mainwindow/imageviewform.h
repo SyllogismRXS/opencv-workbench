@@ -56,7 +56,9 @@
 #include <opencv_workbench/syllo/Chain.h>
 #include <opencv_workbench/dev/cut/cut.h>
 #include <opencv_workbench/dev/scuba_face_label/scuba_face_label.h>
+#include <opencv_workbench/dev/video_object_label/video_object_label.h>
 
+#include <QTextStream>
 
 class ImageViewForm : public QMainWindow
 {
@@ -103,6 +105,7 @@ class ImageViewForm : public QMainWindow
      void record();
 
      void draw_image(const cv::Mat &img);
+     void draw_image_2(const cv::Mat &img);
 
      void double_frame_rate();
      void divide_frame_rate();
@@ -118,6 +121,9 @@ class ImageViewForm : public QMainWindow
      void start_scuba_face_labeling();
      void scuba_face_label();
 
+     void video_object_label();
+     void start_video_object_labeling();
+
      QImage Mat2QImage(cv::Mat const& src);
      cv::Mat QImage2Mat(QImage const& src);
 
@@ -130,6 +136,7 @@ private:
      //cv::Mat cv_image;     
 
      syllo::Stream stream_;
+     syllo::Stream stream_2_;
 
      void readSettings();
      void writeSettings();
@@ -140,6 +147,9 @@ private:
      
      QString prev_config_file_;
 
+     
+     bool synced_sonar_;
+
 protected:
 
      QDialog * cut_dialog_;
@@ -147,6 +157,9 @@ protected:
 
      QDialog * scuba_face_label_dialog_;
      ScubaFaceLabel *scuba_face_label_;
+
+     QDialog * video_object_label_dialog_;
+     VideoObjectLabel *video_object_label_;
 
      State_t state_;
      State_t record_state_;
@@ -165,6 +178,8 @@ protected:
      cv::Mat curr_image_;
      cv::Mat visible_img_;
 
+     cv::Mat curr_image_2_;
+
      bool mouse_dragging_;
      QPoint first_click_;
      QPoint second_click_;
@@ -172,6 +187,15 @@ protected:
 
      bool moving_second_pt_;
      bool moving_box_;
+
+     bool box_mode_;
+
+     QString video_label_output_dir_;
+     bool label_mode_;
+     QString model_name_;
+     QString video_label_fn_;
+     QFile *video_label_file_;
+     QTextStream *out_;
 };
 
 #endif

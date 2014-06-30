@@ -67,6 +67,11 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      first_click_ = QPoint(-1,-1);
      second_click_ = QPoint(-1,-1);
 
+     synced_sonar_ = false;
+
+     box_mode_ = false;
+     label_mode_ = false;
+
      if (prev_config_file_ != "") {
           chain_.LoadFile(prev_config_file_.toStdString());
      }
@@ -82,6 +87,7 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      
      connect(ui.actionCut, SIGNAL(triggered()), this, SLOT(cut()));
      connect(ui.actionScuba_Face_Label, SIGNAL(triggered()), this, SLOT(scuba_face_label()));
+     connect(ui.actionVideo_Object_Label, SIGNAL(triggered()), this, SLOT(video_object_label()));
      connect(ui.actionRecord, SIGNAL(triggered()), this, SLOT(record()));    
 
      connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
@@ -167,6 +173,22 @@ void ImageViewForm::mouseReleased(QPoint p)
      }
      //cout << "X: " << p.x() << endl;
      //cout << "Y: " << p.y() << endl;
+
+     if (label_mode_) {
+          *out_ << QString::number(ui.frame_num_spinbox->value()) << ", "
+                << QString::number(p.x()) << ", "
+                << QString::number(p.y())
+                << endl;
+          
+          // move to the next frame
+          if (stream_.read(curr_image_)) {
+               this->draw();
+          } else {
+               cout << "Done Labelling" << endl;
+               video_label_file_->close();
+          }
+          
+     }
 }
 
 void ImageViewForm::set_cam_id(int id)
@@ -197,6 +219,8 @@ void ImageViewForm::start_scuba_face_labeling()
 
      //cout << "input:" << input_dir_.toUtf8().constData() << endl;
 
+     box_mode_ = true;
+
      delete scuba_face_label_;
      delete scuba_face_label_dialog_;
 
@@ -211,6 +235,52 @@ void ImageViewForm::start_scuba_face_labeling()
      cout << "opening file: " << files_.at(cur_file_).toStdString() << endl;
      open_media(input_dir_ + "/" + files_.at(cur_file_));
      cur_file_++;
+}
+
+void ImageViewForm::video_object_label()
+{
+     video_object_label_dialog_ = new QDialog(this);
+     video_object_label_ = new VideoObjectLabel(video_object_label_dialog_);
+     
+     //video_object_label_->set_output_dir(output_dir_);     
+
+     connect(video_object_label_, SIGNAL(start_labeling()), this, SLOT(start_video_object_labeling()));
+     
+     video_object_label_dialog_->show();
+     video_object_label_->show();
+}
+
+void ImageViewForm::start_video_object_labeling()
+{
+     video_label_output_dir_ = video_object_label_->output_dir();
+     model_name_ = video_object_label_->model_name();
+
+     if (model_name_ != "") {
+          label_mode_ = true;
+     }
+
+     video_label_fn_ = video_label_output_dir_ + "/" + 
+          ui.filename_label->text() + "." + model_name_ + ".label";
+
+     cout << "Output file: " << video_label_fn_.toStdString() << endl;
+
+     video_label_file_ = new QFile(video_label_fn_);
+     video_label_file_->open(QIODevice::WriteOnly | QIODevice::Text);
+     out_ = new QTextStream(video_label_file_);
+     
+     delete video_object_label_;
+     delete video_object_label_dialog_;
+
+     //files_ = QDir(input_dir_).entryList(QStringList("*"), 
+     //                                    QDir::Files | QDir::NoSymLinks);
+     //cur_file_ = 0;
+
+     //for (int i = 0; i < files_.size(); ++i) {
+     //     cout << files_.at(i).toLocal8Bit().constData() << endl;
+     //}
+     //cout << "opening file: " << files_.at(cur_file_).toStdString() << endl;
+     //open_media(input_dir_ + "/" + files_.at(cur_file_));
+     //cur_file_++;
 }
 
 void ImageViewForm::cut()
@@ -308,6 +378,7 @@ void ImageViewForm::set_frame_num(int frame_num)
 {
      if (state_ == paused) {
           stream_.set_frame_number(frame_num);
+          stream_2_.set_frame_number(frame_num);
           //this->draw();
      }
 }
@@ -418,25 +489,31 @@ void ImageViewForm::draw()
           visible_img_ = curr_image_.clone();
      }
           
-
-     if (mouse_dragging_) {
-          cv::Point pt1;
-          cv::Point pt2;
-          if (moving_second_pt_) {
-               pt1 = cv::Point(first_click_.x(), first_click_.y());
-               pt2 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
-          } else {
-               pt1 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
-               pt2 = cv::Point(second_click_.x(), second_click_.y());
-          }
-          chain_.draw_rectangle(visible_img_, visible_img_, pt1, pt2);
+     if (box_mode_) {
+          if (mouse_dragging_) {
+               cv::Point pt1;
+               cv::Point pt2;
+               if (moving_second_pt_) {
+                    pt1 = cv::Point(first_click_.x(), first_click_.y());
+                    pt2 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
+               } else {
+                    pt1 = cv::Point(mouse_loc_.x(), mouse_loc_.y());
+                    pt2 = cv::Point(second_click_.x(), second_click_.y());
+               }
+               chain_.draw_rectangle(visible_img_, visible_img_, pt1, pt2);
           
-     } else {
-          chain_.draw_rectangle(visible_img_, visible_img_,cv::Point(first_click_.x(), first_click_.y()), 
-                                cv::Point(second_click_.x(),second_click_.y()));
+          } else {
+               chain_.draw_rectangle(visible_img_, visible_img_,cv::Point(first_click_.x(), first_click_.y()), 
+                                     cv::Point(second_click_.x(),second_click_.y()));
+          }
      }
 
      this->draw_image(visible_img_);     
+
+     if (synced_sonar_) {
+          stream_2_.read(curr_image_2_);
+          this->draw_image_2(curr_image_2_);     
+     }
 
      if (record_state_ == recording) {
           stream_.step_camera_record();
@@ -448,6 +525,14 @@ void ImageViewForm::draw_image(const cv::Mat &img)
      q_image = Mat2QImage(img);
      ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
      ui.image_frame->adjustSize();
+}
+
+void ImageViewForm::draw_image_2(const cv::Mat &img)
+{
+     q_image = Mat2QImage(img);
+     
+     ui.image_frame_2->setPixmap(QPixmap::fromImage(q_image));
+     ui.image_frame_2->adjustSize();
 }
 
 void ImageViewForm::open_camera()
@@ -502,7 +587,7 @@ void ImageViewForm::open()
      if (prev_open_path_ != "") {
           dir = prev_open_path_;
      }
-
+     
      QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), dir);
      open_media(fileName);
 }
@@ -516,6 +601,22 @@ void ImageViewForm::open_media(QString fileName)
           std::string fn = fileName.toStdString();
           
           syllo::Status status = stream_.open(fn);          
+
+          synced_sonar_ = false;
+          std::string ext = fn.substr(fn.find_last_of(".") + 1);
+          std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
+
+          // If the file is a sonar file and there is an associated avi file
+          // We need to be in dual display (sonar/video) mode
+          if (ext == "SON") {
+               std::string query_file = fn.substr(0,fn.find_last_of(".")) + std::string(".avi");
+               cout << "Looking for video file: " << query_file << endl;              
+               syllo::Status status2 = stream_2_.open(query_file);
+               if (status2 == syllo::Success && stream_2_.isOpened()) {
+                    synced_sonar_ = true;
+               }
+          }
+
           if (status == syllo::Success && stream_.isOpened()) {
                
                this->set_frame_num(0);
@@ -531,6 +632,8 @@ void ImageViewForm::open_media(QString fileName)
                
                if (stream_.read(curr_image_)) {
 
+                    stream_2_.read(curr_image_2_);
+
                     // one time processing:
                     //chain_.process(curr_image_, curr_image_);
 
@@ -539,7 +642,7 @@ void ImageViewForm::open_media(QString fileName)
                     if (stream_.type() == syllo::ImageType) {
                          this->play();
                     } else {
-                         this->pause();
+                         this->pause();                         
                     }                    
                } else {
                     this->pause();
