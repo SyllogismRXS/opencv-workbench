@@ -43,14 +43,21 @@ int main(int argc, char *argv[])
           return -1;
      }
          
+     int frame_num = 0;
      for(;;) {
+          cout << "Frame number: " << frame_num << endl;
+
           cv::Mat target;
           if (!cap.read(target)) {
                break;
           }
           larks.detect(target);      
-          //if(cv::waitKey(30) >= 0) break;
-          break;
+
+          cout << larks.model_detections_[0].detected << endl;
+
+          if(cv::waitKey(30) >= 0) break;          
+
+          frame_num++;          
      }          
      
      cv::waitKey(0);

@@ -22,21 +22,20 @@ Sonar::Sonar()
 Sonar::~Sonar()
 {
 #if ENABLE_SONAR == 1
-     if (cimg_) {
-          BVTColorImage_Destroy(cimg_);
-     }
-     
-     if (img_) {
+     // TODO: Segfaults (problem with bvt sdk?)
+     //if (cimg_ != NULL) {
+     //     BVTColorImage_Destroy(cimg_);
+     //}    
+     if (img_ != NULL) {
           BVTMagImage_Destroy(img_);
      }
-
-     if (mapper_) {
-          BVTColorMapper_Destroy(mapper_);
-     }
-
-     if (son_) {
-          BVTSonar_Destroy(son_);
-     }
+     // TODO: Segfaults
+     ///if (mapper_) {
+     ///     BVTColorMapper_Destroy(mapper_);
+     ///}    
+     //if (son_ != NULL) {
+     //     BVTSonar_Destroy(son_);
+     //}
 
      // Close logging file
      this->SonarLogEnable(false);

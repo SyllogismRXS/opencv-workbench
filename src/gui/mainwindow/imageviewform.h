@@ -54,9 +54,9 @@
 
 #include <opencv_workbench/utils/Stream.h>
 #include <opencv_workbench/syllo/Chain.h>
-#include <opencv_workbench/dev/cut/cut.h>
-#include <opencv_workbench/dev/scuba_face_label/scuba_face_label.h>
-#include <opencv_workbench/dev/video_object_label/video_object_label.h>
+#include <opencv_workbench/gui/cut/cut.h>
+#include <opencv_workbench/gui/scuba_face_label/scuba_face_label.h>
+#include <opencv_workbench/gui/video_object_label/video_object_label.h>
 
 #include <QTextStream>
 

@@ -479,8 +479,11 @@ void ImageViewForm::draw()
      if (stream_.isLive()) {                    
      } else {
           // Set all appropriate GUI elements on each frame
-          ui.frame_slider->setValue(stream_.get_frame_number());
-          ui.frame_num_spinbox->setValue(stream_.get_frame_number());
+          // CV_CAP_PROP_POS_FRAMES is 0-based index of
+          // NEXT frame to be captured, we want the currently
+          // displayed frame number
+          ui.frame_slider->setValue(stream_.get_frame_number()-1);
+          ui.frame_num_spinbox->setValue(stream_.get_frame_number()-1);
      }
           
      if (ui.enable_chain_checkbox->isChecked()) {

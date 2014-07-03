@@ -40,33 +40,33 @@ namespace syllo {
           }
 #endif
 
-          //cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( width, height ) );
-          //cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( 0,0 ) );
-          cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing-2/haarcascade.xml", cvSize( 0,0 ) );
-          if( cascade == NULL )
-          {
-               printf( "Unable to load classifier\n" );
-
-               return 1;
-          }
-
-          int* numclassifiers = new int[cascade->count];
-          numclassifiers[0] = cascade->stage_classifier[0].count;
-          for( int i = 1; i < cascade->count; i++ )
-          {
-               numclassifiers[i] = numclassifiers[i-1] + cascade->stage_classifier[i].count;
-          }
-
-          storage = cvCreateMemStorage();
-
-          int nos = -1, nos0;
-          nos0 = cascade->count;
-          if( nos <= 0 ){
-               nos = nos0;
-          }
-
-          printf( "Number of stages: %d\n", nos );
-          printf( "Number of weak classifiers: %d\n", numclassifiers[nos - 1] );
+          ////cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( width, height ) );
+          ////cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml", cvSize( 0,0 ) );
+          //cascade = cvLoadHaarClassifierCascade( "/home/syllogismrxs/Documents/scuba-faces-db/processing-2/haarcascade.xml", cvSize( 0,0 ) );
+          //if( cascade == NULL )
+          //{
+          //     printf( "Unable to load classifier\n" );
+          //
+          //     return 1;
+          //}
+          //
+          //int* numclassifiers = new int[cascade->count];
+          //numclassifiers[0] = cascade->stage_classifier[0].count;
+          //for( int i = 1; i < cascade->count; i++ )
+          //{
+          //     numclassifiers[i] = numclassifiers[i-1] + cascade->stage_classifier[i].count;
+          //}
+          //
+          //storage = cvCreateMemStorage();
+          //
+          //int nos = -1, nos0;
+          //nos0 = cascade->count;
+          //if( nos <= 0 ){
+          //     nos = nos0;
+          //}
+          //
+          //printf( "Number of stages: %d\n", nos );
+          //printf( "Number of weak classifiers: %d\n", numclassifiers[nos - 1] );
           
           
           //if( !face_cascade.load( "/home/syllogismrxs/Documents/scuba-faces-db/processing/haarcascade.xml" ) ) { 
@@ -87,7 +87,7 @@ namespace syllo {
           //     return -1; 
           //}
 
-          rng = new cv::RNG(12345);
+          //rng = new cv::RNG(12345);
 
           return 0;
      }

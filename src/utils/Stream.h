@@ -282,8 +282,7 @@ namespace syllo
           int get_frame_number()
           {
                switch (type_) {
-	       case MovieType:
-                    //return vcap_->get(cv::CAP_PROP_POS_FRAMES);                    
+	       case MovieType:                    
                     return vcap_->get(CV_CAP_PROP_POS_FRAMES);
 		    break;
 	       case CameraType:

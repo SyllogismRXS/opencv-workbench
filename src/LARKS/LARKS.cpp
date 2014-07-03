@@ -302,7 +302,7 @@ namespace larks {
           cv::resize(LARK, LARK1, LARK1.size(), 0, 0, cv::INTER_LANCZOS4);
           cv::namedWindow("LARK", CV_WINDOW_AUTOSIZE);
           cv::imshow("LARK", LARK1*10);
-          cv::waitKey(0);
+          //cv::waitKey(0);
      }     
 
      void Saliency::ProtoObject(const cv::Mat &SaliencyMap, cv::Mat& thMap)
@@ -822,7 +822,7 @@ namespace larks {
                cv::imshow("block",img3);               
 
                t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-               std::cout << " Saliency Computation: " << t << std::endl;
+               //std::cout << " Saliency Computation: " << t << std::endl;
                use_saliency = false;
           }          
 
@@ -851,7 +851,7 @@ namespace larks {
                }
                
                t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-               std::cout << "PCA projection computation: time " << t << std::endl;
+               //std::cout << "PCA projection computation: time " << t << std::endl;
 
                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
                // Find the location of objects
@@ -894,7 +894,7 @@ namespace larks {
 
           } else {
                use_saliency = true;
-               cv::waitKey(3);
+               //cv::waitKey(3);
           }
      }
 
@@ -971,7 +971,7 @@ namespace larks {
           */
 
           t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-          cout << "[Pre detection search time " << t << " sec]" << endl;
+          //cout << "[Pre detection search time " << t << " sec]" << endl;
      }
 
      void LARKS::pyramidFeatures(array_type2 TF, array_type3& TFs, array_type3 QF, array_type4& QFs,double_type3 QF_norm, double_type4& QF_norms, array_type2 query_mask, array_type3& query_masks, int level, const int numTemplate)
@@ -1082,8 +1082,7 @@ namespace larks {
           }
 
           t = ((double) cv::getTickCount() - t) / cv::getTickFrequency();
-          cout << "[Multi-scale search time " << t << " sec]" << endl;
-
+          //cout << "[Multi-scale search time " << t << " sec]" << endl;
 
           t = (double) cv::getTickCount();
           cv::Mat rotationIndex = cv::Mat::zeros(RM[0][0][0].rows,
@@ -1241,7 +1240,7 @@ namespace larks {
                /// d.mask.roi.y = detectionpt[0].y;
                /// d.mask.roi.width = detectionpt[3].x - detectionpt[0].x + 1 ;
                /// d.mask.roi.height = detectionpt[3].y - detectionpt[0].y + 1;
-               cout << "Found object - id: " << obj << " , position: (" << detectionpt[0].x << "," << detectionpt[0].y << ")" << endl;
+               //cout << "Found object - id: " << obj << " , position: (" << detectionpt[0].x << "," << detectionpt[0].y << ")" << endl;
                
                cv::rectangle(img1,cv::Point(detectionpt[0].x, 
                                             detectionpt[0].y), 
@@ -1249,6 +1248,12 @@ namespace larks {
                              cv::Scalar(255,255,0),2,8,0);
 
                cv::imshow("point",img1);               
+
+               model_detections_[obj].model_num = obj;
+               model_detections_[obj].detected = true;
+               model_detections_[obj].position = cv::Point(detectionpt[0].x, 
+                                                           detectionpt[0].y);
+               model_detections_[obj].count++;
 
                /*roi.x = detectionpt[0].x;
                  roi.y = detectionpt[0].y;
@@ -2024,6 +2029,8 @@ namespace larks {
           index_rotations.resize(num_models_);
           region_index.resize(num_models_);
           
+          model_detections_.resize(num_models_);
+
           for ( id = 0 ; id < num_models_; id++) {
                this->Load(model[id], id);
                //model_storage_->load(model[id],getName(),*this);

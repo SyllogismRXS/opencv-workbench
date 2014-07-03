@@ -102,6 +102,23 @@ namespace larks
           std::string label;
           cv::Mat mask;
      };
+
+     // Model number, detected? position? count
+     //std::vector<
+     class ModelDetection
+     {
+     public:
+          ModelDetection()
+          {
+               model_num = 0;
+               detected = false;
+               count = 0;
+          }
+          int model_num;
+          bool detected;
+          cv::Point position;
+          int count;          
+     };
      
      class LARKS// : public Detector, public Trainable
      {
@@ -357,7 +374,10 @@ namespace larks
           double_type3 maxVal;
           std::vector<double_type3> maxVals;
 
-          std::vector<int> index_templates, index_scales, index_rotations;
+          std::vector<int> index_templates, index_scales, index_rotations;         
+
+          std::vector<ModelDetection> model_detections_;
+
      };
 
 }

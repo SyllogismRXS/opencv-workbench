@@ -58,7 +58,7 @@ INSTALL(DIRECTORY ${OPENCV_WORKBENCH_INC_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX
 ## let cmake know where the headers are
 include_directories(${OPENCV_WORKBENCH_INC_DIR})
 
-include_directories(${OPENCV_WORKBENCH_BUILD_DIR}/src/dev)
+include_directories(${OPENCV_WORKBENCH_BUILD_DIR}/src/gui)
 
 include_directories(${OPENCV_WORKBENCH_INC_DIR}/opencv_workbench/syllo-widgets)
 
