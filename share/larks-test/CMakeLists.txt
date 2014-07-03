@@ -1,4 +1,4 @@
-set( APP_NAME test)
+set( APP_NAME larks-test)
 
 add_executable(${APP_NAME} 
   main.cpp

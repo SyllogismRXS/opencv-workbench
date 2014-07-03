@@ -118,6 +118,7 @@ namespace larks
           bool detected;
           cv::Point position;
           int count;          
+          cv::Rect rect;
      };
      
      class LARKS// : public Detector, public Trainable

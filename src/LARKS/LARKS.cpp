@@ -1254,6 +1254,10 @@ namespace larks {
                model_detections_[obj].position = cv::Point(detectionpt[0].x, 
                                                            detectionpt[0].y);
                model_detections_[obj].count++;
+               model_detections_[obj].rect = cv::Rect(detectionpt[0].x, detectionpt[0].y, 
+                                                      detectionpt[0].x + models[obj].img_.cols,
+                                                      detectionpt[0].y + models[obj].img_.cols
+                    );
 
                /*roi.x = detectionpt[0].x;
                  roi.y = detectionpt[0].y;

@@ -91,8 +91,8 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      connect(ui.actionRecord, SIGNAL(triggered()), this, SLOT(record()));    
 
      connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
-     connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
-     connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
+     //connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
+     //connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
 
      connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
      connect(ui.rewind_button, SIGNAL(released()), this, SLOT(divide_frame_rate()));
@@ -175,8 +175,8 @@ void ImageViewForm::mouseReleased(QPoint p)
      //cout << "Y: " << p.y() << endl;
 
      if (label_mode_) {
-          *out_ << QString::number(ui.frame_num_spinbox->value()) << ", "
-                << QString::number(p.x()) << ", "
+          *out_ << QString::number(ui.frame_num_spinbox->value()) << ","
+                << QString::number(p.x()) << ","
                 << QString::number(p.y())
                 << endl;
           
@@ -186,8 +186,7 @@ void ImageViewForm::mouseReleased(QPoint p)
           } else {
                cout << "Done Labelling" << endl;
                video_label_file_->close();
-          }
-          
+          }     
      }
 }
 
@@ -625,8 +624,8 @@ void ImageViewForm::open_media(QString fileName)
                this->set_frame_num(0);
                
                // set slider range
-               ui.frame_slider->setRange(1,stream_.get_frame_count());
-               ui.frame_num_spinbox->setRange(1,stream_.get_frame_count());
+               ui.frame_slider->setRange(0,stream_.get_frame_count()-1);
+               ui.frame_num_spinbox->setRange(0,stream_.get_frame_count()-1);
                ui.total_frames_spinbox->setValue(stream_.get_frame_count());
                ui.filename_label->setText(QFileInfo(fileName).fileName());
                
