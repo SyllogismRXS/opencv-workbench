@@ -1,0 +1,105 @@
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: -1
+False Positives: 42
+False Negatives: 1381
+True Positives: 387
+True Postive RMS Error: 20.5477
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 0
+False Positives: 1145
+False Negatives: 0
+True Positives: 665
+True Postive RMS Error: 6.30407
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 1
+False Positives: 819
+False Negatives: 0
+True Positives: 991
+True Postive RMS Error: 6.37493
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 2
+False Positives: 1653
+False Negatives: 0
+True Positives: 157
+True Postive RMS Error: 84.4078
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 3
+False Positives: 582
+False Negatives: 0
+True Positives: 1228
+True Postive RMS Error: 28.3326
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 4
+False Positives: 38
+False Negatives: 0
+True Positives: 1772
+True Postive RMS Error: 17.2619
+==========================================
+==========================================
+Eigen Value #0: 0.000826219
+Eigen Value #1: 0.000584465
+Eigen Value #2: 0.000363685
+has 1 templates
+numTemplate: 1
+numScale: 2
+End of labels file
+==========================================
+Method: 5
+False Positives: 81
+False Negatives: 0
+True Positives: 1729
+True Postive RMS Error: 12.4736
+==========================================

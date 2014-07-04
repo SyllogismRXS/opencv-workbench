@@ -4,7 +4,7 @@
 /// @file RMS.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-07-03 19:14:13 syllogismrxs>
+/// Time-stamp: <2014-07-04 12:16:18 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 03 Jul 2014
@@ -40,31 +40,52 @@
 /// ---------------------------------------------------------------------------
 #include <iostream>
 #include <vector>
+#include <math.h>
+
+#include <opencv2/core/core.hpp>
+
+using std::cout;
+using std::endl;
 
 class RMS {
 public:     
-     void push(double actual, double predicted)
+     void push(cv::Point2f actual, cv::Point2f predicted)
      {
           actual_.push_back(actual);
           predicted_.push_back(predicted);
      }
 
-     double rms_error()
+     cv::Point2f rms_error()
      {
           // RMS:
           // 1. Square the difference
           // 2. Average the squared differences
           // 3. Take the square root
-          double sum = 0;
-
-          std::vector<double>::iterator it_actual = actual_.begin();
-          std::vector<double>::iterator it_predicted = predicted_.begin();
-          for (it_actual = actual_.begin(); it_actual != actual_.end(); it_actual++) {
-               sum += pow(*it_actual - *it_predicted,2);
-               
-               it_predicted++;
-          }
+          cv::Point2f sum;
+          sum.x = sum.y = 0;
           
+          if (actual_.size() != predicted_.size()) {
+               cout << "Actual and Predicted data points don't match." << endl;
+          }
+          int count = actual_.size();
+
+          std::vector<cv::Point2f>::iterator it_actual;
+          std::vector<cv::Point2f>::iterator it_predicted;
+          for (it_actual = actual_.begin(), it_predicted = predicted_.begin(); 
+               it_actual != actual_.end(); it_actual++, it_predicted++) {
+               sum.x += pow(it_predicted->x - it_actual->x, 2);
+               sum.y += pow(it_predicted->y - it_actual->y, 2);
+          }
+
+          cv::Point2f avg;
+          avg.x = sum.x / (float)count;
+          avg.y = sum.y / (float)count;
+          
+          cv::Point2f rms;
+          rms.x = sqrt(avg.x);
+          rms.y = sqrt(avg.y);
+          
+          return rms;
      }    
 
      void reset()
@@ -75,8 +96,8 @@ public:
 
 protected:
 private:     
-     std::vector<double> actual_;
-     std::vector<double> predicted_;
+     std::vector<cv::Point2f> actual_;
+     std::vector<cv::Point2f> predicted_;
 };
 
 #endif

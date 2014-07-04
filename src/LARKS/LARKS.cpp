@@ -1244,19 +1244,18 @@ namespace larks {
                
                cv::rectangle(img1,cv::Point(detectionpt[0].x, 
                                             detectionpt[0].y), 
-                             cv::Point(detectionpt[0].x + models[obj].img_.cols, detectionpt[0].y + models[obj].img_.cols), 
+                             cv::Point(detectionpt[0].x + models[obj].img_.cols, detectionpt[0].y + models[obj].img_.rows), 
                              cv::Scalar(255,255,0),2,8,0);
 
                cv::imshow("point",img1);               
 
                model_detections_[obj].model_num = obj;
                model_detections_[obj].detected = true;
-               model_detections_[obj].position = cv::Point(detectionpt[0].x, 
-                                                           detectionpt[0].y);
+               model_detections_[obj].position = cv::Point(detectionpt[0].x + models[obj].img_.cols/2, detectionpt[0].y + models[obj].img_.rows/2);
                model_detections_[obj].count++;
                model_detections_[obj].rect = cv::Rect(detectionpt[0].x, detectionpt[0].y, 
                                                       detectionpt[0].x + models[obj].img_.cols,
-                                                      detectionpt[0].y + models[obj].img_.cols
+                                                      detectionpt[0].y + models[obj].img_.rows
                     );
 
                /*roi.x = detectionpt[0].x;
