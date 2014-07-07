@@ -27,3 +27,9 @@ if [ $# -gt 0 ]; then
         popd >& /dev/null
     fi
 fi
+
+# Test Calls:
+#./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label -1
+#./bin/larks-test ~/Dropbox/video/diver-swim.avi ./data/images/diver-sonar.png ./data/label/diver-swim.avi.diver.label -1
+
+./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 0

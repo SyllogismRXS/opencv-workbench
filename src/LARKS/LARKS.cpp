@@ -858,7 +858,7 @@ namespace larks {
 
                std::vector<cv::Mat> RMs(num_models_);
                
-               double threshold = 0.3;
+               double threshold = 0.15;
                //double threshold = 0.2; // replaced threshold_[i]
                //double threshold = 0.1; // replaced threshold_[i]
                //double threshold = 0.3; // replaced threshold_[i]
@@ -1674,10 +1674,12 @@ namespace larks {
           for (int n = 0; n < numTemplate; n++) {
                for (int m = 0; m < numRotation; m++) {
 
+                    cv::imshow("training",query[n][m]);
+
                     cv::Mat sC11, sC12, sC22;
                     LARK.computeCovariance(query[n][m], wsize, dfactor, sC11, sC12, sC22);
                     array_type1 query_temp(boost::extents[wsize * wsize]);
-                    
+                         
                     LARK.computeLARK(query[n][m].rows, query[n][m].cols, wsize, sC11, sC12, sC22,
                                      query_temp);                    
 

@@ -309,6 +309,8 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
      cv::Mat tempImg(sonarImg);
      image = sonarImg;
 
+     cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
+
      cvReleaseImageHeader(&sonarImg);
      BVTPing_Destroy(ping);
 

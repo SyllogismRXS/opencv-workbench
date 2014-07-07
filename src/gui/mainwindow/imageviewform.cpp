@@ -92,7 +92,7 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
 
      connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
      //connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
-     //connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
+     connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
 
      connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
      connect(ui.rewind_button, SIGNAL(released()), this, SLOT(divide_frame_rate()));
@@ -615,7 +615,7 @@ void ImageViewForm::open_media(QString fileName)
                cout << "Looking for video file: " << query_file << endl;              
                syllo::Status status2 = stream_2_.open(query_file);
                if (status2 == syllo::Success && stream_2_.isOpened()) {
-                    synced_sonar_ = true;
+                    //synced_sonar_ = true;
                }
           }
 

@@ -88,7 +88,8 @@ namespace syllo
                     break;
                default:
                     //return cv::VideoWriter::fourcc('I', 'Y', 'U', 'V');
-                    return CV_FOURCC('I', 'Y', 'U', 'V');
+                    //return CV_FOURCC('I', 'Y', 'U', 'V');
+                    return CV_FOURCC('M','J','P','G');
                }
           }
 
@@ -258,7 +259,7 @@ namespace syllo
 		    return -1;
 	       }
           }
-
+          
           int get_fps()
           {
                switch (type_) {
@@ -391,8 +392,8 @@ namespace syllo
                
                // Get the video size
                cv::Size size = cv::Size((int) this->width(),    // Acquire input size
-                                        (int) this->height());
-               
+                                        (int) this->height());                              
+
                std::string ext = filename.substr(filename.find_last_of(".") + 1);
                std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
 
@@ -422,7 +423,7 @@ namespace syllo
                for(int i = start_frame; i <= end_frame ; i++) {
                     // Get the next frame
                     cv::Mat frame;
-                    this->read(frame);
+                    this->read(frame);                    
                     
                     // Check if the frame is empty
                     if (frame.empty()) { 
@@ -455,11 +456,15 @@ namespace syllo
                     codec = select_codec(AVI);
                }
 
+               cout << "==========================================" << endl;
+               cout << "Filename: " << filename << endl;
+               cout << "Using codec: " << codec << endl;
+               cout << "Size: " << this->height() << "x" << this->width() << endl;               
+               cout << "FPS: " << this->get_fps() << endl;
+
                // Open the output video file:
-               //output_ = new VideoWriter;
-               //output_->open(filename, codec, this->get_fps(), size, true);
                output_ = new cv::VideoWriter(filename, codec, this->get_fps(), size, true);
-               
+                              
                if (!output_->isOpened()) {
                     cout << "Error: Couldn't create output file: " << filename << endl;
                     return Failure;
@@ -475,6 +480,7 @@ namespace syllo
           int step_video_export()
           {
                if(output_count_ >= end_frame_) {
+                    cv::destroyWindow("export");
                     delete output_;
                     return 0;
                }
@@ -482,9 +488,20 @@ namespace syllo
                // Get the next frame
                cv::Mat frame;
                this->read(frame);
-                    
+
+#if 0
+               cout << "Frame info: " << endl;
+               cout << "type: " << frame.type() << endl;
+               cout << "depth: " << frame.depth() << endl;
+               cout << "channels: " << frame.channels() << endl;
+#endif
+                   
+               cv::imshow("export", frame);
+               cv::waitKey(1);
+ 
                // Check if the frame is empty
                if (frame.empty()) { 
+                    cout << "Warning: Frame empty." << endl;
                     delete output_;
                     return 0;
                }

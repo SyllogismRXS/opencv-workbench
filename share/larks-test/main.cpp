@@ -13,12 +13,25 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
+     // Arguments:
+     // 1 - video
+     // 2 - template
+     // 3 - labels
+     // 4 - method
+
      cout << "==========================================" << endl;
 
      int match_method = LARKS_METHOD;
      
-     if (argc > 1) {
-          match_method = atoi(argv[1]);
+     if (argc < 3) {
+          cout << "Invalid arguments" << endl;
+          cout << "usage: "<< endl;
+          cout << "\t" << argv[0] << " video-file query-file <method>" << endl;
+          return -1;
+     }
+
+     if (argc > 3) {
+          match_method = atoi(argv[4]);
      }
 
      larks::LARKS larks;
@@ -26,13 +39,15 @@ int main(int argc, char *argv[])
 
      cv::Mat query;
      //query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/fin.png", CV_LOAD_IMAGE_COLOR);
-     query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/query.png", CV_LOAD_IMAGE_COLOR);
+     //query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/query.png", CV_LOAD_IMAGE_COLOR);
+     query = cv::imread(argv[2], CV_LOAD_IMAGE_COLOR);
      //query = cv::imread("/home/syllogismrxs/repos/opencv-workbench/data/images/fin-2.png", CV_LOAD_IMAGE_COLOR);
  
      if (!query.data) {
           cout <<  "Could not open or find the image" << std::endl;
           return -1;
      }
+     cv::imshow("query",query);
        
      larks.trainInstance("query",query);
      larks.endTraining("query");
@@ -50,7 +65,8 @@ int main(int argc, char *argv[])
      //     return -1;
      //}
      
-     cv::VideoCapture cap("/home/syllogismrxs/Dropbox/video/target.avi");
+     //cv::VideoCapture cap("/home/syllogismrxs/Dropbox/video/target.avi");
+     cv::VideoCapture cap(argv[1]);
      //cv::VideoCapture cap("/home/syllogismrxs/Desktop/fin-target.avi");
      if(!cap.isOpened()) {
           cout << "Failed to open target video" << endl;
@@ -59,7 +75,8 @@ int main(int argc, char *argv[])
          
 
      // Open the file holding the labeled locations of the scuba diver's face
-     std::ifstream labels("/home/syllogismrxs/repos/opencv-workbench/data/label/target.avi.scuba_face.label");
+     //std::ifstream labels("/home/syllogismrxs/repos/opencv-workbench/data/label/target.avi.scuba_face.label");
+     std::ifstream labels(argv[3]);
      if (!labels.is_open()) {
           cout << "Failed to open labels file." << endl;
           return -1;
@@ -141,7 +158,7 @@ int main(int argc, char *argv[])
 
                /// Do the Matching and Normalize
                cv::matchTemplate( target, query, result, match_method );
-               cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
+               //cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
 
                /// Localizing the best match with minMaxLoc
                double minVal; 
@@ -151,12 +168,27 @@ int main(int argc, char *argv[])
                cv::Point matchLoc;
 
                cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
+               cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
 
                /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
                if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED ) { 
                     matchLoc = minLoc; 
+                    cout << minVal << endl;
+                    detection = true;
+                    if (minVal < 7.5e+07) {
+                         detection = true;
+                    } else {
+                         detection = false;
+                    }
                } else { 
+                    cout << maxVal << endl;
                     matchLoc = maxLoc;
+                    
+                    if (maxVal > 0.5) {
+                         detection = true;
+                    } else {
+                         detection = false;
+                    }
                }
 
                /// Show me what you got
@@ -167,20 +199,19 @@ int main(int argc, char *argv[])
 
                cv::imshow( "img_display", img_display );
                cv::imshow( "result", result );
-
-               detection = true;
+               
                pos_detected.x = matchLoc.x + query.cols/2;
                pos_detected.y = matchLoc.y + query.rows/2;
           }
 
           if (frame_num == next_labeled_frame) {
                cv::Point pos_truth(x_pos,y_pos);               
-               cv::circle(target,pos_truth,10,cv::Scalar(0,255,0),1,8,0);
-               cv::circle(target,pos_detected,20,cv::Scalar(255,255,255),1,8,0);
-               cv::imshow("truth",target);
+               cv::circle(target,pos_truth,10,cv::Scalar(0,255,0),1,8,0);               
                               
                cv::Point diff;
                if (detection) {
+                    cv::circle(target,pos_detected,20,cv::Scalar(255,255,255),1,8,0);
+
                     diff = pos_truth - pos_detected;
                     
                     if (!pos_truth.inside(detected_rectangle)) {
@@ -196,6 +227,7 @@ int main(int argc, char *argv[])
                     // Missed a positive label
                     false_negatives++;
                }
+               cv::imshow("truth",target);
 
           } else {
                // If the current frame has a detection and it's not the next
