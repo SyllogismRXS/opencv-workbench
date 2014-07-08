@@ -285,8 +285,7 @@ namespace larks
                models_.resize(num_models); models_ = models;	
           }
           
-          //inline void set_threshold(std::vector<double> threshold, int num_models) { threshold_.resize(num_models); threshold_ = threshold;	}
-
+          //inline void set_threshold(std::vector<double> threshold, int num_models) { threshold_.resize(num_models); threshold_ = threshold;	}          
 
           int id;
 
@@ -314,6 +313,12 @@ namespace larks
 
           std::vector<std::string> models_;
           //std::vector<double> threshold_;
+
+          double threshold_;
+          inline void set_threshold(double threshold)
+          {
+               threshold_ = threshold;
+          }
 
           Larkcomputation LARK;
 

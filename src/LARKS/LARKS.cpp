@@ -858,12 +858,13 @@ namespace larks {
 
                std::vector<cv::Mat> RMs(num_models_);
                
-               double threshold = 0.15;
+               //threshold_
+               //double threshold = 0.15;
                //double threshold = 0.2; // replaced threshold_[i]
                //double threshold = 0.1; // replaced threshold_[i]
                //double threshold = 0.3; // replaced threshold_[i]
                for (int i = 0; i < num_models_; i++) {
-                    if (Prev_max[i] < threshold) {
+                    if (Prev_max[i] < threshold_) {
                          Pre_Search(f, numTemplates[i], numRotation, numScale, 
                                     Py_query_masks[i], Py_QFs[i], Py_QF_norms[i], 
                                     target, binaryfeaturemode, Py_TFs[i], scales, 
@@ -887,7 +888,7 @@ namespace larks {
                            target, binaryfeaturemode, Py_TFs[i], scales, 
                            block_table, region_index[i], Prev_max[i], 
                            maxComponents, img2, use_saliency, img1,  RMs[i], 
-                           models_[i],  threshold, maxVals[i], 
+                           models_[i],  threshold_, maxVals[i], 
                            index_templates[i], index_scales[i], 
                            index_rotations[i], level, i, d); 
                }
@@ -2056,5 +2057,7 @@ namespace larks {
           for (int i = 0; i < numScale; i++) {
                scales.at<float> (0, i) = scales1[i];
           }
+
+          threshold_ = 0.15;
      }
 }

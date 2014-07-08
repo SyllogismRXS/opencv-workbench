@@ -29,7 +29,7 @@ if [ $# -gt 0 ]; then
 fi
 
 # Test Calls:
-#./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label -1
-#./bin/larks-test ~/Dropbox/video/diver-swim.avi ./data/images/diver-sonar.png ./data/label/diver-swim.avi.diver.label -1
+./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label -1 0.08 0.02 0.3
 
-./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 0
+#./bin/larks-test ~/Dropbox/video/diver-swim.avi ./data/images/diver-sonar.png ./data/label/diver-swim.avi.diver.label -1
+#./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 0
