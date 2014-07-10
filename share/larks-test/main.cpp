@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
                     }
                }
 
-               //if(cv::waitKey(30) >= 0) break;
+               if(cv::waitKey(30) >= 0) break;
                frame_num++;               
           } // end of single video
           

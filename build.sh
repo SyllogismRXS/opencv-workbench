@@ -30,6 +30,7 @@ fi
 
 # Test Calls:
 #./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label -1 0.01 0.01 0.08
+./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label -1 0.18 0.01 0.20
 
 # Method 0 Calls
 #./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 0 36780200 4598920 82769400
@@ -38,4 +39,8 @@ fi
 # Method 1 Calls
 #./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 1 36780200 4598920 82769400
 #./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 1 0.126967 0.021846 0.345426
-./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 1 0.323581 0.0043692 0.345427
+#./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 1 0.323581 0.0043692 0.345427
+
+# Method 2 Calls
+#./bin/larks-test ~/Dropbox/video/target.avi ./data/images/query.png ./data/label/target.avi.scuba_face.label 2 334442000 11563300 450075000
+
