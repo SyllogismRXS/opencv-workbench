@@ -14,6 +14,14 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
+     //cout << CV_TM_SQDIFF << endl;        // 0 - lower better
+     //cout << CV_TM_SQDIFF_NORMED << endl; // 1 - lower better
+     //cout << CV_TM_CCORR << endl;         // 2 - higher better
+     //cout << CV_TM_CCORR_NORMED << endl;  // 3 - higher better
+     //cout << CV_TM_CCOEFF << endl;        // 4 - higher better
+     //cout << CV_TM_CCOEFF_NORMED << endl; // 5 - higher better
+     //return 0;
+
      cout << "==========================================" << endl;          
      if (argc != 8) {
           cout << "Invalid arguments" << endl;
@@ -21,7 +29,7 @@ int main(int argc, char *argv[])
           cout << "\t" << argv[0] << " video-file query-file labels method "
                << "start-thresh thresh-step end-thresh" << endl;
           return -1;
-     }
+     }     
 
      // Argument processing
      std::string target_video = argv[1];
@@ -30,7 +38,7 @@ int main(int argc, char *argv[])
      int match_method = atoi(argv[4]);
      double threshold_start = atof(argv[5]);
      double threshold_step = atof(argv[6]);
-     double threshold_stop = atof(argv[7]);
+     double threshold_stop = atof(argv[7]) + 0.00001;
 
      // time string generation
      time_t rawtime;
@@ -88,7 +96,8 @@ int main(int argc, char *argv[])
      //find the image" << std::endl ; return -1; }
      
      //cv::VideoCapture cap("/home/syllogismrxs/Dropbox/video/target.avi");     
-     //cv::VideoCapture cap("/home/syllogismrxs/Desktop/fin-target.avi");
+     //cv::VideoCapture cap("/home/syllogismrxs/Desktop/fin-target.avi");     
+
      int target_area;
           
      double threshold = threshold_start; // 0.08
@@ -118,6 +127,9 @@ int main(int argc, char *argv[])
           int false_positives = 0;
           int false_negatives = 0;
           int true_positives = 0;
+
+          double max_champ = -9999999999;
+          double min_champ = +9999999999;
 
           RMS rms;
 
@@ -202,21 +214,39 @@ int main(int argc, char *argv[])
                     /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
                     if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED ) { 
                          matchLoc = minLoc; 
-                         cout << minVal << endl;
+                         //cout << minVal << endl;
                          detection = true;
-                         if (minVal < 7.5e+07) {
+                         
+                         //if (minVal < 7.5e+07) {
+                         if (minVal < threshold) {
                               detection = true;
                          } else {
                               detection = false;
                          }
+
+                         if (minVal > max_champ) {
+                              max_champ = minVal;
+                         }
+                         if (minVal < min_champ) {
+                              min_champ = minVal;
+                         }
+
                     } else { 
-                         cout << maxVal << endl;
+                         //cout << maxVal << endl;
                          matchLoc = maxLoc;
                     
-                         if (maxVal > 0.5) {
+                         //if (maxVal > 0.5) {
+                         if (maxVal > threshold) {
                               detection = true;
                          } else {
                               detection = false;
+                         }
+
+                         if (maxVal > max_champ) {
+                              max_champ = maxVal;
+                         }
+                         if (maxVal < min_champ) {
+                              min_champ = maxVal;
                          }
                     }
 
@@ -275,8 +305,13 @@ int main(int argc, char *argv[])
 
           double true_negatives = (double)frame_num * (((double)target_area / (double)query_area) - 1);
 
-          double true_positive_rate = (double)true_positives / ((double)true_positives + (double)false_positives);
-          double false_positive_rate = (double)false_positives / ((double)false_positives + (double)true_negatives);
+          // wikipedia equations
+          //double true_positive_rate = (double)true_positives / ((double)true_positives + (double)false_positives);
+          //double false_positive_rate = (double)false_positives / ((double)false_positives + (double)true_negatives);
+
+          // equations from ROC analysis paper
+          double true_positive_rate = (double)true_positives / (double)frame_num;
+          double false_positive_rate = (double)false_positives / (double)frame_num;
 
           cout << "==========================================" << endl;          
           cout << "Method: " << match_method << endl;
@@ -288,9 +323,11 @@ int main(int argc, char *argv[])
           cout << "True Positive rate: " << true_positive_rate << endl;
           cout << "False Positive rate: " << false_positive_rate << endl;
           cout << "True Postive RMS Error: " << rms_error_norm << endl;
+          cout << "Max Champ: " << max_champ << endl;
+          cout << "Min Champ: " << min_champ << endl;
           
           // Write data to output file
-          roc_stream << match_method << "," << threshold << "," << frame_num << false_positives << "," << false_negatives
+          roc_stream << match_method << "," << threshold << "," << frame_num << "," << false_positives << "," << false_negatives
                      << "," << true_positives << "," << true_negatives << "," << true_positive_rate << "," 
                      << false_positive_rate << "," << rms_error_norm << endl;
 
