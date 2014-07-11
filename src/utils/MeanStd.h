@@ -1,13 +1,13 @@
-#ifndef RMS_H_
-#define RMS_H_
+#ifndef MEANSTD_H_
+#define MEANSTD_H_
 /// ---------------------------------------------------------------------------
-/// @file RMS.h
+/// @file MeanStd.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-07-11 14:01:26 syllogismrxs>
+/// Time-stamp: <2014-07-11 13:56:06 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 03 Jul 2014
+/// Created: 11 Jul 2014
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,73 +35,55 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The RMS class ...
+/// The MeanStd class ...
 /// 
 /// ---------------------------------------------------------------------------
+
 #include <iostream>
 #include <vector>
 #include <math.h>
 
-#include <opencv2/core/core.hpp>
 
-using std::cout;
-using std::endl;
-
-class RMS {
-public:     
-     void push(cv::Point2f actual, cv::Point2f predicted)
+class MeanStd {
+public:
+     void push(double sample)
      {
-          actual_.push_back(actual);
-          predicted_.push_back(predicted);
+          samples_.push_back(sample);
      }
 
-     cv::Point2f rms_error()
+     double mean()
      {
-          if (actual_.size() == 0) {
-               return cv::Point(0,0);
+          double sum = 0;
+          std::vector<double>::iterator it;
+          for (it = samples_.begin(); it != samples_.end(); it++) {
+               sum += *it;
           }
-
-          // RMS:
-          // 1. Square the difference
-          // 2. Average the squared differences
-          // 3. Take the square root
-          cv::Point2f sum;
-          sum.x = sum.y = 0;
-          
-          if (actual_.size() != predicted_.size()) {
-               cout << "Actual and Predicted data points don't match." << endl;
+          return sum / (double)samples_.size();
+     }
+     
+     double variance()
+     {
+          double mean = this->mean();
+          double sum = 0;
+          std::vector<double>::iterator it;
+          for (it = samples_.begin(); it != samples_.end(); it++) {
+               sum += pow((*it)-mean,2);
           }
-          int count = actual_.size();
+          return sum / (double)samples_.size();
+     }
 
-          std::vector<cv::Point2f>::iterator it_actual;
-          std::vector<cv::Point2f>::iterator it_predicted;
-          for (it_actual = actual_.begin(), it_predicted = predicted_.begin(); 
-               it_actual != actual_.end(); it_actual++, it_predicted++) {
-               sum.x += pow(it_predicted->x - it_actual->x, 2);
-               sum.y += pow(it_predicted->y - it_actual->y, 2);
-          }
-
-          cv::Point2f avg;
-          avg.x = sum.x / (float)count;
-          avg.y = sum.y / (float)count;
-          
-          cv::Point2f rms;
-          rms.x = sqrt(avg.x);
-          rms.y = sqrt(avg.y);
-          
-          return rms;
-     }    
+     double std()
+     {
+          return sqrt(this->variance());
+     }
 
      void reset()
      {
-          actual_.clear();
-          predicted_.clear();
+          samples_.clear();
      }
-
 protected:
-private:     
-     std::vector<cv::Point2f> actual_;
-     std::vector<cv::Point2f> predicted_;
+private:
+     std::vector<double> samples_;
 };
 
 #endif

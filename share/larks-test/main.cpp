@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <opencv_workbench/LARKS/LARKS.h>
 #include <opencv_workbench/utils/RMS.h>
+#include <opencv_workbench/utils/MeanStd.h>
 #include <time.h>
 
 using std::cout;
@@ -13,7 +14,7 @@ using std::endl;
 #define CV_TM_SQDIFF_METHOD 1
 
 int main(int argc, char *argv[])
-{
+{     
      //cout << CV_TM_SQDIFF << endl;        // 0 - lower better
      //cout << CV_TM_SQDIFF_NORMED << endl; // 1 - lower better
      //cout << CV_TM_CCORR << endl;         // 2 - higher better
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
      
      std::ofstream roc_stream;
      roc_stream.open (roc_fn.c_str(), std::ofstream::out | std::ofstream::app);
-     roc_stream << "# Method,Threshold,NumberOfFrames,FP,FN,TP,TN,TPR,FPR,TPRMSE" << endl;
+     roc_stream << "# Method,Threshold,NumberOfFrames,FP,FN,TP,TN,TPR,FPR,TPRMSE,MeanPT,StdPT" << endl;
      
      larks::LARKS larks;
      larks.startTraining();
@@ -131,8 +132,13 @@ int main(int argc, char *argv[])
           double max_champ = -9999999999;
           double min_champ = +9999999999;
 
-          RMS rms;
+          RMS rms;          
 
+          double start_time;
+          double elapsed_time;
+
+          MeanStd mean_std;
+                    
           int prev_detect_count = -1;
           for(;;) {
 
@@ -178,7 +184,12 @@ int main(int argc, char *argv[])
                cv::Rect detected_rectangle; // shared
           
                if (match_method == LARKS_METHOD) {
-                    larks.detect(target);      
+
+                    start_time = (double) cv::getTickCount();                         
+                    larks.detect(target);
+                    elapsed_time  = ((double) cv::getTickCount() - start_time) / cv::getTickFrequency();                    
+                    mean_std.push(elapsed_time);
+
                     if (prev_detect_count != larks.model_detections_[0].count && 
                         larks.model_detections_[0].detected) {
                          detection = true;
@@ -197,10 +208,6 @@ int main(int argc, char *argv[])
 
                     result.create( result_cols, result_rows, CV_32FC1 );
 
-                    /// Do the Matching and Normalize
-                    cv::matchTemplate( target, query, result, match_method );
-                    //cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
-
                     /// Localizing the best match with minMaxLoc
                     double minVal; 
                     double maxVal; 
@@ -208,8 +215,10 @@ int main(int argc, char *argv[])
                     cv::Point maxLoc;
                     cv::Point matchLoc;
 
-                    cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
-                    cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
+                    /// Do the Matching and Normalize
+                    start_time = (double) cv::getTickCount();
+                    cv::matchTemplate( target, query, result, match_method );
+                    cv::minMaxLoc( result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );                    
 
                     /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
                     if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED ) { 
@@ -237,6 +246,7 @@ int main(int argc, char *argv[])
                     
                          //if (maxVal > 0.5) {
                          if (maxVal > threshold) {
+                         //if (maxVal < threshold) {
                               detection = true;
                          } else {
                               detection = false;
@@ -249,6 +259,10 @@ int main(int argc, char *argv[])
                               min_champ = maxVal;
                          }
                     }
+                    elapsed_time  = ((double) cv::getTickCount() - start_time) / cv::getTickFrequency();                    
+                    mean_std.push(elapsed_time);
+
+                    cv::normalize( result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
 
                     /// Show me what you got
                     cv::rectangle( img_display, matchLoc, cv::Point( matchLoc.x + query.cols , matchLoc.y + query.rows ), cv::Scalar::all(0), 2, 8, 0 );
@@ -296,7 +310,7 @@ int main(int argc, char *argv[])
                     }
                }
 
-               if(cv::waitKey(30) >= 0) break;
+               //if(cv::waitKey(30) >= 0) break;
                frame_num++;               
           } // end of single video
           
@@ -325,11 +339,14 @@ int main(int argc, char *argv[])
           cout << "True Postive RMS Error: " << rms_error_norm << endl;
           cout << "Max Champ: " << max_champ << endl;
           cout << "Min Champ: " << min_champ << endl;
+          cout << "Processing Time (mean): " << mean_std.mean() << endl; 
+          cout << "Processing Time (std): " << mean_std.std() << endl; 
+          cout << "Processing Time (var): " << mean_std.variance() << endl; 
           
           // Write data to output file
           roc_stream << match_method << "," << threshold << "," << frame_num << "," << false_positives << "," << false_negatives
                      << "," << true_positives << "," << true_negatives << "," << true_positive_rate << "," 
-                     << false_positive_rate << "," << rms_error_norm << endl;
+                     << false_positive_rate << "," << rms_error_norm << "," << mean_std.mean() << "," << mean_std.std() << endl;
 
           
           threshold += threshold_step;

@@ -7,8 +7,7 @@ touch $OUTPUT_FILE
 
 for i in `seq -1 5`;
 do
-    ./larks-test ~/Dropbox/video/diver-swim.avi ~/repos/opencv-workbench/data/images/diver-sonar.png ~/repos/opencv-workbench/data/label/diver-swim.avi.diver.label $i >> $OUTPUT_FILE 2>&1
-    #./larks-test $i >> $OUTPUT_FILE 2>&1
+    ./larks-test ~/Dropbox/video/target.avi ../data/images/query.png ../data/label/target.avi.scuba_face.label $i 0.5 0.5 0.6 >> $OUTPUT_FILE 2>&1
 done 
 
 popd >& /dev/null
