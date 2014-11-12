@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
+#include <unistd.h>
 
 #include "Sonar.h"
 //#include <syllo_common/Utils.h>
@@ -14,8 +15,8 @@ using std::endl;
 
 Sonar::Sonar()
      : initialized_(false), fn_(""), ip_addr_(""), logging_(false), 
-       mode_(Sonar::net), data_mode_(Sonar::image), min_range_(0), 
-       max_range_(40), color_map_(""), save_directory_("./")
+       mode_(Sonar::net), data_mode_(Sonar::image), save_directory_("./"), 
+       color_map_(""), min_range_(0), max_range_(40)
 {
 }
 
@@ -306,9 +307,10 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
      // And set it's data
      cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
 	
-     cv::Mat tempImg(sonarImg);
-     image = sonarImg;
-
+     //cv::Mat tempImg(sonarImg);
+     //image = sonarImg;
+     image = cv::cvarrToMat(sonarImg); // opencv3?
+     
      cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
 
      cvReleaseImageHeader(&sonarImg);
