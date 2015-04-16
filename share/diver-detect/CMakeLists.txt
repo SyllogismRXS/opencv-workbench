@@ -1,4 +1,4 @@
-set( APP_NAME pca)
+set( APP_NAME diver-detect)
 
 add_executable(${APP_NAME} 
   main.cpp
@@ -6,4 +6,7 @@ add_executable(${APP_NAME}
 
 target_link_libraries(${APP_NAME} 
   ${OpenCV_LIBS}
-    )
+  track
+  syllo
+  sonar-sdk  
+  )

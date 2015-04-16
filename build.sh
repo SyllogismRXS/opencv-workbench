@@ -23,7 +23,8 @@ if [ $# -gt 0 ]; then
         # Move the bin directory and pass the command to call
         # Example call: ./build.sh ./hello-world
         pushd ./bin >& /dev/null
-        $1
+        #$1
+        ./diver-detect ~/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi
         popd >& /dev/null
     fi
 fi

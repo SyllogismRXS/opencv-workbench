@@ -23,6 +23,8 @@ get_filename_component(OPENCV_WORKBENCH_SCRIPTS_DIR ./scripts ABSOLUTE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 FIND_PACKAGE ( Boost COMPONENTS filesystem system REQUIRED)
 
@@ -104,10 +106,12 @@ if (DEFINED ENV{BLUEVIEW_SDK_ROOT})
   include_directories($ENV{BLUEVIEW_SDK_ROOT}/include)
   # Set the Blueview SDK libraries
   set(BLUEVIEW_SDK_LIBS $ENV{BLUEVIEW_SDK_ROOT}/lib/libbvtsdk.so)
+  add_definitions(-DENABLE_SONAR=1)
 else()
   message("WARNING: Can't find the BlueView SDK")
   message("Set the BLUEVIEW_SDK_ROOT environment variable in your .bashrc")
   message("if you require the blueview library")  
+  add_definitions(-DENABLE_SONAR=0)
   #return() # exit quietly if sdk not found
 endif()
 

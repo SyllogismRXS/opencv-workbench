@@ -4,7 +4,7 @@
 /// @file Chain.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-01-14 12:58:57 syllogismrxs>
+/// Time-stamp: <2015-04-16 18:55:34 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 01 Nov 2013
@@ -41,7 +41,7 @@
 
 #include <cv.h>
 
-#include <yaml-cpp/yaml.h>
+//#include <yaml-cpp/yaml.h>
 
 typedef struct ObjectPos
 {
@@ -59,7 +59,7 @@ namespace syllo{
      class Chain {
      private:
      protected:
-          YAML::Node config_;
+          //YAML::Node config_;
 
           /** Function Headers */
           void DetectFace( cv::Mat &src, cv::Mat &dest);

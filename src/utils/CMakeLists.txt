@@ -1,9 +1,8 @@
-set( LIB_NAME opencv-workbench-utils )
+set( LIB_NAME sonar-sdk )
 
 ADD_LIBRARY( ${LIB_NAME} SHARED
-	Stream.h
-        Sonar.h
-        Sonar.cpp        
+  Sonar.h
+  Sonar.cpp        
 )
 
 target_link_libraries(${LIB_NAME} 

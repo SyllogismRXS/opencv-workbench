@@ -201,6 +201,7 @@ int Sonar::reset()
 
 Sonar::Status_t Sonar::SonarLogEnable(bool enable)
 {
+#if ENABLE_SONAR == 1
      // Whether enable is true or false, if we enter the function here,
      // we should properly close the current file if currently logging
      if (logging_ && son_logger_) {
@@ -241,6 +242,7 @@ Sonar::Status_t Sonar::SonarLogEnable(bool enable)
 
      logging_ = true;
 
+#endif
      return Sonar::Success;
 }
 
@@ -365,7 +367,9 @@ void Sonar::set_range(double min_range, double max_range)
           max_range_ = min_range_ + 2;
      }
      
+#if ENABLE_SONAR == 1
      BVTHead_SetRange(head_, min_range_, max_range_);
+#endif
 }
 
 void Sonar::set_min_range(double min_range)

@@ -34,17 +34,18 @@ target_link_libraries(${APP_NAME}
   ${QT_LIBRARIES}
   clickablelabel
   ${OpenCV_LIBS}
-  opencv-workbench-utils
   cut_widgetlib
   scuba_face_labellib
   video_object_labellib
   opencv-built-in
-  chain  
+  syllo
+  track
   ${YAMLCPP_LIBRARY}
+  sonar-sdk
   )
 
 if (DEFINED BLUEVIEW_SDK_LIBS)
-  target_link_libraries(${APP_NAME}
+  target_link_libraries(${APP_NAME}    
     ${BLUEVIEW_SDK_LIBS}
     )
 endif()

@@ -1,7 +1,7 @@
 #ifndef _SONAR_H_
 #define _SONAR_H_
 
-#define ENABLE_SONAR 1
+//#define ENABLE_SONAR 0
 
 #include <opencv/cv.h>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -9,6 +9,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// Set in top-level CMakeLists.txt
 #if ENABLE_SONAR == 1
 #include <bvt_sdk.h>
 #endif
@@ -69,20 +70,19 @@ protected:
      std::string cur_log_file_;
      std::string save_directory_;
 
-
+     std::string color_map_;
+     
 #if ENABLE_SONAR == 1
      BVTHead head_;
      BVTSonar son_;
 
      BVTMagImage img_;
      BVTColorImage cimg_;
-     BVTColorMapper mapper_;
-     std::string color_map_;
+     BVTColorMapper mapper_;     
 
      // Sonar file save / logger members
      BVTSonar son_logger_;
      BVTHead out_head_;
-
 #endif
 
      int heads_;
