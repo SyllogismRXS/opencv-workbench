@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
      }
      
      cv::Mat original;
+     cv::Mat original_w_tracks;
      cv::Mat gray;
      cv::Mat threshold;     
      
@@ -71,19 +72,16 @@ int main(int argc, char *argv[])
      int frame_num = 0;
      while (stream.read(original)) {          
 
+          original_w_tracks = original;
+          
           cv::cvtColor(original, gray, CV_BGR2GRAY);          
-          //cv::threshold(gray, threshold, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
-          //cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO | CV_THRESH_OTSU);
           cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO);
           
-          syllo::RunningGaussian(0.5, threshold, rg, avgs, variance);	  
-          
+          syllo::RunningGaussian(0.5, threshold, rg, avgs, variance);
+
           cv::erode(rg, erode, erosionConfig);	 
           cv::dilate(erode, dilate, dilationConfig);	  
                               
-          //cv::imshow("Erode", erode);
-          //cv::imshow("Dilate", dilate);          
-          
           ////////////////////////////
 	  // Blob Detector / Tracker
 	  ////////////////////////////	  
@@ -107,7 +105,8 @@ int main(int argc, char *argv[])
                               all_clusters, frame_num, track_ids); 
 	  prev_clusters = new_clusters;
 	  
-	  drawClusters(blob_img, blob_img, new_clusters, 20);	 
+	  drawClusters(blob_img, blob_img, new_clusters, 20);
+          drawClusters(original_w_tracks, original_w_tracks, new_clusters, 20);
           
           // Display images
           cv::imshow("Original", original);
@@ -115,6 +114,7 @@ int main(int argc, char *argv[])
           cv::imshow("Threshold", threshold);
           cv::imshow("Running", rg);
           cv::imshow("Clusters", blob_img);
+          cv::imshow("Tracks", original_w_tracks);
 
           if(cv::waitKey(10) >= 0) break;
           

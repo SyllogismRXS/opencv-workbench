@@ -9,12 +9,15 @@ pushd build >& /dev/null
 cmake ..
 
 make
+BUILD_RESULT=$?
 
 popd >& /dev/null
 
+# Check status of make build command to see if there were any errors
+# and ...
 # If arguments are supplied to the build script, then this could mean
 # that the user either wants to install the project or execute a program
-if [ $# -gt 0 ]; then
+if [ ${BUILD_RESULT} -eq 0 ] && [ $# -gt 0 ]; then
     # The user wants to install the project
     if [ $1 == "install" ]; then
         make install
