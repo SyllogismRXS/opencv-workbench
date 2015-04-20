@@ -20,7 +20,7 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
-     cout << "Diver Detection" << endl;     
+     cout << "Diver Detection - Segmentation" << endl;     
 
      if (argc < 2) {
           cout << "Usage: " << argv[0] << " <input-file>" << endl;
@@ -71,23 +71,22 @@ int main(int argc, char *argv[])
      
      int frame_num = 0;
      while (stream.read(original)) {          
-
-          original_w_tracks = original;
-          
+          original_w_tracks = original.clone();                    
+                    
+          ////////////////////////////
+          // Original Preprocessing
+          ////////////////////////////
           cv::cvtColor(original, gray, CV_BGR2GRAY);          
           cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO);
-          
-          syllo::RunningGaussian(0.5, threshold, rg, avgs, variance);
-
-          cv::erode(rg, erode, erosionConfig);	 
-          cv::dilate(erode, dilate, dilationConfig);	  
+                    
+          cv::dilate(threshold, dilate, dilationConfig);
                               
           ////////////////////////////
 	  // Blob Detector / Tracker
 	  ////////////////////////////	  
 	  std::map<int,syllo::Blob> blobs;
 	  syllo::DetectBlobs(dilate, blob_img, blobs);
-	  
+          
 	  syllo::CentroidsOfBlobs(blob_img, blobs);
 	  
 	  std::map<int,syllo::Blob> new_blobs;
@@ -108,11 +107,61 @@ int main(int argc, char *argv[])
 	  drawClusters(blob_img, blob_img, new_clusters, 20);
           drawClusters(original_w_tracks, original_w_tracks, new_clusters, 20);
           
+          
+          ///////////////////////////////////////////////
+          /// Image Segmentation
+          ///////////////////////////////////////////////
+          cv::Mat1b markers(original.rows, original.cols);
+          // let's set all of them to possible background first
+          markers.setTo(cv::GC_PR_BGD);
+
+          //// cut out a small area in the middle of the image          
+          //int m_rows = 0.1 * original.rows;
+          //int m_cols = 0.1 * original.cols;
+          //// of course here you could also use cv::Rect() instead of cv::Range to select 
+          //// the region of interest
+          //cv::Mat1b fg_seed = markers(cv::Range(original.rows/2 - m_rows/2, original.rows/2 + m_rows/2), 
+          //                            cv::Range(original.cols/2 - m_cols/2, original.cols/2 + m_cols/2));
+          // cut out a small area in the middle of the image
+
+          int fg_rows = 20;
+          int fg_cols = 20;
+          if (new_clusters.size() > 1 && new_clusters[1].getCentroid().y > fg_rows && new_clusters[1].getCentroid().x > fg_cols) {
+               
+               int fg_center_row = new_clusters[1].getCentroid().y;
+               int fg_center_col = new_clusters[1].getCentroid().x;
+
+               // of course here you could also use cv::Rect() instead of cv::Range to select 
+               // the region of interest
+               cv::Mat1b fg_seed = markers(cv::Range(fg_center_row - fg_rows/2, fg_center_row + fg_rows/2),
+                                           cv::Range(fg_center_col - fg_cols/2, fg_center_col + fg_cols/2));
+          
+               // mark it as foreground
+               fg_seed.setTo(cv::GC_FGD);
+          
+               // select first 1 row of the image as background
+               cv::Mat1b bg_seed = markers(cv::Range(0, 1),cv::Range::all());
+               bg_seed.setTo(cv::GC_BGD);
+
+               cv::Mat bgd, fgd;
+               int iterations = 3;
+               cv::grabCut(original, markers, cv::Rect(), bgd, fgd, iterations, cv::GC_INIT_WITH_MASK);          
+          
+               // let's get all foreground and possible foreground pixels
+               cv::Mat1b mask_fgpf = ( markers == cv::GC_FGD) | ( markers == cv::GC_PR_FGD);
+               // and copy all the foreground-pixels to a temporary image
+               cv::Mat3b tmp = cv::Mat3b::zeros(original.rows, original.cols);
+               original.copyTo(tmp, mask_fgpf);
+               // show it
+               cv::imshow("foreground", tmp);
+          }
+          
+          ////////////////////////////////////////////////
           // Display images
+          ////////////////////////////////////////////////
           cv::imshow("Original", original);
           cv::imshow("Gray", gray);
           cv::imshow("Threshold", threshold);
-          cv::imshow("Running", rg);
           cv::imshow("Clusters", blob_img);
           cv::imshow("Tracks", original_w_tracks);
 

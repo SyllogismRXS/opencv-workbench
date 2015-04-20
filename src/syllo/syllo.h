@@ -238,6 +238,8 @@ namespace syllo
 	       detectCount = 0;
 
 	       kalmanTracker.setModel(A,B,C,R,Q);
+
+               return 0;
 	  }
 
 	  int step()
@@ -248,11 +250,13 @@ namespace syllo
 	       }
 
 	       age--;
+               return 0;
 	  }
 
 	  int velocityUpdate()
 	  {
-	       //estVel(0) 
+	       //estVel(0)
+               return -1;
 	  }
 
 	  int update(Blob newBlob, int curTime)
@@ -327,11 +331,11 @@ namespace syllo
 	       return size;
 	  }
 
-	  int setSize(int size)
+	  void setSize(int size)
 	  {
-	       this->size = size;
+	       this->size = size;               
 	  }
-     
+          
      };
 
      typedef enum {
@@ -459,8 +463,8 @@ namespace syllo
 
 	  void calcMags()
 	  {
-	       velMag = sqrt( pow(velocity.x,2) + (velocity.y,2));
-	       //varMag = sqrt( pow(variance(0),2) + (variance(1),2));
+	       velMag = sqrt( pow(velocity.x,2) + pow(velocity.y,2));
+	       //varMag = sqrt( pow(variance(0),2) + pow(variance(1),2));
 	  }
 
 	  double CrossProduct(const cv::Vec2d &v1, const cv::Vec2d & v2)
@@ -574,8 +578,7 @@ namespace syllo
 	       double xAvg = 0;
 	       double yAvg = 0;
 
-	       int count = 0;
-	       int size = blobs.size();
+               int size = blobs.size();
 	       
 	       if (size > 0) {
 		    std::map<int,syllo::Blob>::iterator it;

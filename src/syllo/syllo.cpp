@@ -128,6 +128,7 @@ namespace syllo {
 	  // Show me what you got
 	  rectangle( outputImg, matchLoc, cv::Point( matchLoc.x + templImg.cols , matchLoc.y + templImg.rows ), cv::Scalar::all(0), 2, 8 ); 
 	  //rectangle( result, matchLoc, Point( matchLoc.x + templImg.cols , matchLoc.y + templImg.rows ), Scalar::all(0), 2, 8, 0 );
+          return 0;
      }
 
      /*
@@ -355,7 +356,7 @@ namespace syllo {
 	       it->second.setID(newID);
 	       newBlobs[newID] = it->second;
 	  }
-
+          return 0;
      }
 
      int formClusters(std::map<int,syllo::Blob> blobs, std::map<int,syllo::Cluster> &clusters)
@@ -398,6 +399,8 @@ namespace syllo {
 	  for (clustIt = clusters.begin() ; clustIt != clusters.end() ; clustIt++) {
 	       clustIt->second.calcCentroid();
 	  }
+
+          return 0;
      }
 
      int ClusterMatch(std::map<int,syllo::Cluster> &prevClusters, std::map<int,syllo::Cluster> &clusters, std::map<int,syllo::Cluster> &newClusters, std::map<int,syllo::Cluster> &allClusters, int curTime, std::map<int,bool> &IDs) 
@@ -512,6 +515,7 @@ namespace syllo {
 	       allClusters[champID] = it->second;
 	       champID++;
 	  }
+          return 0;
      }
 
      int StepClusterPF(std::map<int,syllo::Cluster> &clusters)
@@ -520,6 +524,7 @@ namespace syllo {
 	  for (it = clusters.begin() ; it != clusters.end(); it++) {
 	       it->second.pf_step();
 	  }
+          return 0;
      }
 
      int getFarthestTravel(std::map<int,syllo::Cluster> &clusters, syllo::Cluster &cluster)
@@ -535,6 +540,7 @@ namespace syllo {
 		    cluster = it->second;
 	       }
 	  }
+          return 0;
      }
 
      int getFastestCluster(std::map<int,syllo::Cluster> &clusters, syllo::Cluster &cluster)
@@ -547,6 +553,7 @@ namespace syllo {
 		    cluster = it->second;
 	       }
 	  }
+          return 0;
      }
 
      int getConstVelCluster(std::map<int,syllo::Cluster> &clusters, syllo::Cluster &cluster)
@@ -567,6 +574,7 @@ namespace syllo {
 	       }
 	  }
 	  printf("==> Winner: %d", clusterChampID);
+          return 0;
      }
 
      int drawClusters(cv::Mat &src, cv::Mat &dst, std::map<int,syllo::Cluster> &clusters, int radius) 
@@ -678,8 +686,7 @@ namespace syllo {
 	  //printf("%s %d %s %d\n", getImgType(input.type()).c_str(), input.depth(), getImgType(templateImg.type()).c_str(), templateImg.depth());
 	  
 	  std::map<int,syllo::Blob>::iterator it;
-	  int i = 0;
-	  float champ = -2000;
+          float champ = -2000;
 	  syllo::Blob champBlob;
 	  for (it = blobs.begin() ; it != blobs.end(); it++) {
 	       //printf("blobs: %d\n",i++);
@@ -751,8 +758,7 @@ namespace syllo {
 	  matchImg.create(1,1,CV_32FC1);
 
 	  std::map<int,syllo::Cluster>::iterator it;
-	  int i = 0;
-	  float champ = -2000;
+          float champ = -2000;
 	  syllo::Cluster champCluster;
 	  for (it = clusters.begin() ; it != clusters.end(); it++) {
 	       cv::Rect roiRect = cv::Rect(it->second.getCentroid().x-templateImg.cols/2-10, 
@@ -858,6 +864,7 @@ namespace syllo {
 	  }
 
 	  foreImg.copyTo(img2);
+          return 0;
      }
 
      // Test function
@@ -874,6 +881,7 @@ namespace syllo {
 	       it->second.getParticleFilter(pf);
 	       drawParticles(pf, input, output);
 	  }
+          return 0;
      }
 
      int drawParticles(ParticleFilter &pf, cv::Mat &src, cv::Mat &dst)
@@ -917,7 +925,7 @@ namespace syllo {
                cout << "Setting entity " << itMin->first << " to clutter" << endl;
                itMin->second.set_type(clutter);
           }
-          
+          return 0;
      }
 
      int tagClusterEntity(cv::Point point, EntityType target, EntityType others, 
@@ -938,6 +946,8 @@ namespace syllo {
           itMin->second.set_type(target);
           cout << "Setting " << itMin->first << " to " 
                << itMin->second.type() << endl;
+          
+          return 0;
      }
 
      cv::Point getTypeCentroid(EntityType type, std::map<int,syllo::Cluster> &clusters)
