@@ -7,5 +7,7 @@ add_subdirectory(mainwindow)
 add_subdirectory(cut)
 add_subdirectory(eigenfaces)
 add_subdirectory(facerec_video)
+add_subdirectory(video_window)
+add_subdirectory(workbench)
 
 
