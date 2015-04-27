@@ -84,8 +84,7 @@ private:
      
 protected:
      
-     QDialog * video_window_dialog_;
-     VideoWindow *video_window_;
+     std::vector<VideoWindow*> video_windows_;
      
      void closeEvent(QCloseEvent *event);     
 };

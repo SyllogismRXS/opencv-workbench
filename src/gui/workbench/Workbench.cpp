@@ -78,15 +78,27 @@ void Workbench::open()
      if (!fileName.isEmpty()) {
           prev_open_path_ = QFileInfo(fileName).path();
 
-          // Send to VideoWindow Widget
-          //video_window_dialog_ = new QDialog(this);
-          //video_window_ = new VideoWindow(video_window_dialog_);
-          video_window_ = new VideoWindow();
+          // Free up memory from any windows that have been closed already:
+          std::vector<VideoWindow *>::iterator it = video_windows_.begin();
+          for(; it != video_windows_.end(); ) {
+               if (!((*it)->isVisible())) {
+                    delete *it;
+                    video_windows_.erase(it);
+               } else {
+                    it++;
+               }
+          }
           
-          video_window_->open(fileName);          
+          // Send to VideoWindow Widget
+          video_windows_.push_back(new VideoWindow());
+          
+          video_windows_.back()->open(fileName);          
           //connect(video_window_, SIGNAL(start_labeling()), this, SLOT(start_video_windowing()));          
-          //video_window_dialog_->show();
-          video_window_->show();
+                    
+          video_windows_.back()->raise();
+          video_windows_.back()->activateWindow();
+          video_windows_.back()->setFocus(Qt::ActiveWindowFocusReason);
+          video_windows_.back()->showNormal();          
      }     
 }
 
@@ -101,7 +113,7 @@ void Workbench::writeSettings()
      QSettings settings;
 
      // Window size and position
-     settings.beginGroup("MainWindow");
+     settings.beginGroup("Workbench");
      settings.setValue("size", size());
      settings.setValue("pos", pos());
 
@@ -115,7 +127,7 @@ void Workbench::readSettings()
 {
      QSettings settings;
      
-     settings.beginGroup("MainWindow");
+     settings.beginGroup("Workbench");
      
      // Window size
      resize(settings.value("size", QSize(400, 400)).toSize());

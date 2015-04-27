@@ -42,6 +42,8 @@
 #include <QResource>
 #include <QSettings>
 
+#include <opencv_workbench/utils/SylloQt.h>
+
 #include "VideoWindow.h"
 
 using std::cout;
@@ -55,150 +57,46 @@ VideoWindow::VideoWindow(QWidget *parent)
      readSettings();
 
      state_ = none;
-     record_state_ = not_recording;
      
-     //connect(ui.actionOpen, SIGNAL(triggered()), this, SLOT(open()));
-     //connect(ui.actionOpen_Camera, SIGNAL(triggered()), this, SLOT(open_camera()));
-     //connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(save()));
-     //connect(ui.actionQuit, SIGNAL(triggered()), this, SLOT(close()));
-     //connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(about()));
-     //
-     //connect(ui.actionCut, SIGNAL(triggered()), this, SLOT(cut()));
-     //connect(ui.actionRecord, SIGNAL(triggered()), this, SLOT(record()));    
+     connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
+     connect(ui.frame_slider, SIGNAL(sliderReleased()), this, SLOT(slider_released()));
 
-     //connect(ui.fps_spinbox, SIGNAL(valueChanged(double)), this, SLOT(set_fps(double)));
-     //connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num(int)));
-     //connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
-
+     connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num_from_spinbox(int)));
+     
      connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
-     //connect(ui.rewind_button, SIGNAL(released()), this, SLOT(divide_frame_rate()));
-     //connect(ui.forward_button, SIGNAL(released()), this, SLOT(double_frame_rate()));
      
-     //connect(ui.cam_id_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_cam_id(int)));
-
      // Keyboard shortcuts
      // Note: Get deleted automatically when program closes.
-     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
-     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_C), this, SLOT(open_camera()));
+     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));     
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
      new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(space_bar()));
-     new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(divide_frame_rate()));
-     new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(double_frame_rate()));
-     
-     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(record()));
+     new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(back_one_frame()));
+     new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(step_one_frame()));
+     new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(double_frame_rate()));
+     new QShortcut(QKeySequence(Qt::Key_Down), this, SLOT(divide_frame_rate()));
      
      timer_ = new QTimer(this);
 
-     connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));
-
-     //this->setCentralWidget(ui.centralwidget);
-     //this->adjustSize();
+     connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));     
 }
 
-void VideoWindow::set_cam_id(int id)
-{
-     if (stream_.isLive()) {
-          this->open_camera();
-     }
-}
-
-void VideoWindow::cut()
-{
-     cut_dialog_ = new QDialog(this);     
-     cut_ = new CutForm(cut_dialog_);
-
-     // Inform the Cut dialog of the max and min frame numbers
-     cut_->set_min_max(0,stream_.get_frame_count());
-
-     connect(cut_, SIGNAL(export_video()), this, SLOT(export_video_frames()));
-     
-     cut_dialog_->show();
-     cut_->show();
-}
-
-void VideoWindow::record()
-{
-     std::string temp_fn = QDir::homePath().toStdString() + "/output.avi";
-     if (record_state_ == not_recording) {
-          // Setup video export
-          syllo::Status status;
-          status = stream_.setup_export_video(temp_fn,0,1);
-          if (status != syllo::Success) {
-               QMessageBox::critical(this,tr("Error"), tr("Failed to setup video record."));
-          } else {
-               record_state_ = recording;
-               ui.record_button->setIcon(QIcon(":/resources/record_enable.png"));
-          }
-     } else {
-          // Recording
-          // Stop the recording
-          record_state_ = not_recording;
-          ui.record_button->setIcon(QIcon(":/resources/record.png"));
-          stream_.stop_camera_record();
-
-          // Ask the user if he wants to save the file
-          QString str_avi = "AVI (*.avi)";
-          QFileDialog * save_diag = new QFileDialog(this, tr("Save file"), QDir::homePath(), tr(str_avi.toStdString().c_str()));
-          save_diag->setAcceptMode(QFileDialog::AcceptSave);
-
-          if (save_diag->exec()) {
-               // Get the selected file
-               QString fn = save_diag->selectedFiles()[0];
-               QString base_ext = QFileInfo(fn).baseName() + ".avi";
-               fn = QFileInfo(fn).absolutePath() + "/" + base_ext;
-               cout << "filename: " << fn.toStdString() << endl;
-               QFile::rename(QString::fromUtf8(temp_fn.c_str()), fn);
-          }              
-          delete save_diag;
-     }
-}
-
-void VideoWindow::export_video_frames()
-{
-     int start_frame = cut_->get_start_frame();
-     int end_frame = cut_->get_end_frame();
-     QString file_name = cut_->get_filename();
-
-     delete cut_;
-     delete cut_dialog_;
-     
-     QDialog *diag_progress = new QDialog(this);
-     QProgressBar *prog_bar = new QProgressBar(diag_progress);
-     
-     diag_progress->setWindowTitle("Exporting video...");
-     prog_bar->setRange(0, end_frame-start_frame);
-     diag_progress->show();
-     prog_bar->show();
-
-     // Setup video export
-     syllo::Status status;
-     status = stream_.setup_export_video(file_name.toStdString(), start_frame, end_frame);
-     if (status != syllo::Success) {
-          QMessageBox::critical(this,tr("Error"), tr("Failed to output video."));
-     }
-
-     int prog = 0;
-     while (stream_.step_video_export()) {
-          prog_bar->setValue(prog++);          
-     }
-
-     delete prog_bar;
-     delete diag_progress;
-
-     QMessageBox::information(this,tr("Export Complete!"), tr("Video export complete!"));
-}
-
-void VideoWindow::set_frame_num_from_slider(int frame_num)
-{
-     this->set_frame_num(frame_num);     
-}
-
-void VideoWindow::set_frame_num(int frame_num) 
+void VideoWindow::set_frame_num_from_slider(int frame_num) 
 {
      if (state_ == paused) {
-          stream_.set_frame_number(frame_num);
-          //this->draw();
-     }
+          stream_.set_frame_number(frame_num);          
+     }     
+     stream_.set_frame_number(frame_num);     
+}
+
+void VideoWindow::slider_released()
+{     
+     this->draw();
+}
+
+void VideoWindow::set_frame_num_from_spinbox(int frame_num)
+{
+     stream_.set_frame_number(frame_num);     
+     this->draw();
 }
 
 void VideoWindow::play()
@@ -218,8 +116,22 @@ void VideoWindow::pause()
 void VideoWindow::set_fps(double fps)
 {
      fps_ = fps;
-     //ui.fps_spinbox->setValue(fps_);
+     if (fps_ < 0.1) {
+          fps_ = 0.1;
+     }
      timer_->setInterval(1000.0/fps_);
+}
+
+void VideoWindow::back_one_frame()
+{ 
+     stream_.set_frame_number(stream_.get_frame_number()-2);
+     this->draw();
+}
+
+void VideoWindow::step_one_frame()
+{     
+     stream_.set_frame_number(stream_.get_frame_number());
+     this->draw();
 }
 
 void VideoWindow::double_frame_rate()
@@ -231,7 +143,6 @@ void VideoWindow::divide_frame_rate()
 {
      this->set_fps(fps_/2.0);
 }
-
 
 void VideoWindow::closeEvent(QCloseEvent *event)
 {
@@ -250,21 +161,23 @@ void VideoWindow::space_bar()
 
 void VideoWindow::timer_loop()
 {
-     if (stream_.isOpened()) {
-          if (stream_.type() != syllo::ImageType) {
-               if (stream_.read(curr_image_)) {
-                    this->draw();
-               } else {
-                    cout << "Done" << endl;
-                    this->pause();
-                    this->set_frame_num(0);
-               }
-          }          
-     }     
+     this->draw();     
 }
 
 void VideoWindow::draw()
 {
+     if (!stream_.isOpened()) {
+          cout << "Stream is not open" << endl;
+          return;
+     }
+     
+     if (stream_.type() == syllo::ImageType || !stream_.read(curr_image_)) {
+          cout << "Done" << endl;
+          this->pause();
+          stream_.set_frame_number(0);
+          return;
+     }
+     
      if (stream_.isLive()) {                    
      } else {
           // Set all appropriate GUI elements on each frame
@@ -278,31 +191,26 @@ void VideoWindow::draw()
      visible_img_ = curr_image_.clone();                    
 
      this->draw_image(visible_img_);     
-     this->adjustSize();
-     
-     if (record_state_ == recording) {
-          stream_.step_camera_record();
-     }
+     this->adjustSize();          
 }
 
 void VideoWindow::draw_image(const cv::Mat &img)
 {
-     q_image = Mat2QImage(img);
+     q_image = SylloQt::Mat2QImage(img);
      ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
      ui.image_frame->adjustSize();
 }
 
-void VideoWindow::open_camera()
+void VideoWindow::open_camera(int id)
 {
      if (stream_.isOpened()) {
           stream_.release();
      }          
 
-     //syllo::Status status = stream_.open(ui.cam_id_spinbox->value());
-     syllo::Status status = stream_.open(0);
+     syllo::Status status = stream_.open(id);
      if (status == syllo::Success && stream_.isOpened()) {
                
-          this->set_frame_num(0);                                   
+          stream_.set_frame_number(0);
           stream_.read(curr_image_);          
           this->draw_image(curr_image_);               
 
@@ -348,9 +256,7 @@ void VideoWindow::open(QString fileName)
                cout << "Looking for video file: " << query_file << endl;              
           }
 
-          if (status == syllo::Success && stream_.isOpened()) {
-               
-               this->set_frame_num(0);
+          if (status == syllo::Success && stream_.isOpened()) {                              
                
                // set slider range
                ui.frame_slider->setRange(0,stream_.get_frame_count()-1);
@@ -363,27 +269,11 @@ void VideoWindow::open(QString fileName)
                }
                this->set_fps(fps_);
                
-               if (stream_.read(curr_image_)) {
-                    // one time processing:
-                    
-                    this->draw();                    
-
-                    if (stream_.type() == syllo::ImageType) {
-                         this->play();
-                    } else {
-                         this->pause();                         
-                    }                    
-               } else {
-                    this->pause();
-                    this->set_frame_num(0);
-               }
+               stream_.set_frame_number(0);
+               this->draw();
+               this->pause();               
           }
      }
-}
-
-void VideoWindow::save()
-{
-     cout << "Save!" << endl;
 }
 
 void VideoWindow::about()
@@ -392,34 +282,12 @@ void VideoWindow::about()
                         tr("<p><b>The OpenCV Workbench</b> is a GUI application that simplifies the computer vision prototyping process.</p><p>Author: Kevin DeMarco (kevin.demarco@gmail.com)</p>"));
 }
 
-QImage VideoWindow::Mat2QImage(cv::Mat const& src)
-{
-     cv::Mat temp; // make the same cv::Mat
-     //cv::cvtColor(src, temp,CV_BGR2RGB); // cvtColor Makes a copy, that what i need
-     cv::cvtColor(src, src,CV_BGR2RGB); // cvtColor Makes a copy, that what i need
-     //QImage dest((uchar*) temp.data, temp.cols, temp.rows, temp.step, QImage::Format_RGB888);
-     QImage dest((uchar*) src.data, src.cols, src.rows, src.step, QImage::Format_RGB888);
-     //QImage dest2(dest);
-     //dest2.detach(); // enforce deep copy
-     //return dest2;
-     dest.detach();
-     return dest;
-}
-
-cv::Mat VideoWindow::QImage2Mat(QImage const& src)
-{
-     cv::Mat tmp(src.height(),src.width(),CV_8UC3,(uchar*)src.bits(),src.bytesPerLine());
-     cv::Mat result; // deep copy just in case (my lack of knowledge with open cv)
-     cv::cvtColor(tmp, result,CV_BGR2RGB);
-     return result;
-}
-
 void VideoWindow::writeSettings()
 {
      QSettings settings;
 
      // Window size and position
-     settings.beginGroup("MainWindow");
+     settings.beginGroup("VideoWindow");
      settings.setValue("size", size());
      settings.setValue("pos", pos());
 
@@ -433,7 +301,7 @@ void VideoWindow::readSettings()
 {
      QSettings settings;
      
-     settings.beginGroup("MainWindow");
+     settings.beginGroup("VideoWindow");
      
      // Window size
      resize(settings.value("size", QSize(400, 400)).toSize());

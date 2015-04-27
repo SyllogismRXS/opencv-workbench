@@ -76,8 +76,6 @@ class VideoWindow : public QWidget
           none = 0,
           paused,
           playing,
-          recording,
-          not_recording
      }State_t;
 
      VideoWindow(QWidget *parent = 0);
@@ -87,8 +85,7 @@ class VideoWindow : public QWidget
      private slots:
      void about();
      void open();
-     void open_camera();
-     void save();
+     void open_camera(int id);
      void timer_loop();
      
      void space_bar();
@@ -96,24 +93,20 @@ class VideoWindow : public QWidget
      void draw();
      void play();
      void pause();
-     void record();
 
      void draw_image(const cv::Mat &img);
      
-     void double_frame_rate();
-     void divide_frame_rate();
-
-     void set_fps(double fps);
-     void set_frame_num(int frame_num);
-     void set_frame_num_from_slider(int frame_num);
-
-     void set_cam_id(int id);
-
-     void cut();
-     void export_video_frames();
+     void step_one_frame();
+     void back_one_frame();
      
-     QImage Mat2QImage(cv::Mat const& src);
-     cv::Mat QImage2Mat(QImage const& src);
+     void double_frame_rate();
+     void divide_frame_rate();   
+     
+     void set_fps(double fps);
+     void set_frame_num_from_slider(int frame_num);
+     void set_frame_num_from_spinbox(int frame_num);
+     
+     void slider_released();         
 
 private:
      Ui::VideoWindow ui;
@@ -136,7 +129,6 @@ protected:
      CutForm *cut_;
 
      State_t state_;
-     State_t record_state_;
      double fps_;         
      
      void closeEvent(QCloseEvent *event);
