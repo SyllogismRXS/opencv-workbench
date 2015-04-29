@@ -53,6 +53,7 @@
 #include <video_window/ui_VideoWindow.h>
 
 #include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/utils/AnnotationParser.h>
 #include <opencv_workbench/gui/cut/cut.h>
 #include <opencv_workbench/gui/video_window/VideoWindow.h>
 
@@ -69,14 +70,15 @@ class Annotate : public VideoWindow
           
 protected:     
      
+     virtual void before_next_frame();
      virtual void before_display(cv::Mat &img);
+     virtual void on_open();
      int distance(QPoint p1, QPoint p2);
      bool nearby(QPoint p1, QPoint p2, int threshold);
      bool inside(QPoint p, QPoint p1, QPoint p2);
      
      bool box_drawn_;
      
-     QPoint mouse_loc_;
      QPoint pt1_;
      QPoint pt2_;
 
@@ -86,7 +88,9 @@ protected:
      bool edit_box_;
 
      QPoint pt1_drag_offset_;
-     QPoint pt2_drag_offset_;    
+     QPoint pt2_drag_offset_;             
+
+     AnnotationParser parser_;
      
 private:
      

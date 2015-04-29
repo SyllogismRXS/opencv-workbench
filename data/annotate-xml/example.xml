@@ -1,62 +1,59 @@
 <annotation>
-<folder>VOC2009</folder>
-<filename>2007_000027.jpg</filename>
-<source>
-    <database>The VOC2007 Database</database>
-    <annotation>PASCAL VOC2007</annotation>
-    <image>flickr</image>
-</source>
-<size>
+  <folder>/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/</folder>
+  <filename>2014_01_24_15_22_46.avi</filename>
+  <type>video</type>
+  <source>
+    <database>Kevin DeMarco's BlueView Sonar Database</database>
+    <annotation>PASCAL-Like Annotation</annotation>
+  </source>
+  <size>
     <width>486</width>
     <height>500</height>
     <depth>3</depth>
-</size>
-<segmented>0</segmented>
-<object>
-    <name>person</name>
-    <pose>Unspecified</pose>
-    <truncated>0</truncated>
-    <difficult>0</difficult>
-    <bndbox>
-        <xmin>174</xmin>
-        <ymin>101</ymin>
-        <xmax>349</xmax>
-        <ymax>351</ymax>
-    </bndbox>
-    <part>
-        <name>head</name>
+  </size>
+  <number_of_frames>400</number_of_frames>
+  <frames>
+    <frame>
+      <frame_number>0</frame_number>
+      <object>
+        <name>diver</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
         <bndbox>
-            <xmin>169</xmin>
-            <ymin>104</ymin>
-            <xmax>209</xmax>
-            <ymax>146</ymax>
-        </bndbox>
-    </part>
-    <part>
-        <name>hand</name>
+          <xmin>174</xmin>
+          <ymin>101</ymin>
+          <xmax>349</xmax>
+          <ymax>351</ymax>
+        </bndbox>    
+      </object>
+      <object>
+        <name>diver_2</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
         <bndbox>
-            <xmin>278</xmin>
-            <ymin>210</ymin>
-            <xmax>297</xmax>
-            <ymax>233</ymax>
-        </bndbox>
-    </part>
-    <part>
-        <name>foot</name>
+          <xmin>1</xmin>
+          <ymin>2</ymin>
+          <xmax>3</xmax>
+          <ymax>4</ymax>
+        </bndbox>    
+      </object>      
+    </frame>
+    <frame>
+      <frame_number>1</frame_number>
+      <object>
+        <name>diver</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
         <bndbox>
-            <xmin>273</xmin>
-            <ymin>333</ymin>
-            <xmax>297</xmax>
-            <ymax>354</ymax>
-        </bndbox>
-    </part>
-    <part>
-        <name>foot</name>
-        <bndbox>
-            <xmin>319</xmin>
-            <ymin>307</ymin>
-            <xmax>340</xmax>
-            <ymax>326</ymax>
-        </bndbox>
-    </part>
-</object>
+          <xmin>174</xmin>
+          <ymin>101</ymin>
+          <xmax>349</xmax>
+          <ymax>351</ymax>
+        </bndbox>    
+      </object>
+    </frame>
+  </frames>
+</annotation>

@@ -61,7 +61,7 @@ VideoWindow::VideoWindow(QWidget *parent)
      connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
      connect(ui.frame_slider, SIGNAL(sliderReleased()), this, SLOT(slider_released()));
 
-     connect(ui.frame_num_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_frame_num_from_spinbox(int)));
+     connect(ui.frame_num_spinbox, SIGNAL(editingFinished()), this, SLOT(set_frame_num_from_spinbox()));
      
      connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
      
@@ -95,13 +95,13 @@ void VideoWindow::set_frame_num_from_slider(int frame_num)
 }
 
 void VideoWindow::slider_released()
-{     
+{    
      this->get_video_frame();
 }
 
-void VideoWindow::set_frame_num_from_spinbox(int frame_num)
-{
-     stream_.set_frame_number(frame_num);     
+void VideoWindow::set_frame_num_from_spinbox()
+{     
+     stream_.set_frame_number(ui.frame_num_spinbox->value());     
      this->get_video_frame();
 }
 
@@ -177,6 +177,8 @@ void VideoWindow::timer_refresh_loop()
 
 void VideoWindow::get_video_frame()
 {
+     this->before_next_frame();
+     
      if (!stream_.isOpened()) {
           cout << "Stream is not open" << endl;
           return;
@@ -218,6 +220,12 @@ void VideoWindow::before_display(cv::Mat &img)
 {
 }
 
+// Overriden by subclasses
+void VideoWindow::before_next_frame()
+{
+     cout << "x_Saving data for frame: " << stream_.get_frame_number()-1 << endl;
+}
+
 void VideoWindow::display_image(const cv::Mat &img)
 {
      q_image = SylloQt::Mat2QImage(img);
@@ -256,17 +264,24 @@ void VideoWindow::open()
           dir = prev_open_path_;
      }
      
-     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), dir);
-     this->open(fileName);     
+     filename_ = QFileDialog::getOpenFileName(this, tr("Open File"), dir);
+     this->open(filename_);     
 }
 
-void VideoWindow::open(QString fileName)
-{
-     if (!fileName.isEmpty()) {
-          // Save the previously opened directory
-          prev_open_path_ = QFileInfo(fileName).path();         
 
-          std::string fn = fileName.toStdString();
+// Override
+void VideoWindow::on_open()
+{
+}
+
+void VideoWindow::open(QString filename)
+{
+     filename_ = filename;
+     if (!filename_.isEmpty()) {
+          // Save the previously opened directory
+          prev_open_path_ = QFileInfo(filename_).path();         
+          
+          std::string fn = filename_.toStdString();
           
           syllo::Status status = stream_.open(fn);          
 
@@ -285,7 +300,7 @@ void VideoWindow::open(QString fileName)
                // set slider range
                ui.frame_slider->setRange(0,stream_.get_frame_count()-1);
                ui.frame_num_spinbox->setRange(0,stream_.get_frame_count()-1);
-               ui.filename_label->setText(QFileInfo(fileName).fileName());
+               ui.filename_label->setText(QFileInfo(filename_).fileName());
                
                fps_ = stream_.get_fps();
                if (fps_ <= 0) {
@@ -298,6 +313,7 @@ void VideoWindow::open(QString fileName)
                this->pause();               
           }
      }
+     this->on_open();
 }
 
 void VideoWindow::about()

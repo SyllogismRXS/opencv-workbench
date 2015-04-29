@@ -20,9 +20,10 @@ target_link_libraries(${LIB_NAME}
 set( LIB_NAME_2 workbench-utils )
 
 ADD_LIBRARY( ${LIB_NAME_2} SHARED
-  ParseAnnotation.cpp
+  AnnotationParser.cpp
   )
 
 target_link_libraries(${LIB_NAME_2} 
+  ${Boost_LIBRARIES}  
   #${OpenCV_LIBS} 
   )

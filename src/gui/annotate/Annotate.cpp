@@ -65,6 +65,11 @@ Annotate::Annotate(VideoWindow *parent)
      connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));
 }
 
+void Annotate::on_open()
+{
+     parser_.CheckForFile(filename_.toStdString());     
+}
+
 void Annotate::mousePressed(QPoint p)
 {    
      // If the box has already been drawn, check to see if the user is trying
@@ -122,6 +127,12 @@ void Annotate::mouseReleased(QPoint p)
      disconnect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));
 
      //cout << "Frame num: " << stream_.get_frame_number()-1 << endl;
+}
+
+void Annotate::before_next_frame()
+{
+     // Save any data from this frame
+     //cout << "Saving data for frame: " << stream_.get_frame_number()-1 << endl;
 }
 
 void Annotate::before_display(cv::Mat &img)

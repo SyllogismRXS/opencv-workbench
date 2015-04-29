@@ -26,7 +26,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-FIND_PACKAGE ( Boost COMPONENTS filesystem system REQUIRED)
+########################################################
+# Find Boost
+########################################################
+find_package(Boost COMPONENTS thread date_time program_options filesystem 
+  system REQUIRED)
+
+if(Boost_FOUND)
+        include_directories(${Boost_INCLUDE_DIRS})
+endif()
+message("===========================")
+message("BOOST Directories:")
+message("${Boost_INCLUDE_DIRS}")
 
 set(CMAKE_CXX_FLAGS "-g -Wall")
 
@@ -65,7 +76,7 @@ include_directories(${OPENCV_WORKBENCH_BUILD_DIR}/src/gui)
 include_directories(${OPENCV_WORKBENCH_INC_DIR}/opencv_workbench/syllo-widgets)
 
 ## copy to opencv_workbench/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${OPENCV_WORKBENCH_SRC_DIR} src/*.h)
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${OPENCV_WORKBENCH_SRC_DIR} src/*.h src/*.hpp)
 foreach(I ${INCLUDE_FILES})
   configure_file(${OPENCV_WORKBENCH_SRC_DIR}/${I} ${OPENCV_WORKBENCH_INC_DIR}/opencv_workbench/${I} @ONLY)
 endforeach()

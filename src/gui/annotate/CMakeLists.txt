@@ -43,6 +43,7 @@ target_link_libraries(${APP_NAME}lib
   ${YAMLCPP_LIBRARY}
   sonar-sdk
   video_windowlib
+  workbench-utils
   )
 
 add_executable(${APP_NAME} 
@@ -65,6 +66,7 @@ target_link_libraries(${APP_NAME}
   ${YAMLCPP_LIBRARY}
   sonar-sdk
   video_windowlib
+  workbench-utils
   )
 
 if (DEFINED BLUEVIEW_SDK_LIBS)

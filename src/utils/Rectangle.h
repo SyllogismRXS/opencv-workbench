@@ -1,10 +1,10 @@
-#ifndef PARSEANNOTATION_H_
-#define PARSEANNOTATION_H_
+#ifndef RECTANGLE_H_
+#define RECTANGLE_H_
 /// ---------------------------------------------------------------------------
-/// @file ParseAnnotation.h
+/// @file Rectangle.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-04-29 14:23:13 syllogismrxs>
+/// Time-stamp: <2015-04-29 17:44:53 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -35,14 +35,27 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The ParseAnnotation class ...
+/// The Rectangle class ...
 /// 
 /// ---------------------------------------------------------------------------
 
-class ParseAnnotation {
+#include <opencv_workbench/utils/Point.h>
+
+class Rectangle {
 public:
-     ParseAnnotation();
+     Rectangle() { }
+     Rectangle(Point<int> pt1, Point<int> pt2)
+     {
+          pt1_ = pt1;
+          pt2_ = pt2;
+     }
+
+     Point<int> pt1() { return pt1_; }
+     Point<int> pt2() { return pt2_; }
+     
 protected:
+     Point<int> pt1_;
+     Point<int> pt2_;
 private:
 };
 

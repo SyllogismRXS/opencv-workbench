@@ -81,6 +81,7 @@ class VideoWindow : public QWidget
      VideoWindow(QWidget *parent = 0);
  
      void open(QString fileName);
+     virtual void on_open();
 
      private slots:
      void about();
@@ -94,6 +95,8 @@ class VideoWindow : public QWidget
      void draw();
      void get_video_frame();
      virtual void before_display(cv::Mat &img);
+     virtual void before_next_frame();
+
      void play();
      void pause();
 
@@ -107,7 +110,7 @@ class VideoWindow : public QWidget
      
      void set_fps(double fps);
      void set_frame_num_from_slider(int frame_num);
-     void set_frame_num_from_spinbox(int frame_num);
+     void set_frame_num_from_spinbox();
      
      void slider_released();         
 
@@ -119,6 +122,8 @@ protected:
 
      QImage q_image;
      
+     QString filename_;
+
      syllo::Stream stream_;
      
      void readSettings();

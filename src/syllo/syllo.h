@@ -1,6 +1,9 @@
 #ifndef SYLLO_H_
 #define SYLLO_H_
 
+#include <iostream>
+#include <sstream>
+
 #include <cv.h>
 #include <highgui.h>
 
@@ -14,7 +17,14 @@
 
 namespace syllo
 {
-
+     int str2int(std::string str)
+     {
+          int num;
+          if ( ! (std::istringstream(str) >> num) ) num = 0;
+          return num;
+     }
+     
+     
      //typedef enum{
      //     NoneType = 0,
      //     CameraType = 1,
