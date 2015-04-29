@@ -70,16 +70,23 @@ class Annotate : public VideoWindow
 protected:     
      
      virtual void before_display(cv::Mat &img);
-
-     bool mouse_dragging_;
-     QPoint first_click_;
-     QPoint second_click_;
+     int distance(QPoint p1, QPoint p2);
+     bool nearby(QPoint p1, QPoint p2, int threshold);
+     bool inside(QPoint p, QPoint p1, QPoint p2);
+     
+     bool box_drawn_;
+     
      QPoint mouse_loc_;
+     QPoint pt1_;
+     QPoint pt2_;
 
-     bool moving_second_pt_;
-     bool moving_box_;
+     int near_thresh;
+     bool edit_pt1_;
+     bool edit_pt2_;
+     bool edit_box_;
 
-     bool box_mode_;
+     QPoint pt1_drag_offset_;
+     QPoint pt2_drag_offset_;    
      
 private:
      

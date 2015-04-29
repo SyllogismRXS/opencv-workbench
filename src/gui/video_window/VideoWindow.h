@@ -86,11 +86,13 @@ class VideoWindow : public QWidget
      void about();
      void open();
      void open_camera(int id);
-     void timer_loop();
+     void timer_video_loop();
+     void timer_refresh_loop();
      
      void space_bar();
 
      void draw();
+     void get_video_frame();
      virtual void before_display(cv::Mat &img);
      void play();
      void pause();
@@ -110,9 +112,10 @@ class VideoWindow : public QWidget
      void slider_released();         
 
 protected:
-     Ui::VideoWindow ui;
-
-     QTimer *timer_;
+     Ui::VideoWindow ui;    
+     
+     QTimer *timer_video_;
+     QTimer *timer_refresh_;
 
      QImage q_image;
      
@@ -128,7 +131,8 @@ protected:
      CutForm *cut_;
 
      State_t state_;
-     double fps_;         
+     double fps_;       
+     double timer_refresh_fps_;
      
      void closeEvent(QCloseEvent *event);
 

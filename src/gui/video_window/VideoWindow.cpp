@@ -75,9 +75,15 @@ VideoWindow::VideoWindow(QWidget *parent)
      new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(double_frame_rate()));
      new QShortcut(QKeySequence(Qt::Key_Down), this, SLOT(divide_frame_rate()));
      
-     timer_ = new QTimer(this);
+     timer_video_ = new QTimer(this);
+     timer_refresh_ = new QTimer(this);
 
-     connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));     
+     connect(timer_video_, SIGNAL(timeout()), this, SLOT(timer_video_loop()));     
+     connect(timer_refresh_, SIGNAL(timeout()), this, SLOT(timer_refresh_loop()));
+
+     timer_refresh_fps_ = 30;
+     timer_refresh_->setInterval(1000.0/timer_refresh_fps_);
+     timer_refresh_->start();
 }
 
 void VideoWindow::set_frame_num_from_slider(int frame_num) 
@@ -90,25 +96,25 @@ void VideoWindow::set_frame_num_from_slider(int frame_num)
 
 void VideoWindow::slider_released()
 {     
-     this->draw();
+     this->get_video_frame();
 }
 
 void VideoWindow::set_frame_num_from_spinbox(int frame_num)
 {
      stream_.set_frame_number(frame_num);     
-     this->draw();
+     this->get_video_frame();
 }
 
 void VideoWindow::play()
 {
-     timer_->start();
+     timer_video_->start();
      state_ = playing;
      ui.play_button->setIcon(QIcon(":/resources/pause.png"));
 }
 
 void VideoWindow::pause()
 {
-     timer_->stop();
+     timer_video_->stop();
      state_ = paused;
      ui.play_button->setIcon(QIcon(":/resources/play.png"));
 }
@@ -119,19 +125,19 @@ void VideoWindow::set_fps(double fps)
      if (fps_ < 0.1) {
           fps_ = 0.1;
      }
-     timer_->setInterval(1000.0/fps_);
+     timer_video_->setInterval(1000.0/fps_);
 }
 
 void VideoWindow::back_one_frame()
 { 
      stream_.set_frame_number(stream_.get_frame_number()-2);
-     this->draw();
+     this->get_video_frame();
 }
 
 void VideoWindow::step_one_frame()
 {     
      stream_.set_frame_number(stream_.get_frame_number());
-     this->draw();
+     this->get_video_frame();
 }
 
 void VideoWindow::double_frame_rate()
@@ -159,12 +165,17 @@ void VideoWindow::space_bar()
      }
 }
 
-void VideoWindow::timer_loop()
+void VideoWindow::timer_video_loop()
 {
-     this->draw();     
+     this->get_video_frame();     
 }
 
-void VideoWindow::draw()
+void VideoWindow::timer_refresh_loop()
+{
+     this->draw();
+}
+
+void VideoWindow::get_video_frame()
 {
      if (!stream_.isOpened()) {
           cout << "Stream is not open" << endl;
@@ -187,8 +198,15 @@ void VideoWindow::draw()
           ui.frame_slider->setValue(stream_.get_frame_number()-1);
           ui.frame_num_spinbox->setValue(stream_.get_frame_number()-1);
      }
-          
-     visible_img_ = curr_image_.clone();                    
+     this->draw();
+}
+
+void VideoWindow::draw()
+{     
+     if (curr_image_.empty()) {
+          return;
+     }
+     visible_img_ = curr_image_.clone();
 
      this->before_display(visible_img_);
      this->display_image(visible_img_);     
@@ -276,7 +294,7 @@ void VideoWindow::open(QString fileName)
                this->set_fps(fps_);
                
                stream_.set_frame_number(0);
-               this->draw();
+               this->get_video_frame();               
                this->pause();               
           }
      }
