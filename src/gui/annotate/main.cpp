@@ -38,104 +38,19 @@
  **
  ****************************************************************************/
 
-#ifndef VIDEOWINDOW_H
-#define VIDEOWINDOW_H
+#include <QApplication>
 
-// OpenCV headers
-#include <cv.h>
-//#include <highgui.h>
+#include "Annotate.h"
 
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/contrib/contrib.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-#include <video_window/ui_VideoWindow.h>
-
-#include <opencv_workbench/utils/Stream.h>
-#include <opencv_workbench/gui/cut/cut.h>
-
-#include <QTextStream>
-
-class VideoWindow : public QWidget
+int main(int argc, char *argv[])
 {
-     Q_OBJECT
+     QApplication app(argc, argv);
 
-     public:
+     app.setApplicationName("annotate");
+     app.setOrganizationName("DeMarco");
+     app.setOrganizationDomain("kevindemarco.com");
 
-     typedef enum{
-          img = 0,
-          avi,
-          mp4,
-          wmv,
-          usb_cam,
-          sonar
-     }Media_t;
-
-     typedef enum{
-          none = 0,
-          paused,
-          playing,
-     }State_t;
-
-     VideoWindow(QWidget *parent = 0);
- 
-     void open(QString fileName);
-
-     private slots:
-     void about();
-     void open();
-     void open_camera(int id);
-     void timer_loop();
-     
-     void space_bar();
-
-     void draw();
-     virtual void before_display(cv::Mat &img);
-     void play();
-     void pause();
-
-     void display_image(const cv::Mat &img);
-     
-     void step_one_frame();
-     void back_one_frame();
-     
-     void double_frame_rate();
-     void divide_frame_rate();   
-     
-     void set_fps(double fps);
-     void set_frame_num_from_slider(int frame_num);
-     void set_frame_num_from_spinbox(int frame_num);
-     
-     void slider_released();         
-
-protected:
-     Ui::VideoWindow ui;
-
-     QTimer *timer_;
-
-     QImage q_image;
-     
-     syllo::Stream stream_;
-     
-     void readSettings();
-     void writeSettings();
-
-     QString m_sSettingsFile;
-     QString prev_open_path_;     
-     
-     QDialog * cut_dialog_;
-     CutForm *cut_;
-
-     State_t state_;
-     double fps_;         
-     
-     void closeEvent(QCloseEvent *event);
-
-     cv::Mat curr_image_;
-     cv::Mat visible_img_;
-
-private:
-};
-
-#endif
+     Annotate annotate;
+     annotate.show();
+     return app.exec();
+}

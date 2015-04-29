@@ -38,8 +38,8 @@
  **
  ****************************************************************************/
 
-#ifndef VIDEOWINDOW_H
-#define VIDEOWINDOW_H
+#ifndef ANNOTATE_H
+#define ANNOTATE_H
 
 // OpenCV headers
 #include <cv.h>
@@ -54,88 +54,40 @@
 
 #include <opencv_workbench/utils/Stream.h>
 #include <opencv_workbench/gui/cut/cut.h>
+#include <opencv_workbench/gui/video_window/VideoWindow.h>
 
 #include <QTextStream>
 
-class VideoWindow : public QWidget
+class Annotate : public VideoWindow
 {
      Q_OBJECT
 
      public:
-
-     typedef enum{
-          img = 0,
-          avi,
-          mp4,
-          wmv,
-          usb_cam,
-          sonar
-     }Media_t;
-
-     typedef enum{
-          none = 0,
-          paused,
-          playing,
-     }State_t;
-
-     VideoWindow(QWidget *parent = 0);
- 
-     void open(QString fileName);
-
-     private slots:
-     void about();
-     void open();
-     void open_camera(int id);
-     void timer_loop();
      
-     void space_bar();
-
-     void draw();
+     Annotate(VideoWindow *parent = 0);
+     
+          
+protected:     
+     
      virtual void before_display(cv::Mat &img);
-     void play();
-     void pause();
 
-     void display_image(const cv::Mat &img);
-     
-     void step_one_frame();
-     void back_one_frame();
-     
-     void double_frame_rate();
-     void divide_frame_rate();   
-     
-     void set_fps(double fps);
-     void set_frame_num_from_slider(int frame_num);
-     void set_frame_num_from_spinbox(int frame_num);
-     
-     void slider_released();         
+     bool mouse_dragging_;
+     QPoint first_click_;
+     QPoint second_click_;
+     QPoint mouse_loc_;
 
-protected:
-     Ui::VideoWindow ui;
+     bool moving_second_pt_;
+     bool moving_box_;
 
-     QTimer *timer_;
-
-     QImage q_image;
+     bool box_mode_;
      
-     syllo::Stream stream_;
-     
-     void readSettings();
-     void writeSettings();
-
-     QString m_sSettingsFile;
-     QString prev_open_path_;     
-     
-     QDialog * cut_dialog_;
-     CutForm *cut_;
-
-     State_t state_;
-     double fps_;         
-     
-     void closeEvent(QCloseEvent *event);
-
-     cv::Mat curr_image_;
-     cv::Mat visible_img_;
-
 private:
+     
+private slots:
+     void mousePressed(QPoint p);
+     void mouseReleased(QPoint p);
+     void mouseMoved(QPoint p);
+     
 };
 
 #endif

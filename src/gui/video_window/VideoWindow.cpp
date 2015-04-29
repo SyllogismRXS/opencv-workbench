@@ -190,11 +190,17 @@ void VideoWindow::draw()
           
      visible_img_ = curr_image_.clone();                    
 
-     this->draw_image(visible_img_);     
+     this->before_display(visible_img_);
+     this->display_image(visible_img_);     
      this->adjustSize();          
 }
 
-void VideoWindow::draw_image(const cv::Mat &img)
+// Overriden by subclasses
+void VideoWindow::before_display(cv::Mat &img)
+{
+}
+
+void VideoWindow::display_image(const cv::Mat &img)
 {
      q_image = SylloQt::Mat2QImage(img);
      ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
@@ -212,7 +218,7 @@ void VideoWindow::open_camera(int id)
                
           stream_.set_frame_number(0);
           stream_.read(curr_image_);          
-          this->draw_image(curr_image_);               
+          this->display_image(curr_image_);               
 
           ui.filename_label->setText("Camera");
 
