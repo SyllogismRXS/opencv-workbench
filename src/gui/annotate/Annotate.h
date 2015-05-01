@@ -72,12 +72,13 @@ protected:
      
      virtual void before_next_frame();
      virtual void before_display(cv::Mat &img);
-     virtual void on_open();
+     virtual void on_open();     
+     void save_annotation_data();
      int distance(QPoint p1, QPoint p2);
      bool nearby(QPoint p1, QPoint p2, int threshold);
      bool inside(QPoint p, QPoint p1, QPoint p2);
      
-     bool box_drawn_;
+     bool box_present_;
      
      QPoint pt1_;
      QPoint pt2_;
@@ -98,7 +99,8 @@ private slots:
      void mousePressed(QPoint p);
      void mouseReleased(QPoint p);
      void mouseMoved(QPoint p);
-     
+     void save_annotation();
+     void erase_box();
 };
 
 #endif

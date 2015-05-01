@@ -88,9 +88,9 @@ VideoWindow::VideoWindow(QWidget *parent)
 
 void VideoWindow::set_frame_num_from_slider(int frame_num) 
 {
-     if (state_ == paused) {
-          stream_.set_frame_number(frame_num);          
-     }     
+     //if (state_ == paused) {
+     //     stream_.set_frame_number(frame_num);          
+     //}     
      stream_.set_frame_number(frame_num);     
 }
 
@@ -130,13 +130,13 @@ void VideoWindow::set_fps(double fps)
 
 void VideoWindow::back_one_frame()
 { 
-     stream_.set_frame_number(stream_.get_frame_number()-2);
+     stream_.step_backward();
      this->get_video_frame();
 }
 
 void VideoWindow::step_one_frame()
 {     
-     stream_.set_frame_number(stream_.get_frame_number());
+     stream_.step_forward();
      this->get_video_frame();
 }
 
@@ -167,7 +167,7 @@ void VideoWindow::space_bar()
 
 void VideoWindow::timer_video_loop()
 {
-     this->get_video_frame();     
+     this->step_one_frame();
 }
 
 void VideoWindow::timer_refresh_loop()
@@ -184,22 +184,30 @@ void VideoWindow::get_video_frame()
           return;
      }
      
-     if (stream_.type() == syllo::ImageType || !stream_.read(curr_image_)) {
-          cout << "Done" << endl;
+     if (stream_.type() == syllo::ImageType) {
           this->pause();
           stream_.set_frame_number(0);
           return;
      }
+
+     // Returns false on the last valid frame
+     bool status = stream_.read(curr_image_);
      
      if (stream_.isLive()) {                    
      } else {
           // Set all appropriate GUI elements on each frame
           // CV_CAP_PROP_POS_FRAMES is 0-based index of
           // NEXT frame to be captured, we want the currently
-          // displayed frame number
-          ui.frame_slider->setValue(stream_.get_frame_number()-1);
-          ui.frame_num_spinbox->setValue(stream_.get_frame_number()-1);
+          // displayed frame number                    
+          ui.frame_slider->setValue(stream_.frame_number());
+          ui.frame_num_spinbox->setValue(stream_.frame_number());
      }
+
+     if (!status) {
+          this->pause();
+          stream_.set_frame_number(0);
+     }
+
      this->draw();
 }
 
@@ -223,7 +231,7 @@ void VideoWindow::before_display(cv::Mat &img)
 // Overriden by subclasses
 void VideoWindow::before_next_frame()
 {
-     cout << "x_Saving data for frame: " << stream_.get_frame_number()-1 << endl;
+     //cout << "x_Saving data for frame: " << stream_.frame_number() << endl;
 }
 
 void VideoWindow::display_image(const cv::Mat &img)
@@ -309,11 +317,11 @@ void VideoWindow::open(QString filename)
                this->set_fps(fps_);
                
                stream_.set_frame_number(0);
+               this->on_open();
                this->get_video_frame();               
                this->pause();               
           }
-     }
-     this->on_open();
+     }     
 }
 
 void VideoWindow::about()

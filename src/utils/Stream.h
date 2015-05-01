@@ -56,12 +56,18 @@ namespace syllo
           cv::Mat frame_;          
           std::string img_fn_;
           bool valid_img_;
+
+          int curr_frame_number_;
+          int next_frame_number_;
+
      public:
 
           Stream()
           {
                output_ = NULL;
                vcap_ = NULL;
+               curr_frame_number_ = -1;
+               next_frame_number_ = 0;
           }
           
           Stream_t type() { return type_; }
@@ -181,6 +187,7 @@ namespace syllo
 		    cout << "Invalid file extension: " << ext << endl;
 		    status = Failure;
 	       }
+               
                return status;                  
 	  }
 
@@ -241,6 +248,15 @@ namespace syllo
                     status = vcap_->read(frame_);
                     frame = frame_;		    
 	       }
+               
+               curr_frame_number_ = next_frame_number_;               
+
+               // Check for end of video
+               //cout << curr_frame_number_ << " / " << get_frame_count() << endl;
+               if (curr_frame_number_ >= get_frame_count()-1) {
+                    return false;
+               }
+
                return status;
 	  }
 
@@ -280,11 +296,12 @@ namespace syllo
 	       }
           }
 
-          int get_frame_number()
+          int frame_number()
           {
                switch (type_) {
-	       case MovieType:                    
-                    return vcap_->get(CV_CAP_PROP_POS_FRAMES);
+	       case MovieType:
+                    //return vcap_->get(CV_CAP_PROP_POS_FRAMES)-1;
+                    return curr_frame_number_;
 		    break;
 	       case CameraType:
 		    return 0;
@@ -298,11 +315,17 @@ namespace syllo
 	       }
           }
 
+          int next_frame_number()
+          {
+               return next_frame_number_;
+          }
+
           void set_frame_number(int frame_num)
           {
                switch (type_) {
 	       case MovieType:                    
                     vcap_->set(CV_CAP_PROP_POS_FRAMES, frame_num);
+                    next_frame_number_ = frame_num;
                     break;
 	       case CameraType:
                     break;
@@ -313,6 +336,22 @@ namespace syllo
                     break;
                }
           }          
+
+          void step_forward()
+          {                  
+               vcap_->set(CV_CAP_PROP_POS_FRAMES, ++next_frame_number_);
+          }
+
+          void step_backward()
+          {
+               // Make sure we can't get below zero
+               if (next_frame_number_ <= 0) {
+                    next_frame_number_ = 0;                    
+               } else {
+                    next_frame_number_--;                    
+               }
+               vcap_->set(CV_CAP_PROP_POS_FRAMES, next_frame_number_);
+          }
 
           void release()
           {
@@ -350,7 +389,7 @@ namespace syllo
 	       default:
 		    return -1;
 	       }
-	  }
+	  }          
 
 	  int height()
 	  {

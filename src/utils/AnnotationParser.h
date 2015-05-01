@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-04-29 18:23:16 syllogismrxs>
+/// Time-stamp: <2015-05-01 12:16:32 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -42,15 +42,45 @@
 #include <map>
 #include <opencv_workbench/utils/Frame.h>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 class AnnotationParser {
 public:
      AnnotationParser();
      int ParseFile(std::string file);
      void CheckForFile(std::string video_file);
+     void write_annotation();
      void print();
+
+     void set_width(int width) { width_ = width; }
+     void set_height(int height) { height_ = height; }
+     void set_depth(int depth) { depth_ = depth; }
+     void set_number_of_frames(int num) { number_of_frames_ = num; }
+     void set_type(std::string type) { type_ = type; }
+     void set_video_filename(std::string video_filename) { video_filename_ = video_filename; }
+     void set_folder(std::string folder) { folder_ = folder; }
+     
+     void write_header();
+
+     std::map<int,Frame> frames;
+
 protected:
-     std::string xml_filename_;
-     std::map<int,Frame> frames_;
+     std::string xml_filename_;     
+
+     std::string folder_;
+     std::string type_;
+     std::string video_filename_;
+     int width_;
+     int height_;
+     int depth_;     
+     int number_of_frames_;
+
+     fs::path dir_;
+     fs::path basename_;
      
 private:
 };

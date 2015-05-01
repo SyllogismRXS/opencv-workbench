@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-04-29 17:51:53 syllogismrxs>
+/// Time-stamp: <2015-05-01 14:59:37 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -59,7 +59,7 @@ BoundingBox(int xmin, int xmax, int ymin, int ymax) :
                
      Rectangle rectangle() 
      {
-          return Rectangle(Point<int>(xmin_,ymax_),Point<int>(xmax_,ymin_));
+          return Rectangle(Point<int>(xmin_,ymin_),Point<int>(xmax_,ymax_));
      }
      
 protected:

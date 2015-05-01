@@ -37,12 +37,18 @@
  ** $QT_END_LICENSE$
  **
  ****************************************************************************/
+#include <iostream>
+#include <algorithm>
 
 #include <QtGui>
 #include <QResource>
 #include <QSettings>
 
 #include <opencv_workbench/utils/SylloQt.h>
+#include <opencv_workbench/utils/Frame.h>
+#include <opencv_workbench/utils/Object.h>
+#include <opencv_workbench/utils/BoundingBox.h>
+#include <opencv_workbench/utils/Rectangle.h>
 
 #include "Annotate.h"
 
@@ -57,24 +63,49 @@ Annotate::Annotate(VideoWindow *parent)
      edit_pt1_ = false;
      edit_pt2_ = false; 
      edit_box_ = false;
-     box_drawn_ = false;
+     box_present_ = false;
      
-     near_thresh = 25;
+     near_thresh = 25;     
      
      connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
      connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));
+
+     new QShortcut(QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
+}
+
+void Annotate::erase_box()
+{
+     if (box_present_) {
+          int frame_number = stream_.frame_number();
+          parser_.frames.erase(frame_number);
+     }     
+     box_present_ = false;
+}
+void Annotate::save_annotation()
+{
+     this->save_annotation_data();
+     parser_.write_annotation();
+     //parser_.print();
 }
 
 void Annotate::on_open()
 {
-     parser_.CheckForFile(filename_.toStdString());     
+     parser_.CheckForFile(filename_.toStdString());
+     parser_.set_width(stream_.width());
+     parser_.set_height(stream_.height());
+     parser_.set_depth(3);
+     parser_.set_type("video");
+     parser_.set_number_of_frames(stream_.get_frame_count());
+
+     // Now that the file has been opened, we can allow the user to try to save
+     new QShortcut(QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));
 }
 
 void Annotate::mousePressed(QPoint p)
 {    
      // If the box has already been drawn, check to see if the user is trying
      // to edit the corners of the box
-     if (box_drawn_) {
+     if (box_present_) {
           // Is the user trying to edit point 1, point 2, or is the user
           // trying to move the entire box?
           if (nearby(p,pt1_,near_thresh)) {
@@ -96,6 +127,7 @@ void Annotate::mousePressed(QPoint p)
           pt2_ = p;
      }
 
+     box_present_ = true;
      connect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));     
 }
 
@@ -120,26 +152,72 @@ void Annotate::mouseReleased(QPoint p)
      edit_pt2_ = false;
      edit_box_ = false;
 
-     // A box has been drawn
-     box_drawn_ = true;          
-     
      // Disconnect mouse moving callback
      disconnect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));
 
-     //cout << "Frame num: " << stream_.get_frame_number()-1 << endl;
+     //cout << "Frame num: " << stream_.frame_number()-1 << endl;
 }
 
 void Annotate::before_next_frame()
 {
+     this->save_annotation_data();
+
+     // Does the next frame have annotation data?
+     int next_frame_number = stream_.next_frame_number();
+     // Is this frame annotated already?
+     
+     if (parser_.frames.count(next_frame_number) > 0) {
+          box_present_ = true;
+          Rectangle rect = parser_.frames[next_frame_number].objects["diver"].bbox.rectangle();
+          pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
+          pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
+     }
+}
+
+void Annotate::save_annotation_data()
+{
      // Save any data from this frame
-     //cout << "Saving data for frame: " << stream_.get_frame_number()-1 << endl;
+     int frame_number = stream_.frame_number();
+          
+     // Ensure that we have a valid frame number and that a box is present
+     if (frame_number < 0) {
+          return;
+     }
+     
+     if(!box_present_) {
+          return;
+     }
+
+     Frame frame;
+     frame.set_frame_number(frame_number);
+     Object object;
+     object.set_name("diver");
+     object.bbox = BoundingBox(std::min(pt1_.x(),pt2_.x()), 
+                               std::max(pt1_.x(),pt2_.x()),
+                               std::min(pt1_.y(),pt2_.y()), 
+                               std::max(pt1_.y(),pt2_.y()));
+
+     // Save object to current frame
+     frame.objects[object.name()] = object;
+
+     // Save frame to parser
+     if (parser_.frames.count(frame_number) > 0) {
+          parser_.frames.erase(frame_number);
+     }
+     
+     parser_.frames[frame_number] = frame;
 }
 
 void Annotate::before_display(cv::Mat &img)
-{
-     cv::Point pt1(pt1_.x(), pt1_.y());
-     cv::Point pt2(pt2_.x(), pt2_.y());
-     cv::rectangle(img,pt1,pt2,cv::Scalar(0,0,255),1,8,0);
+{         
+     if (box_present_) {
+          cv::Point pt1(pt1_.x(), pt1_.y());
+          cv::Point pt2(pt2_.x(), pt2_.y());
+                    
+          cv::rectangle(img,pt1,pt2,cv::Scalar(0,0,255),1,8,0);
+          cv::circle(img, pt1, 1, cv::Scalar(255,255,255), 1, 8, 0);
+          cv::circle(img, pt2, 1, cv::Scalar(255,255,255), 1, 8, 0);
+     }
 }
 
 int Annotate::distance(QPoint p1, QPoint p2)

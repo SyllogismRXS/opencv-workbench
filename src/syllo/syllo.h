@@ -23,6 +23,13 @@ namespace syllo
           if ( ! (std::istringstream(str) >> num) ) num = 0;
           return num;
      }
+
+     std::string int2str(int x)
+     {
+          std::ostringstream convert;   // stream used for the conversion
+          convert << x;      // insert the textual representation of 'Number' in the characters in the stream
+          return convert.str();          
+     }
      
      
      //typedef enum{
