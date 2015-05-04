@@ -33,9 +33,9 @@ void AnnotationParser::CheckForFile(std::string video_file)
 
      if ( !boost::filesystem::exists( xml_filename_ ) ) {
           cout << "Annotation file doesn't exist. Creating..." << endl;
-          std::ofstream outfile;
-          outfile.open(xml_filename_.c_str());          
-          outfile.close();
+          //std::ofstream outfile;
+          //outfile.open(xml_filename_.c_str());          
+          //outfile.close();
      } else {
           cout << "Found annotation file." << endl;
           this->ParseFile(xml_filename_);
