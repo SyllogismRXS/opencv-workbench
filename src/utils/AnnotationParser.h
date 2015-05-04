@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-01 12:16:32 syllogismrxs>
+/// Time-stamp: <2015-05-04 13:19:54 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -53,6 +53,7 @@ public:
      AnnotationParser();
      int ParseFile(std::string file);
      void CheckForFile(std::string video_file);
+     void reset();
      void write_annotation();
      void print();
 

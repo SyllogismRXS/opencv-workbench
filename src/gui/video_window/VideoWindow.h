@@ -80,10 +80,11 @@ class VideoWindow : public QWidget
 
      VideoWindow(QWidget *parent = 0);
  
-     void open(QString fileName);
-     virtual void on_open();
+     void open(QString fileName);     
 
      private slots:
+     void tooltip_enabled();
+     void mouseMoved(QPoint p);
      void about();
      void open();
      void open_camera(int id);
@@ -112,7 +113,9 @@ class VideoWindow : public QWidget
      void set_frame_num_from_slider(int frame_num);
      void set_frame_num_from_spinbox();
      
-     void slider_released();         
+     void slider_released();       
+
+     void draw_tooltip(cv::Mat &img);
 
 protected:
      Ui::VideoWindow ui;    
@@ -143,7 +146,13 @@ protected:
 
      cv::Mat curr_image_;
      cv::Mat visible_img_;
+     
+     bool tooltip_enabled_;   
+     QPoint mouse_pos_;
 
+     virtual void on_open();
+     virtual void on_mouseMoved(QPoint p);
+          
 private:
 };
 

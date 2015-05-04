@@ -5,6 +5,7 @@
 ClickableLabel::ClickableLabel(QWidget * parent, Qt::WindowFlags f) : QLabel(parent,f)
 {
      initialized = false;
+     setMouseTracking(true);
 }
 
 //ClickableLabel::ClickableLabel(const QString& text, QWidget * parent, Qt::WindowFlags f ) : QLabel(parent,f)

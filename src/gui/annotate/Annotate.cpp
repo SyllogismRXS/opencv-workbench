@@ -64,23 +64,35 @@ Annotate::Annotate(VideoWindow *parent)
      edit_pt2_ = false; 
      edit_box_ = false;
      box_present_ = false;
-     
+
+     edit_enabled_ = false;
+
      near_thresh = 25;     
      
      connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
-     connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));
-
+     connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));       
+     
      new QShortcut(QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
+     new QShortcut(QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
+     new QShortcut(QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));     
 }
 
 void Annotate::erase_box()
 {
-     if (box_present_) {
-          int frame_number = stream_.frame_number();
-          parser_.frames.erase(frame_number);
-     }     
-     box_present_ = false;
+     if (edit_enabled_) {
+          if (box_present_) {
+               int frame_number = stream_.frame_number();
+               parser_.frames.erase(frame_number);
+          }     
+          box_present_ = false;
+     }
 }
+
+void Annotate::edit_enabled()
+{
+     edit_enabled_ = !edit_enabled_;
+}
+
 void Annotate::save_annotation()
 {
      this->save_annotation_data();
@@ -90,15 +102,14 @@ void Annotate::save_annotation()
 
 void Annotate::on_open()
 {
+     parser_.reset();
+
      parser_.CheckForFile(filename_.toStdString());
      parser_.set_width(stream_.width());
      parser_.set_height(stream_.height());
      parser_.set_depth(3);
      parser_.set_type("video");
-     parser_.set_number_of_frames(stream_.get_frame_count());
-
-     // Now that the file has been opened, we can allow the user to try to save
-     new QShortcut(QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));
+     parser_.set_number_of_frames(stream_.get_frame_count());     
 }
 
 void Annotate::mousePressed(QPoint p)
@@ -120,18 +131,19 @@ void Annotate::mousePressed(QPoint p)
                // User is trying to draw a new box
                pt1_ = p;
                pt2_ = p;
+               edit_pt2_ = true;
           }
      } else {
           // First time drawing a box
           pt1_ = p;
           pt2_ = p;
+          edit_pt2_ = true;          
      }
 
      box_present_ = true;
-     connect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));     
 }
 
-void Annotate::mouseMoved(QPoint p)
+void Annotate::on_mouseMoved(QPoint p)
 {
      if (edit_pt1_) {
           pt1_ = p;
@@ -140,9 +152,7 @@ void Annotate::mouseMoved(QPoint p)
      } else if (edit_box_) {
           pt1_ = p + pt1_drag_offset_;
           pt2_ = p + pt2_drag_offset_;
-     } else {
-          pt2_ = p;
-     }
+     }               
 }
 
 void Annotate::mouseReleased(QPoint p)
@@ -151,16 +161,13 @@ void Annotate::mouseReleased(QPoint p)
      edit_pt1_ = false;
      edit_pt2_ = false;
      edit_box_ = false;
-
-     // Disconnect mouse moving callback
-     disconnect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));
-
-     //cout << "Frame num: " << stream_.frame_number()-1 << endl;
 }
 
 void Annotate::before_next_frame()
 {
-     this->save_annotation_data();
+     if (edit_enabled_) {     
+          this->save_annotation_data();          
+     }
 
      // Does the next frame have annotation data?
      int next_frame_number = stream_.next_frame_number();
@@ -171,6 +178,8 @@ void Annotate::before_next_frame()
           Rectangle rect = parser_.frames[next_frame_number].objects["diver"].bbox.rectangle();
           pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
           pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
+     } else if (!edit_enabled_) {
+          box_present_ = false;         
      }
 }
 
@@ -209,12 +218,17 @@ void Annotate::save_annotation_data()
 }
 
 void Annotate::before_display(cv::Mat &img)
-{         
+{     
+     if (edit_enabled_) {
+          cv::rectangle(img,cv::Point(0,0),cv::Point(img.cols-1,img.rows-1),
+                        cv::Scalar(0,0,255),2,8,0);
+     }
+     
      if (box_present_) {
           cv::Point pt1(pt1_.x(), pt1_.y());
           cv::Point pt2(pt2_.x(), pt2_.y());
                     
-          cv::rectangle(img,pt1,pt2,cv::Scalar(0,0,255),1,8,0);
+          cv::rectangle(img,pt1,pt2,cv::Scalar(0,255,0),1,8,0);
           cv::circle(img, pt1, 1, cv::Scalar(255,255,255), 1, 8, 0);
           cv::circle(img, pt2, 1, cv::Scalar(255,255,255), 1, 8, 0);
      }

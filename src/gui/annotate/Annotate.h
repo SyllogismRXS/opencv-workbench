@@ -73,6 +73,8 @@ protected:
      virtual void before_next_frame();
      virtual void before_display(cv::Mat &img);
      virtual void on_open();     
+     virtual void on_mouseMoved(QPoint p);
+
      void save_annotation_data();
      int distance(QPoint p1, QPoint p2);
      bool nearby(QPoint p1, QPoint p2, int threshold);
@@ -92,15 +94,17 @@ protected:
      QPoint pt2_drag_offset_;             
 
      AnnotationParser parser_;
+
+     bool edit_enabled_;          
      
 private:
      
 private slots:
      void mousePressed(QPoint p);
-     void mouseReleased(QPoint p);
-     void mouseMoved(QPoint p);
+     void mouseReleased(QPoint p);     
      void save_annotation();
      void erase_box();
+     void edit_enabled();     
 };
 
 #endif

@@ -21,6 +21,15 @@ AnnotationParser::AnnotationParser()
      
 }
 
+void AnnotationParser::reset()
+{
+     xml_filename_ = "";
+     dir_ = "";
+     basename_ = "";
+     
+     frames.clear();
+}
+
 void AnnotationParser::CheckForFile(std::string video_file)
 {
      video_filename_ = video_file;

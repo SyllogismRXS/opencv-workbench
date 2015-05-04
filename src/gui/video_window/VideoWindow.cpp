@@ -43,6 +43,7 @@
 #include <QSettings>
 
 #include <opencv_workbench/utils/SylloQt.h>
+#include <opencv_workbench/syllo/syllo.h>
 
 #include "VideoWindow.h"
 
@@ -57,6 +58,9 @@ VideoWindow::VideoWindow(QWidget *parent)
      readSettings();
 
      state_ = none;
+
+     tooltip_enabled_ = false;
+     new QShortcut(QKeySequence(Qt::Key_T), this, SLOT(tooltip_enabled()));
      
      connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
      connect(ui.frame_slider, SIGNAL(sliderReleased()), this, SLOT(slider_released()));
@@ -80,10 +84,23 @@ VideoWindow::VideoWindow(QWidget *parent)
 
      connect(timer_video_, SIGNAL(timeout()), this, SLOT(timer_video_loop()));     
      connect(timer_refresh_, SIGNAL(timeout()), this, SLOT(timer_refresh_loop()));
+     
+     connect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));     
 
      timer_refresh_fps_ = 30;
      timer_refresh_->setInterval(1000.0/timer_refresh_fps_);
      timer_refresh_->start();
+}
+
+void VideoWindow::mouseMoved(QPoint p)
+{     
+     mouse_pos_ = p;
+     this->on_mouseMoved(p);
+}
+
+// override this
+void VideoWindow::on_mouseMoved(QPoint p)
+{
 }
 
 void VideoWindow::set_frame_num_from_slider(int frame_num) 
@@ -219,8 +236,29 @@ void VideoWindow::draw()
      visible_img_ = curr_image_.clone();
 
      this->before_display(visible_img_);
+     this->draw_tooltip(visible_img_);
      this->display_image(visible_img_);     
      this->adjustSize();          
+}
+
+void VideoWindow::tooltip_enabled()
+{
+     tooltip_enabled_ = !tooltip_enabled_;
+}
+
+void VideoWindow::draw_tooltip(cv::Mat &img)
+{
+     if (tooltip_enabled_) {
+          std::string str = syllo::int2str(mouse_pos_.x()) + "," + 
+               syllo::int2str(mouse_pos_.y());
+          
+          cv::Point p = cv::Point(mouse_pos_.x(),mouse_pos_.y());
+          cv::Point p1 = cv::Point(mouse_pos_.x()-3,mouse_pos_.y()+3);
+          cv::Point p2 = cv::Point(mouse_pos_.x()+65,mouse_pos_.y()-15);
+          cv::rectangle(img, p1, p2, cv::Scalar(20,255,57),-1,8,0);
+          cv::putText(img, str, p, cv::FONT_HERSHEY_COMPLEX_SMALL, 0.75, 
+                      cv::Scalar(0,0,0), 1, 8, false);
+     }
 }
 
 // Overriden by subclasses
