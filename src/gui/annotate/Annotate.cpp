@@ -48,7 +48,7 @@
 #include <opencv_workbench/utils/Frame.h>
 #include <opencv_workbench/utils/Object.h>
 #include <opencv_workbench/utils/BoundingBox.h>
-#include <opencv_workbench/utils/Rectangle.h>
+//#include <opencv_workbench/utils/Rectangle.h>
 
 #include "Annotate.h"
 
@@ -72,9 +72,17 @@ Annotate::Annotate(VideoWindow *parent)
      connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
      connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));       
      
-     new QShortcut(QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
-     new QShortcut(QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
-     new QShortcut(QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));     
+     add_shortcut("Qt::Key_E", QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
+     add_shortcut("Qt::Key_M", QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
+     add_shortcut("Qt::Key_S", QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));
+     
+     //new QShortcut(QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
+     //new QShortcut(QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));     
+}
+
+void Annotate::export_roi()
+{
+     parser_.export_roi();
 }
 
 void Annotate::erase_box()
@@ -175,9 +183,11 @@ void Annotate::before_next_frame()
      
      if (parser_.frames.count(next_frame_number) > 0) {
           box_present_ = true;
-          Rectangle rect = parser_.frames[next_frame_number].objects["diver"].bbox.rectangle();
-          pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
-          pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
+          cv::Rect rect = parser_.frames[next_frame_number].objects["diver"].bbox.rectangle();
+          //pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
+          //pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
+          pt1_ = QPoint(rect.tl().x, rect.tl().y);
+          pt2_ = QPoint(rect.br().x, rect.br().y);
      } else if (!edit_enabled_) {
           box_present_ = false;         
      }

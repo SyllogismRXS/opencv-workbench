@@ -52,15 +52,14 @@ using std::endl;
 
 VideoWindow::VideoWindow(QWidget *parent)
      : QWidget(parent)
-{
+{     
      ui.setupUi(this);
 
      readSettings();
 
      state_ = none;
 
-     tooltip_enabled_ = false;
-     new QShortcut(QKeySequence(Qt::Key_T), this, SLOT(tooltip_enabled()));
+     tooltip_enabled_ = false;     
      
      connect(ui.frame_slider, SIGNAL(sliderMoved(int)), this, SLOT(set_frame_num_from_slider(int)));
      connect(ui.frame_slider, SIGNAL(sliderReleased()), this, SLOT(slider_released()));
@@ -69,15 +68,22 @@ VideoWindow::VideoWindow(QWidget *parent)
      
      connect(ui.play_button, SIGNAL(released()), this, SLOT(space_bar()));   
      
-     // Keyboard shortcuts
-     // Note: Get deleted automatically when program closes.
-     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));     
-     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
-     new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(space_bar()));
-     new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(back_one_frame()));
-     new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(step_one_frame()));
-     new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(double_frame_rate()));
-     new QShortcut(QKeySequence(Qt::Key_Down), this, SLOT(divide_frame_rate()));
+     add_shortcut("Qt::CTRL + Qt::Key_O", QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
+     add_shortcut("Qt::CTRL + Qt::Key_Q", QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
+     add_shortcut("Qt::Key_Space", QKeySequence(Qt::Key_Space), this, SLOT(space_bar()));
+     add_shortcut("Qt::Key_Left", QKeySequence(Qt::Key_Left), this, SLOT(back_one_frame()));
+     add_shortcut("Qt::Key_Right", QKeySequence(Qt::Key_Right), this, SLOT(step_one_frame()));
+     add_shortcut("Qt::Key_Up", QKeySequence(Qt::Key_Up), this, SLOT(double_frame_rate()));
+     add_shortcut("Qt::Key_Down", QKeySequence(Qt::Key_Down), this, SLOT(divide_frame_rate()));
+     add_shortcut("Qt::Key_T", QKeySequence(Qt::Key_T), this, SLOT(tooltip_enabled()));          
+     
+     //// Keyboard shortcuts
+     //// Note: Get deleted automatically when program closes.
+     ////new QShortcut(QKeySequence(Qt::Key_Space), this, SLOT(space_bar()));
+     //new QShortcut(QKeySequence(Qt::Key_Left), this, SLOT(back_one_frame()));
+     //new QShortcut(QKeySequence(Qt::Key_Right), this, SLOT(step_one_frame()));
+     //new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(double_frame_rate()));
+     //new QShortcut(QKeySequence(Qt::Key_Down), this, SLOT(divide_frame_rate()));
      
      timer_video_ = new QTimer(this);
      timer_refresh_ = new QTimer(this);
@@ -89,7 +95,17 @@ VideoWindow::VideoWindow(QWidget *parent)
 
      timer_refresh_fps_ = 30;
      timer_refresh_->setInterval(1000.0/timer_refresh_fps_);
-     timer_refresh_->start();
+     timer_refresh_->start();     
+}
+
+void VideoWindow::add_shortcut(std::string name, const QKeySequence & key, QWidget * parent, const char * member = 0)
+{
+     if (shortcuts_.count(name) > 0) {
+          std::map<std::string, QShortcut*>::iterator it = shortcuts_.find(name);
+          delete it->second;
+          shortcuts_.erase(it);
+     }
+     shortcuts_[name] = new QShortcut(key, parent, member);
 }
 
 void VideoWindow::mouseMoved(QPoint p)
@@ -152,7 +168,7 @@ void VideoWindow::back_one_frame()
 }
 
 void VideoWindow::step_one_frame()
-{     
+{          
      stream_.step_forward();
      this->get_video_frame();
 }
@@ -238,8 +254,34 @@ void VideoWindow::draw()
      this->before_display(visible_img_);
      this->draw_tooltip(visible_img_);
      this->display_image(visible_img_);     
-     this->adjustSize();          
+     
+     this->updateGeometry();
+     this->adjustSize();     
+     
+     //cout << "This: " << this->sizeHint().rheight() << "," <<  this->sizeHint().rwidth() << endl; 
+     //cout << "ImageFrame: " << ui.image_frame->sizeHint().rheight() << "," <<  ui.image_frame->sizeHint().rwidth() << endl; 
 }
+
+//QSize VideoWindow::sizeHint() const
+//{
+//     //this->updateGeometry();
+//     //this->adjustSize();
+//
+//     QSize size;
+//     size.setWidth(ui.verticalLayoutWidget->sizeHint().rwidth());
+//     size.setHeight(ui.verticalLayoutWidget->sizeHint().rheight());
+//     
+//     //cout << "Video: " << size.rheight() << "," <<  size.rwidth() << endl;      
+//     
+//     //QSize size(-1,-1);     
+//     return size;
+//}
+//
+//void VideoWindow::resizeEvent(QResizeEvent *)
+//{
+//     //cout << "Resize" << endl;
+//     this->resize(ui.verticalLayoutWidget->sizeHint().rwidth(), ui.verticalLayoutWidget->sizeHint().rheight());
+//}
 
 void VideoWindow::tooltip_enabled()
 {
@@ -275,8 +317,13 @@ void VideoWindow::before_next_frame()
 void VideoWindow::display_image(const cv::Mat &img)
 {
      q_image = SylloQt::Mat2QImage(img);
-     ui.image_frame->setPixmap(QPixmap::fromImage(q_image));
-     ui.image_frame->adjustSize();
+     
+     QPixmap pix = QPixmap::fromImage(q_image);
+
+     ui.image_frame->setPixmap(pix);
+     ui.image_frame->resize(ui.image_frame->pixmap()->size());
+     ui.image_frame->updateGeometry();
+     //ui.image_frame->adjustSize();     
 }
 
 void VideoWindow::open_camera(int id)
@@ -355,11 +402,24 @@ void VideoWindow::open(QString filename)
                this->set_fps(fps_);
                
                stream_.set_frame_number(0);
+               
                this->on_open();
-               this->get_video_frame();               
+               this->get_video_frame();                    
                this->pause();               
+
+               //this->resize(ui.verticalLayoutWidget->sizeHint().rwidth()+50, ui.verticalLayoutWidget->sizeHint().rheight());               
+               //this->resize(this->GoodSize());               
+               this->updateGeometry();
+               this->adjustSize();               
           }
-     }     
+     }
+}
+
+QSize VideoWindow::GoodSize()
+{
+     QSize size(ui.verticalLayoutWidget->sizeHint().rwidth()+50, ui.verticalLayoutWidget->sizeHint().rheight());
+     cout << "Good: " << size.rwidth() << "," << size.rheight() << endl;
+     return size;
 }
 
 void VideoWindow::about()

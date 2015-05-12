@@ -25,5 +25,5 @@ ADD_LIBRARY( ${LIB_NAME_2} SHARED
 
 target_link_libraries(${LIB_NAME_2} 
   ${Boost_LIBRARIES}  
-  #${OpenCV_LIBS} 
+  ${OpenCV_LIBS} 
   )

@@ -23,6 +23,7 @@ AnnotationParser::AnnotationParser()
 
 void AnnotationParser::reset()
 {
+     video_filename_ = "";
      xml_filename_ = "";
      dir_ = "";
      basename_ = "";
@@ -274,4 +275,70 @@ void AnnotationParser::print()
                     << object_it->second.bbox.ymax() << ")" << endl << endl;
           }
      }
+}
+
+bool AnnotationParser::export_roi()
+{
+     if (video_filename_ == "") {
+          cout << "No annotation file" << endl;
+          return false;
+     }
+     
+     // First determine size of movie we will export
+     // Currently, find average height and width of all video frames
+     int width_sum = 0, height_sum = 0;
+     int count = 0;
+     
+     // Assumes only single ROI per frame
+     std::map<int,Frame>::iterator frame_it = frames.begin();
+     for(; frame_it != frames.end(); frame_it++) {
+          std::map<std::string, Object>::iterator object_it;
+          object_it = frame_it->second.objects.begin();
+          for (; object_it != frame_it->second.objects.end(); object_it++) {
+               width_sum += object_it->second.bbox.width();
+               height_sum += object_it->second.bbox.height();
+               count++;
+          }
+     }
+     
+     double width_avg = (double)width_sum / (double)count;
+     double height_avg = (double)height_sum / (double)count;
+     
+     // New Video File to Write
+     int lastindex = video_filename_.find_last_of("."); 
+     std::string roi_fn = video_filename_.substr(0, lastindex) + 
+          std::string("_roi.avi");
+     cout << "Output: " << roi_fn << endl;
+     
+     cv::Size size(width_avg, height_avg); // height width?
+     cv::VideoWriter out(roi_fn, CV_FOURCC('M','J','P','G'), 23, size, true);
+     if (!out.isOpened()) {
+          cout << "Failed to Export ROI" << endl;
+          return false;
+     }
+
+     // Open original video file
+     cv::VideoCapture in;
+     in.open(video_filename_);
+     if (!in.isOpened()) {
+          cout << "Failed to open input video: Export ROI" << endl;
+          return false;
+     }
+     
+     // Find the centroid of each annotated frame, export the average
+     // ROI size
+     for(frame_it = frames.begin(); frame_it != frames.end(); frame_it++) {
+          std::map<std::string, Object>::iterator object_it;
+          object_it = frame_it->second.objects.begin();
+          for (; object_it != frame_it->second.objects.end(); object_it++) {
+               cv::Mat img;
+               in.set(CV_CAP_PROP_POS_FRAMES, frame_it->second.frame_number());
+               in.read(img);
+               cv::Rect rect = object_it->second.bbox.ForceBox(width_avg, height_avg);
+               cv::Mat roi(img, rect);
+               out.write(roi);
+          }
+     }         
+     cout << "Export ROI Complete" << endl;
+     return true;
 }

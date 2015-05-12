@@ -38,73 +38,19 @@
  **
  ****************************************************************************/
 
-#ifndef ANNOTATE_H
-#define ANNOTATE_H
+#include <QApplication>
 
-// OpenCV headers
-#include <cv.h>
-//#include <highgui.h>
+#include "MenuWindow.h"
 
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/contrib/contrib.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-#include <video_window/ui_VideoWindow.h>
-
-#include <opencv_workbench/utils/Stream.h>
-#include <opencv_workbench/utils/AnnotationParser.h>
-#include <opencv_workbench/gui/cut/cut.h>
-#include <opencv_workbench/gui/video_window/VideoWindow.h>
-
-#include <QTextStream>
-
-class Annotate : public VideoWindow
+int main(int argc, char *argv[])
 {
-     Q_OBJECT
+     QApplication app(argc, argv);
 
-     public:
-     
-     Annotate(VideoWindow *parent = 0);
-     void export_roi();
-          
-protected:     
-     
-     virtual void before_next_frame();
-     virtual void before_display(cv::Mat &img);
-     virtual void on_open();     
-     virtual void on_mouseMoved(QPoint p);
+     app.setApplicationName("opencv-workbench");
+     app.setOrganizationName("DeMarco");
+     app.setOrganizationDomain("kevindemarco.com");
 
-     void save_annotation_data();
-     int distance(QPoint p1, QPoint p2);
-     bool nearby(QPoint p1, QPoint p2, int threshold);
-     bool inside(QPoint p, QPoint p1, QPoint p2);
-     
-     bool box_present_;
-     
-     QPoint pt1_;
-     QPoint pt2_;
-
-     int near_thresh;
-     bool edit_pt1_;
-     bool edit_pt2_;
-     bool edit_box_;
-
-     QPoint pt1_drag_offset_;
-     QPoint pt2_drag_offset_;             
-
-     AnnotationParser parser_;
-
-     bool edit_enabled_;          
-     
-private:
-     
-private slots:
-     void mousePressed(QPoint p);
-     void mouseReleased(QPoint p);     
-     void save_annotation();
-     void erase_box();
-     void edit_enabled();     
-};
-
-#endif
+     MenuWindow workbench;
+     workbench.show();
+     return app.exec();
+}

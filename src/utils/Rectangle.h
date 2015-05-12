@@ -4,7 +4,7 @@
 /// @file Rectangle.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-04-29 17:44:53 syllogismrxs>
+/// Time-stamp: <2015-05-12 15:59:08 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -38,6 +38,14 @@
 /// The Rectangle class ...
 /// 
 /// ---------------------------------------------------------------------------
+
+#include <cv.h>
+//#include <highgui.h>
+
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include <opencv_workbench/utils/Point.h>
 

@@ -10,6 +10,7 @@ add_subdirectory(facerec_video)
 add_subdirectory(video_window)
 add_subdirectory(annotate)
 add_subdirectory(workbench)
+add_subdirectory(menu_window)
 
 
 

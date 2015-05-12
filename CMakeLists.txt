@@ -126,5 +126,7 @@ else()
   #return() # exit quietly if sdk not found
 endif()
 
+include_directories(${OPENCV_WORKBENCH_SRC_DIR}/gui/annotate)
+
 add_subdirectory(src)
 add_subdirectory(share)

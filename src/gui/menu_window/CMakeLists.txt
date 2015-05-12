@@ -1,4 +1,4 @@
-set( APP_NAME video_window)
+set( APP_NAME menu_window)
 
 file ( GLOB_RECURSE app_SOURCES *.cpp )
 file ( GLOB_RECURSE app_HEADERS *.h )
@@ -23,28 +23,6 @@ add_definitions(-DQDESIGNER_EXPORT_WIDGETS)
 
 #message(${CMAKE_CURRENT_BINARY_DIR})
 
-ADD_LIBRARY( ${APP_NAME}lib SHARED
-  ${app_SOURCES}
-  ${app_HEADERS_MOC}
-  ${app_FORMS_HEADERS}
-  ${app_RESOURCES_RCC}
-)
-
-target_link_libraries(${APP_NAME}lib
-  ${QT_LIBRARIES}
-  clickablelabel
-  ${OpenCV_LIBS}
-  cut_widgetlib
-  scuba_face_labellib
-  video_object_labellib
-  opencv-built-in
-  syllo
-  track
-  ${YAMLCPP_LIBRARY}
-  sonar-sdk
-  workbench-utils
-  )
-
 add_executable(${APP_NAME} 
   ${app_SOURCES}
   ${app_HEADERS_MOC}
@@ -57,6 +35,7 @@ target_link_libraries(${APP_NAME}
   clickablelabel
   ${OpenCV_LIBS}
   cut_widgetlib
+  video_windowlib
   scuba_face_labellib
   video_object_labellib
   opencv-built-in
@@ -64,7 +43,7 @@ target_link_libraries(${APP_NAME}
   track
   ${YAMLCPP_LIBRARY}
   sonar-sdk
-  workbench-utils
+  annotatelib
   )
 
 if (DEFINED BLUEVIEW_SDK_LIBS)

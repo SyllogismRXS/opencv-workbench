@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-04 13:19:54 syllogismrxs>
+/// Time-stamp: <2015-05-12 15:29:48 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -56,6 +56,7 @@ public:
      void reset();
      void write_annotation();
      void print();
+     bool export_roi();
 
      void set_width(int width) { width_ = width; }
      void set_height(int height) { height_ = height; }

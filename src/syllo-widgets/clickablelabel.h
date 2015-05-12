@@ -17,6 +17,7 @@ public:
      //explicit ClickableLabel( const QString& text ="", QWidget * parent = 0, Qt::WindowFlags f = 0);
      ~ClickableLabel();
 
+     QSize sizeHint() const;     
      bool isContainer() const;
      bool isInitialized() const;
      QIcon icon() const;

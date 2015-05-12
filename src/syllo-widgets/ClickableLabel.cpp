@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QtPlugin>
 
 #include "clickablelabel.h"
@@ -6,6 +7,8 @@ ClickableLabel::ClickableLabel(QWidget * parent, Qt::WindowFlags f) : QLabel(par
 {
      initialized = false;
      setMouseTracking(true);
+     
+     setScaledContents(true);
 }
 
 //ClickableLabel::ClickableLabel(const QString& text, QWidget * parent, Qt::WindowFlags f ) : QLabel(parent,f)
@@ -16,7 +19,19 @@ ClickableLabel::ClickableLabel(QWidget * parent, Qt::WindowFlags f) : QLabel(par
 ClickableLabel::~ClickableLabel()
 {
 }
- 
+
+QSize ClickableLabel::sizeHint() const
+{
+     QSize size;
+     if (pixmap() == 0) {
+          size = QWidget::sizeHint();
+     } else {
+          size = pixmap()->size();
+     }
+     //std::cout << "sizeHint: " << size.rwidth() << "," <<  size.rheight() << std::endl; 
+     return size;
+}
+
 void ClickableLabel::mousePressEvent ( QMouseEvent * event )
 {
      const QPoint p = event->pos();

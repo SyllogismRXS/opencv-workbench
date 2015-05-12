@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-01 14:59:37 syllogismrxs>
+/// Time-stamp: <2015-05-12 16:23:19 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -38,7 +38,15 @@
 /// The BoundingBox class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <opencv_workbench/utils/Rectangle.h>
+#include <math.h>
+
+#include <cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+//#include <opencv_workbench/utils/Rectangle.h>
 
 class BoundingBox {
 public:
@@ -56,12 +64,38 @@ BoundingBox(int xmin, int xmax, int ymin, int ymax) :
      int xmax() { return xmax_; }
      int ymin() { return ymin_; }
      int ymax() { return ymax_; }     
-               
-     Rectangle rectangle() 
+
+     int width()
      {
-          return Rectangle(Point<int>(xmin_,ymin_),Point<int>(xmax_,ymax_));
+          return xmax_ - xmin_;
+     }
+
+     int height()
+     {
+          return ymax_ - ymin_;
      }
      
+     cv::Rect rectangle() 
+     {
+          //return Rectangle(Point<int>(xmin_,ymin_),Point<int>(xmax_,ymax_));
+          return cv::Rect(xmin_, ymin_, xmax_-xmin_, ymax_-ymin_);
+     }
+
+     cv::Point centroid()
+     {
+          double x_pos = round(double(xmax_+xmin_) / 2.0);
+          double y_pos = round(double(ymax_+ymin_) / 2.0);
+          cv::Point p(x_pos, y_pos);
+          return p;
+     }
+
+     cv::Rect ForceBox(int width, int height)
+     {
+          cv::Point centroid = this->centroid();
+          cv::Rect rect(centroid.x-width/2, centroid.y-height/2, width, height);
+          return rect;
+     }
+          
 protected:
      int xmin_;
      int xmax_;
