@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-04 17:20:45 syllogismrxs>
+/// Time-stamp: <2015-06-10 15:40:04 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -58,7 +58,7 @@ public:
      
      AnnotationParser();
      int ParseFile(std::string file);
-     void CheckForFile(std::string video_file, AnnotateType_t ann_type);
+     int CheckForFile(std::string video_file, AnnotateType_t ann_type);
      void reset();
      void write_annotation();
      void print();
@@ -71,8 +71,7 @@ public:
      void set_number_of_frames(int num) { number_of_frames_ = num; }
      void set_type(std::string type) { type_ = type; }
      void set_video_filename(std::string video_filename) { video_filename_ = video_filename; }
-     void set_folder(std::string folder) { folder_ = folder; }
-     
+     void set_folder(std::string folder) { folder_ = folder; }     
      void write_header();
 
      std::map<int,Frame> frames;

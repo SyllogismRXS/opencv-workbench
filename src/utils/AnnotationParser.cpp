@@ -36,7 +36,7 @@ void AnnotationParser::clear()
      frames.clear();
 }
 
-void AnnotationParser::CheckForFile(std::string video_file, 
+int AnnotationParser::CheckForFile(std::string video_file, 
                                     AnnotationParser::AnnotateType_t ann_type)
 {
      video_filename_ = video_file;
@@ -56,13 +56,11 @@ void AnnotationParser::CheckForFile(std::string video_file,
      basename_ = fs::path(video_file).filename();
 
      if ( !boost::filesystem::exists( xml_filename_ ) ) {
-          cout << "Annotation file doesn't exist. Creating..." << endl;
-          //std::ofstream outfile;
-          //outfile.open(xml_filename_.c_str());          
-          //outfile.close();
+          cout << "Annotation file doesn't exist yet." << endl;
+          return 1;
      } else {
           cout << "Found annotation file." << endl;
-          this->ParseFile(xml_filename_);
+          return this->ParseFile(xml_filename_);
      }
 }
 
@@ -238,8 +236,8 @@ int AnnotationParser::ParseFile(std::string file)
           xml_node<> *object_node = frame_node->first_node("object");
           do {
                if (object_node == 0) {
-                    cout << "Missing an object node" << endl;
-                    continue;
+                    //cout << "Missing an object node" << endl;
+                    break;
                }               
                
                std::string object_name = object_node->first_node("name")->value();

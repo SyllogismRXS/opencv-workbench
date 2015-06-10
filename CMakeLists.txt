@@ -29,8 +29,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 ########################################################
 # Find Boost
 ########################################################
-find_package(Boost COMPONENTS thread date_time program_options filesystem 
-  system REQUIRED)
+find_package(Boost COMPONENTS thread date_time iostreams program_options 
+  filesystem system REQUIRED)
 
 if(Boost_FOUND)
         include_directories(${Boost_INCLUDE_DIRS})
