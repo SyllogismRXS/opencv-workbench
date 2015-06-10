@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-12 15:29:48 syllogismrxs>
+/// Time-stamp: <2015-06-04 17:20:45 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -50,13 +50,20 @@ namespace fs = boost::filesystem;
 
 class AnnotationParser {
 public:
+
+     typedef enum {
+          hand = 0,
+          track = 1,
+     }AnnotateType_t;
+     
      AnnotationParser();
      int ParseFile(std::string file);
-     void CheckForFile(std::string video_file);
+     void CheckForFile(std::string video_file, AnnotateType_t ann_type);
      void reset();
      void write_annotation();
      void print();
      bool export_roi();
+     void clear();
 
      void set_width(int width) { width_ = width; }
      void set_height(int height) { height_ = height; }
@@ -72,7 +79,8 @@ public:
 
 protected:
      std::string xml_filename_;     
-
+     AnnotateType_t ann_type_;
+     
      std::string folder_;
      std::string type_;
      std::string video_filename_;

@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
      while (stream.read(original)) {          
 
           // Display images
-          //cv::imshow("Original", original);                    
-          //if(cv::waitKey(10) >= 0) break;
+          cv::imshow("Original", original);                    
+          if(cv::waitKey(10) >= 0) break;
                     
           pd.add_frame(original);
           

@@ -112,7 +112,7 @@ void Annotate::on_open()
 {
      parser_.reset();
 
-     parser_.CheckForFile(filename_.toStdString());
+     parser_.CheckForFile(filename_.toStdString(), AnnotationParser::hand);
      parser_.set_width(stream_.width());
      parser_.set_height(stream_.height());
      parser_.set_depth(3);

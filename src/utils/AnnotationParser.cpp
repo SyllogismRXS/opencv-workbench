@@ -31,12 +31,26 @@ void AnnotationParser::reset()
      frames.clear();
 }
 
-void AnnotationParser::CheckForFile(std::string video_file)
+void AnnotationParser::clear()
+{
+     frames.clear();
+}
+
+void AnnotationParser::CheckForFile(std::string video_file, 
+                                    AnnotationParser::AnnotateType_t ann_type)
 {
      video_filename_ = video_file;
      
      int lastindex = video_file.find_last_of("."); 
-     xml_filename_ = video_file.substr(0, lastindex) + ".xml";
+     xml_filename_ = video_file.substr(0, lastindex);
+     
+     if (ann_type == hand) {
+          xml_filename_ += ".xml";
+     } else if (ann_type == track) {
+          xml_filename_ += "-tracks.xml";
+     } else {
+          cout << "ERROR: Invalid annotation type" << endl;
+     }         
      
      dir_ = fs::path(video_file).parent_path();
      basename_ = fs::path(video_file).filename();
@@ -172,7 +186,8 @@ void AnnotationParser::write_header()
           }
      }
      
-     std::cout << doc;
+     // Prints the document to screen
+     //std::cout << doc;
     
      std::ofstream outfile;
      outfile.open(xml_filename_.c_str());          
@@ -224,6 +239,7 @@ int AnnotationParser::ParseFile(std::string file)
           do {
                if (object_node == 0) {
                     cout << "Missing an object node" << endl;
+                    continue;
                }               
                
                std::string object_name = object_node->first_node("name")->value();

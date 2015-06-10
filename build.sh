@@ -27,8 +27,8 @@ if [ ${BUILD_RESULT} -eq 0 ] && [ $# -gt 0 ]; then
         # Example call: ./build.sh ./hello-world
         pushd ./bin >& /dev/null
         #$1
-        #$1 ~/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi
-        $1 ~/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_22_46_roi.avi
+        $1 ~/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi
+        #$1 ~/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_22_46_roi.avi
         popd >& /dev/null
     fi
 fi

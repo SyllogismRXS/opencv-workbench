@@ -9,4 +9,6 @@ target_link_libraries(${APP_NAME}
   track
   syllo
   sonar-sdk  
+  ${Boost_LIBRARIES}  
+  workbench-utils
   )
