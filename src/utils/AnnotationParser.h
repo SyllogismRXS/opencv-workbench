@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-10 15:40:04 syllogismrxs>
+/// Time-stamp: <2015-06-12 16:02:34 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -75,6 +75,9 @@ public:
      void write_header();
 
      std::map<int,Frame> frames;
+     
+     std::map<std::string,std::string> list_of_tracks();
+     void plot_tracks(std::map<std::string,std::string> &IDs);
 
 protected:
      std::string xml_filename_;     

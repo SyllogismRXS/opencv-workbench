@@ -9,6 +9,8 @@
 #include <opencv_workbench/rapidxml/rapidxml_print.hpp>
 //#include <opencv_workbench/rapidxml/rapidxml_iterators.hpp>
 
+#include <opencv_workbench/plot/Plot.h>
+
 #include "AnnotationParser.h"
 
 using std::cout;
@@ -355,4 +357,59 @@ bool AnnotationParser::export_roi()
      }         
      cout << "Export ROI Complete" << endl;
      return true;
+}
+
+std::map<std::string,std::string> AnnotationParser::list_of_tracks()
+{
+     // Get list of all track IDs
+     std::map<std::string,std::string> IDs;
+     std::map<int,Frame>::iterator it_frame = frames.begin();
+     for (; it_frame != frames.end(); it_frame++) {
+          Frame frame = it_frame->second;
+          
+          // Loop through all objects in each frame
+          std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
+          for (; it_obj != frame.objects.end(); it_obj++) {
+               IDs[it_obj->first] = it_obj->first;
+          }          
+     }
+     return IDs;
+}
+
+void AnnotationParser::plot_tracks(std::map<std::string,std::string> &IDs)
+{
+     std::vector<cv::Point> points; 
+
+     // Loop through all frames, plotting tracks that match the user's input
+     std::map<int,Frame>::iterator it_frame = frames.begin();
+     for (; it_frame != frames.end(); it_frame++) {
+          Frame frame = it_frame->second;
+          
+          // Loop through all objects in each frame
+          std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
+          for (; it_obj != frame.objects.end(); it_obj++) {
+               // Does this object name match any of the IDs we care about?
+               std::map<std::string, std::string>::iterator it_id = IDs.begin();
+               for (; it_id != IDs.end(); it_id++) {
+                    if (it_obj->first == it_id->first) {
+                         points.push_back(it_obj->second.bbox.centroid());
+                         break;
+                    }
+               }                               
+          }          
+     }
+
+     // Plot the tracks;
+     std::vector< std::vector<cv::Point> > vectors;
+     const std::string title = "Tracks";
+     std::vector<std::string> labels;
+     std::vector<std::string> styles;
+
+     vectors.push_back(points);
+     labels.push_back("temp num");
+     styles.push_back("points");     
+     
+     syllo::Plot plot;
+     //plot.gnuplot_test();
+     plot.plot(vectors, title, labels, styles);
 }
