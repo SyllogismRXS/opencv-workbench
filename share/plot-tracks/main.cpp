@@ -39,74 +39,34 @@ int main(int argc, char *argv[])
      }     
      
      //// Get list of all track IDs
-     std::map<std::string,std::string> IDs;
-     IDs = parser.list_of_tracks();
-     //std::map<int,Frame>::iterator it_frame = parser.frames.begin();
-     //for (; it_frame != parser.frames.end(); it_frame++) {
-     //     Frame frame = it_frame->second;
-     //     
-     //     // Loop through all objects in each frame
-     //     std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
-     //     for (; it_obj != frame.objects.end(); it_obj++) {
-     //          IDs[it_obj->first] = it_obj->first;
-     //     }          
-     //}
-
+     std::vector<std::string> names = parser.track_names();
+     
+     
      // Print out the list of object names
      cout << "----------------------------------" << endl;
      cout << "Which track do you want to plot?" << endl;
-     std::map<std::string,std::string>::iterator it_IDs = IDs.begin();
-     for (; it_IDs != IDs.end(); it_IDs++) {
-          cout << it_IDs->first << endl;
+     std::vector<std::string>::iterator it_names = names.begin();
+     for (; it_names != names.end(); it_names++) {
+          cout << *it_names << endl;
      }
      cout << "-----------------" << endl;
-     cout << "$ " ;
-
-     std::string id_str;
-     std::cin >> id_str;
-
-     int id = syllo::str2int(id_str);
-     cout << "You selected ID: " << id << endl;
-
-     std::map<std::string,std::string> to_plot;
-     to_plot[id_str] = id_str;
-     parser.plot_tracks(to_plot);
+     cout << " Type 'e' to end." << endl;     
      
-     ///std::vector<cv::Point> points;      
-     ///// Loop through all frames, plotting tracks that match the user's input
-     ///// Get list of all track IDs
-     ///std::map<int,Frame>::iterator it_frame = parser.frames.begin();
-     ///for (; it_frame != parser.frames.end(); it_frame++) {
-     ///     Frame frame = it_frame->second;
-     ///     
-     ///     // Loop through all objects in each frame
-     ///     std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
-     ///     for (; it_obj != frame.objects.end(); it_obj++) {
-     ///          // Does this object name match?
-     ///          if (it_obj->first == id_str) {
-     ///               points.push_back(it_obj->second.bbox.centroid());
-     ///          }                
-     ///     }          
-     ///}
-     ///
-     ///// Plot the tracks;
-     ///std::vector< std::vector<cv::Point> > vectors;
-     ///const std::string title = "Tracks";
-     ///std::vector<std::string> labels;
-     ///std::vector<std::string> styles;
-     ///
-     ///vectors.push_back(points);
-     ///labels.push_back(id_str);
-     ///styles.push_back("points");     
-     ///
-     ///syllo::Plot plot;
-     /////plot.gnuplot_test();
-     ///plot.plot(vectors, title, labels, styles);  
-
-
+     std::vector<std::string> to_plot;
+     std::string name_str;
+     do {
+          cout << "$ " ;          
+          std::cin >> name_str;
+          if (name_str != "e") {
+               to_plot.push_back(name_str);
+          }
+     } while (name_str != "e");
      
-     //std::string temp;
-     //std::cin >> temp;
+     //int id = syllo::str2int(name_str);
+     //cout << "You selected ID (name): " << id << endl;          
+     //to_plot.push_back(name_str);
+
+     parser.plot_tracks(to_plot);     
      
      return 0;
 }

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 
 #include <opencv_workbench/syllo/syllo.h>
 
@@ -359,10 +360,10 @@ bool AnnotationParser::export_roi()
      return true;
 }
 
-std::map<std::string,std::string> AnnotationParser::list_of_tracks()
+std::vector<std::string> AnnotationParser::track_names()
 {
      // Get list of all track IDs
-     std::map<std::string,std::string> IDs;
+     std::vector<std::string> names;
      std::map<int,Frame>::iterator it_frame = frames.begin();
      for (; it_frame != frames.end(); it_frame++) {
           Frame frame = it_frame->second;
@@ -370,16 +371,22 @@ std::map<std::string,std::string> AnnotationParser::list_of_tracks()
           // Loop through all objects in each frame
           std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
           for (; it_obj != frame.objects.end(); it_obj++) {
-               IDs[it_obj->first] = it_obj->first;
+               // Add the track name to the names vector only if it doesn't
+               // already exist in the names vector
+               if (std::find(names.begin(), names.end(), 
+                             it_obj->first) == names.end()) {
+                    names.push_back(it_obj->first);
+               }
+               //IDs[it_obj->first] = it_obj->first;
           }          
      }
-     return IDs;
+     return names;
 }
 
-void AnnotationParser::plot_tracks(std::map<std::string,std::string> &IDs)
+void AnnotationParser::plot_tracks(std::vector<std::string> &names)
 {
-     std::vector<cv::Point> points; 
-
+     std::map<std::string, std::vector<cv::Point> > points;     
+     
      // Loop through all frames, plotting tracks that match the user's input
      std::map<int,Frame>::iterator it_frame = frames.begin();
      for (; it_frame != frames.end(); it_frame++) {
@@ -388,14 +395,15 @@ void AnnotationParser::plot_tracks(std::map<std::string,std::string> &IDs)
           // Loop through all objects in each frame
           std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
           for (; it_obj != frame.objects.end(); it_obj++) {
+               
                // Does this object name match any of the IDs we care about?
-               std::map<std::string, std::string>::iterator it_id = IDs.begin();
-               for (; it_id != IDs.end(); it_id++) {
-                    if (it_obj->first == it_id->first) {
-                         points.push_back(it_obj->second.bbox.centroid());
-                         break;
-                    }
-               }                               
+               if (std::find(names.begin(), names.end(), 
+                             it_obj->first) != names.end()) {
+
+                    // Push the point onto the appropriate points vector
+                    points[it_obj->first].push_back(it_obj->second.bbox.centroid());
+                    break;
+               }     
           }          
      }
 
@@ -405,11 +413,25 @@ void AnnotationParser::plot_tracks(std::map<std::string,std::string> &IDs)
      std::vector<std::string> labels;
      std::vector<std::string> styles;
 
-     vectors.push_back(points);
-     labels.push_back("temp num");
-     styles.push_back("points");     
+     std::map<std::string, std::vector<cv::Point> >::iterator it_points;
+     for (it_points = points.begin(); it_points != points.end(); it_points++) {
+          vectors.push_back(it_points->second);
+          labels.push_back(it_points->first);
+          //styles.push_back("points");
+          //styles.push_back("lines");
+          styles.push_back("linespoints");
+     }
+     
+     //vectors.push_back(points);
+     //labels.push_back("temp num");
+     //styles.push_back("points");     
      
      syllo::Plot plot;
      //plot.gnuplot_test();
      plot.plot(vectors, title, labels, styles);
+}
+
+void AnnotationParser::write_gnuplot_data()
+{
+     //TODO, future work, maybe.
 }

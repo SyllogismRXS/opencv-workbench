@@ -45,7 +45,7 @@ namespace syllo
           void plot(std::vector< std::vector<cv::Point> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
-                    std::vector<std::string> &styles);
+                    std::vector<std::string> &styles);          
 
           void plot_heading_position(
                std::vector< std::vector<state_5d_type> > &vectors, 
