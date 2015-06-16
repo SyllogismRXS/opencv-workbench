@@ -50,15 +50,20 @@ int main(int argc, char *argv[])
           cout << *it_names << endl;
      }
      cout << "-----------------" << endl;
+     cout << "a : all tracks over size" << endl;
      cout << " Type 'e' to end." << endl;     
      
      std::vector<std::string> to_plot;
      std::string name_str;
+     bool plot_all = false;
      do {
           cout << "$ " ;          
           std::cin >> name_str;
           if (name_str != "e") {
                to_plot.push_back(name_str);
+          } else if (name_str == "a") {
+               plot_all = true;
+               break;
           }
      } while (name_str != "e");
      

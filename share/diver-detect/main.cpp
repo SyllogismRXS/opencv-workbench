@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
                                          c.getCentroid().x,
                                          c.getCentroid().y, 
                                          c.getCentroid().y);
+               object.set_age(c.getAge());
                
                // Save object to current frame
                frame.objects[object.name()] = object;           

@@ -35,7 +35,7 @@ namespace syllo
           //return;
 
           gp_ << "reset\n";
-          gp_ << "set terminal wxt\n";
+          //gp_ << "set terminal wxt\n";
           gp_ << "set title '" << title << "'\n";
           gp_ << "set size ratio -1\n";
           //gp_ << "set view equal xy\n";
