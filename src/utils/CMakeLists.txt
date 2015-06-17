@@ -27,4 +27,5 @@ target_link_libraries(${LIB_NAME_2}
   ${Boost_LIBRARIES}  
   ${OpenCV_LIBS} 
   plot
+  syllo
   )

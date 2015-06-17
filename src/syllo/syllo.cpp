@@ -85,6 +85,20 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
      
 
 namespace syllo {
+
+     int str2int(std::string str)
+     {
+          int num;
+          if ( ! (std::istringstream(str) >> num) ) num = 0;
+          return num;
+     }
+
+     std::string int2str(int x)
+     {
+          std::ostringstream convert;   // stream used for the conversion
+          convert << x;      // insert the textual representation of 'Number' in the characters in the stream
+          return convert.str();          
+     }
      
      int templateDetect(const cv::Mat &inputImg, const cv::Mat &templImg, cv::Mat &outputImg)
      {
@@ -290,6 +304,8 @@ namespace syllo {
      
      int BlobMatch(std::map<int,syllo::Blob> &prevBlobs, std::map<int,syllo::Blob> &blobs, std::map<int,syllo::Blob> &newBlobs, int curTime) 
      {
+          // If there aren't any previous blobs, just copy the current blobs
+          // over to the new blobs.
 	  if (prevBlobs.size() == 0) {
 	       std::map<int,syllo::Blob>::iterator it;
 	       for (it = blobs.begin() ; it != blobs.end(); it++) {
@@ -298,23 +314,18 @@ namespace syllo {
 	       return 0;
 	  }
 
+          // Loop through the previous blobs and match the current blobs with
+          // the previous blobs based on absolute distance.
 	  std::map<int,syllo::Blob>::iterator itPrev;
 	  for (itPrev = prevBlobs.begin() ; itPrev != prevBlobs.end(); itPrev++) {
 	       bool matchFound = false;
 	       std::map<int,syllo::Blob>::iterator it;
 	       for (it = blobs.begin() ; it != blobs.end(); it++) {
 		    
-		    //printf("%d Prev: %d %d ", i, itPrev->second.getCentroid().x, itPrev->second.getCentroid().y );
-		    //printf("x:%d y:%d \t x:%d y:%d\n", itPrev->second.getCentroid().x, itPrev->second.getCentroid().y, it->second.getCentroid().x, it->second.getCentroid().y);		    //if ( abs(dist(itPrev->second.getCentroid(), it->second.getCentroid())) < 80) {
+                    // Is the distance within a specified threshold?
 		    if ( abs(dist(itPrev->second.getCentroid(), it->second.getCentroid())) < 30) {
-			 //if(abs(itPrev->second.getSize() - it->second.getSize()) < 50) {
-			 // Match is found, set new blob's ID to the previous blob's ID
-			 // Add blob to new blobs map
-			 
-			 //it->second.setID(itPrev->first);
-			 //newBlobs[it->second.getID()] = it->second;
-			 //prevBlobs.erase(itPrev->first);
-   
+                         // Match is found, set new blob's ID to the previous blob's ID
+			 // Add blob to new blobs map   
 			 itPrev->second.setSize(it->second.getSize());
 			 itPrev->second.setCentroid(it->second.getCentroid());
 			 //itPrev->second.incAge();
@@ -325,13 +336,15 @@ namespace syllo {
 
 			 matchFound = true;
 			 break;
-			 //}
-			 //}
 		    }
 	       }
+               
 	       if (!matchFound) {
+                    // If a match wasn't found, decrement the age.
 		    itPrev->second.decAge();
 		    if (itPrev->second.getAge() > 0) {
+                         // As long as the age is greater than zero, copy the
+                         // previous blob into the new blobs
 			 newBlobs[itPrev->second.getID()] = itPrev->second;
 		    }
 		    
@@ -346,12 +359,16 @@ namespace syllo {
 	       }
 	  }
 	  
+          // Previously, we deleted all the current blobs that matched previous
+          // blobs. Loop through all of the current blobs that weren't matched
+          // and find the next available ID for the new blobs. Copy the current
+          // newly detected blob into the newBlobs map.
 	  std::map<int,syllo::Blob>::iterator it;
 	  for (it = blobs.begin() ; it != blobs.end(); it++) {
 	       int newID = 1;
 	       //while (prevBlobs.count(newID) == 1 || newBlobs.count(newID) == 1) {
 	       while (newBlobs.count(newID) == 1) {
-	       	 newID++;
+                    newID++;
 	       }
 	       it->second.setID(newID);
 	       newBlobs[newID] = it->second;
@@ -361,32 +378,45 @@ namespace syllo {
 
      int formClusters(std::map<int,syllo::Blob> blobs, std::map<int,syllo::Cluster> &clusters)
      {
+          // Compare each blob to each other blob and cluster together blobs
+          // that are within a specified threshold of each other.
 	  std::map<int,syllo::Blob>::iterator it;
 	  for (it = blobs.begin() ; it != blobs.end() ; it++) {
 	       std::map<int,syllo::Blob>::iterator it2;
 	       for (it2 = blobs.begin() ; it2 != blobs.end() ; it2++) {
 		    if (abs(dist(it->second.getCentroid(),it2->second.getCentroid())) < 30) {
 			 if (it->second.clusterID == -1 && it2->second.clusterID == -1) {
-			      // Add to new cluster
+                              // If neither blob has been added to a cluster
+			      // yet...  Add to new cluster
 			      int newID = 1;
+                              
+                              // Find the next available cluster ID
 			      while (clusters.count(newID) == 1) {
 				   newID++;
 			      }
+
 			      // Set the cluster ID in each blob
 			      it->second.clusterID = newID;
 			      it2->second.clusterID = newID;
 
+                              // Add each blob to the new cluster
 			      syllo::Cluster cluster;
 			      cluster.addBlob(it->first,it->second);
 			      cluster.addBlob(it2->first,it2->second);
 
-			      // Add the blobs to the cluster
+			      // Save the cluster to a map
 			      clusters[newID] = cluster;
 			      
 			 } else if (it->second.clusterID != -1 && it2->second.clusterID == -1) {
+                              // If one blob has been added to a cluster and
+                              // one hasn't yet... Add the blob that hasn't
+                              // been added to the already created cluster.
 			      it2->second.clusterID = it->second.clusterID;
 			      clusters[it->second.clusterID].addBlob(it2->first,it2->second);
 			 } else if (it->second.clusterID == -1 && it2->second.clusterID != -1) {
+                              // Similar to previous case, but the first blob
+                              // hasn't been added to a cluster
+                              // yet. (vice-versa)
 			      it->second.clusterID = it2->second.clusterID;
 			      clusters[it2->second.clusterID].addBlob(it->first,it->second);
 			 }
@@ -420,10 +450,14 @@ namespace syllo {
 	  */
 
 	  if (curTime == 0) {
+               // Initialize some variables on first frame.
 	       IDs[-2] = true;
 	       IDs[-1] = true;
 	       IDs[0] = true;
 	       std::map<int,syllo::Cluster>::iterator it;
+
+               // If using particle filter, initialize particle filter.
+               // Also, loop through each cluster and copy to new clusters
 	       for (it = clusters.begin() ; it != clusters.end(); it++) {
 
 #if ENABLE_PF == 1
@@ -437,13 +471,17 @@ namespace syllo {
 	       return 0;
 	  }
 
+          // Loop through all previous clusters and match with current clusters
+          // based on absolute distance.
 	  std::map<int,syllo::Cluster>::iterator itPrev;
 	  for (itPrev = prevClusters.begin() ; itPrev != prevClusters.end(); itPrev++) {
 	       bool matchFound = false;
 	       std::map<int,syllo::Cluster>::iterator it;
 	       for (it = clusters.begin() ; it != clusters.end(); it++) {
-		    //if ( abs(dist(itPrev->second.getCentroid(), it->second.getCentroid())) < 20) {
-		    if ( abs(dist(itPrev->second.getCentroid(), it->second.getCentroid())) < 50) {
+                    if ( abs(dist(itPrev->second.getCentroid(), it->second.getCentroid())) < 50) {
+                         // Found a match between a current cluster and a
+                         // previous cluster. Copy over the current cluster's
+                         // information to the previous cluster.
 			 itPrev->second.calcVelocity(itPrev->second.getCentroid(), it->second.getCentroid());
 			 itPrev->second.setCentroid(it->second.getCentroid());
 			 itPrev->second.incAge();
@@ -452,26 +490,31 @@ namespace syllo {
 			 itPrev->second.pf_step();
 #endif
 
-			 //itPrev->second.resetAge();
+                         // Copy over previous cluster into new clusters map
 			 newClusters[itPrev->first] = itPrev->second;
 			 allClusters[itPrev->first] = itPrev->second;
+
+                         // Erase the current cluster from the map
 			 clusters.erase(it->first);
 
 			 matchFound = true;
 			 break;
 		    }
 	       }
-	       if (!matchFound) {
 
-		    //itPrev->second.setVelocity(cv::Vec2d(0,0));
-		    //itPrev->second.calcVelocity();
+	       if (!matchFound) {
+                    // If a match wasn't found, decrement the age.
+
 		    itPrev->second.decAge();
 #if ENABLE_PF == 1
                     itPrev->second.pf_step();
 #endif 		    
 		    if (itPrev->second.getAge() > 0) {
+                         // Only copy over the previous cluster if it's age is
+                         // greater than zero.
 			 newClusters[itPrev->first] = itPrev->second;
 		    }
+                    // Keep track of all clusters, just for logging purposes
 		    allClusters[itPrev->first] = itPrev->second;
 	       }
 	  }
@@ -500,8 +543,8 @@ namespace syllo {
 
 	  champID++; // next cluster ID 
 
-	  // From the remaining additional clusters, add them to the 
-	  // newClusters output map
+	  // From the remaining additional clusters (we erased matched
+	  // clusters), add them to the newClusters output map
 	  std::map<int,syllo::Cluster>::iterator it;
 	  for(it = clusters.begin() ; it != clusters.end() ; it++) {
 	       it->second.declareFirstCentroid(curTime);
@@ -510,7 +553,6 @@ namespace syllo {
 #if ENABLE_PFS == 1
 	       it->second.particle_filter_init(1000,0,600,0,800,0,360,-10,10);//TODO: height/width
 #endif	       
-
 	       newClusters[champID] = it->second;
 	       allClusters[champID] = it->second;
 	       champID++;
