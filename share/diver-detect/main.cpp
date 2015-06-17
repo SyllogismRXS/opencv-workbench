@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 	  prev_clusters = new_clusters;
 	  
 	  drawClusters(blob_img, blob_img, new_clusters, 20);
-          drawClusters(original_w_tracks, original_w_tracks, new_clusters, 20);
+          drawClusters(original_w_tracks, original_w_tracks, new_clusters, 20);                    
           
           ///////////////////////////////////////////////////
           // Save Track Information in AnnotationParser
@@ -161,6 +161,13 @@ int main(int argc, char *argv[])
           
           frame_number++;
      }
+
+     ///////////////////////////////////////////////////
+     // Track Metrics
+     ///////////////////////////////////////////////////
+     syllo::Cluster farthest;
+     int ID = syllo::getFarthestTravel(all_clusters, farthest);
+     cout << "Farthest Travelled Cluster: " << ID << endl;
 
      cout << "Saving tracks to xml file" << endl;
      parser.write_annotation();

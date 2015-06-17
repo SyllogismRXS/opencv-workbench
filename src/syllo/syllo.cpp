@@ -575,14 +575,16 @@ namespace syllo {
 	  //std::map<int,syllo::Cluster>::iterator it;
 
 	  int champ = -1000;
+          int champ_ID = -1;
 	  std::map<int,syllo::Cluster>::iterator it;
 	  for (it = clusters.begin() ; it != clusters.end(); it++) {
 	       if (it->second.getDistTravel() > champ) {
 		    champ = it->second.getDistTravel();
 		    cluster = it->second;
+                    champ_ID = it->first;
 	       }
 	  }
-          return 0;
+          return champ_ID;
      }
 
      int getFastestCluster(std::map<int,syllo::Cluster> &clusters, syllo::Cluster &cluster)
