@@ -6,5 +6,5 @@ add_subdirectory(diver-detect-segment)
 add_subdirectory(xml-test)
 add_subdirectory(periodic-detect)
 add_subdirectory(plot-tracks)
-add_subdirectory(analyze-tracks)
+add_subdirectory(run-detector)
 
