@@ -8,4 +8,4 @@ add_subdirectory(syllo-widgets)
 add_subdirectory(tools)
 add_subdirectory(LARKS)
 add_subdirectory(periodic)
-
+add_subdirectory(detector)

@@ -4,17 +4,19 @@
 # $1 - top-level directory of annotated xml files
 # $2 - config file for require tests
 
+IN_DIR="/home/syllogismrxs/Documents/Thesis/data/sonar-avi"
 if [ "$#" -ne 1 ]; then
-    echo "usage: $0 <input-dir>"
-    exit
+    echo "Missing <input-dir>"
+    echo "Using ${IN_DIR}"
+else 
+    IN_DIR=$1
 fi 
 
-IN_DIR=$1
 echo "--------------------------------------------------------------------"
 echo "                 Finding Relevant Video Files"
 echo 
 echo "Input directory: ${IN_DIR}"
-TRUTH_DATA=$(find $1 -name "*truth.xml")
+TRUTH_DATA=$(find ${IN_DIR} -name "*truth.xml")
 
 TRUTH_DATA_ARRAY=()
 VIDEO_FILES_ARRAY=()

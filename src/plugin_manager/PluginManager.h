@@ -4,7 +4,7 @@
 /// @file PluginManager.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-19 17:35:04 actuv>
+/// Time-stamp: <2015-06-23 15:57:28 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -60,7 +60,7 @@ using namespace std;
 namespace fs = ::boost::filesystem;
 
 template <typename T, typename M>
-class PluginManager {
+     class PluginManager {
 public:
      PluginManager() {}
 
@@ -110,23 +110,23 @@ public:
                }
           }
 
-           return paths;
-      }
+          return paths;
+     }
 
-      int search_for_plugins(std::string env_var)
-      {
-           std::vector<std::string> files;
-           std::vector<std::string>::iterator it;
+     int search_for_plugins(std::string env_var)
+     {
+          std::vector<std::string> files;
+          std::vector<std::string>::iterator it;
 
-           // Get all files within environment variable that are
-           // linux shared libraries
-           files = find_files(env_var, ".so");
-           for(it = files.begin(); it < files.end(); it++) {
-                // Load each library found
-                int result = this->load_library(*it);
-                if (result  == FAILED_TO_OPEN_LIBRARY) {
+          // Get all files within environment variable that are
+          // linux shared libraries
+          files = find_files(env_var, ".so");
+          for(it = files.begin(); it < files.end(); it++) {
+               // Load each library found
+               int result = this->load_library(*it);
+               if (result  == FAILED_TO_OPEN_LIBRARY) {
                     cout << "Can't load lib: " << *it << endl;
-                }
+               }
           }
 
           this->finalize_libraries();
@@ -141,12 +141,11 @@ public:
 
           dlib = dlopen(lib_name.c_str(), RTLD_NOW);
           if(dlib == NULL){
-               //cout << "Failed to open library: " << lib_name << endl;
-               std::cerr << dlerror() << endl;
+               //std::cerr << dlerror() << endl;
                cout << dlerror() << endl;
                return FAILED_TO_OPEN_LIBRARY;
           }
-
+          
           if (size == factory.size()) {
                // The factory size will increase by one when we load a proper
                // plugin. If it didn't increase, then it's not a library we
