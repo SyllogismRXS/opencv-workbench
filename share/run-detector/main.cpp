@@ -92,8 +92,9 @@ int main(int argc, char *argv[])
                cv::Point3d point3d = it->position();
 
                Object object;                                             
+               object.set_id(it->id());
                object.set_name(it->name());
-               
+                              
                object.bbox = BoundingBox(point3d.x, 
                                          point3d.x,
                                          point3d.y, 
@@ -136,6 +137,10 @@ int main(int argc, char *argv[])
      // Which track is the oldest?
   
 //plugin_manager_.close_libraries();
+
+
+     cout << "Saving tracks to xml file" << endl;
+     parser_tracks.write_annotation();
 
      cout << "Done Processing." << endl;
      return 0;

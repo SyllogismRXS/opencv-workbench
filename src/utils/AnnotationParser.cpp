@@ -146,6 +146,11 @@ void AnnotationParser::write_header()
                xml_node<> *name_node = doc.allocate_node(node_element, "name", name);
                object_node->append_node(name_node);
 
+               // "ID" node               
+               char * id = doc.allocate_string(syllo::int2str(object_it->second.id()).c_str());
+               xml_node<> *id_node = doc.allocate_node(node_element, "ID", id);
+               object_node->append_node(id_node);
+
                // "Age" node               
                char * age = doc.allocate_string(syllo::int2str(object_it->second.age()).c_str());
                xml_node<> *age_node = doc.allocate_node(node_element, "age", age);

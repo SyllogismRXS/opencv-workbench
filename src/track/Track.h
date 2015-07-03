@@ -4,7 +4,7 @@
 /// @file Track.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-02 18:20:09 syllogismrxs>
+/// Time-stamp: <2015-07-03 19:47:18 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Jul 2015
@@ -44,6 +44,7 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv_workbench/syllo/syllo.h>
 
 namespace syllo {
 
@@ -59,12 +60,39 @@ namespace syllo {
      
      class Track {
      public:
-          Track() { name_ = "undefined"; }
+          Track() 
+          { 
+               name_ = "Unknown:-1"; 
+               type_ = Unknown;
+               id_ = -1;
+          }
           
           void set_type(TrackType_t type) { type_ = type; }
           TrackType_t type() { return type_; }
           int age() { return age_; }
-          std::string name() { return name_; }
+          void set_age(int age) { age_ = age; }
+
+          std::string name() 
+          {
+               switch (type_) {
+               case Unknown:
+                    name_ = "Unknown";
+                    break;
+               case Diver:
+                    name_ = "Diver";
+                    break;
+               case Clutter:
+                    name_ = "Clutter";
+                    break;
+               default:
+                    name_ = "Unknown";
+               }                             
+
+               return name_; 
+          }
+
+          void set_id(int id) { id_ = id; }
+          int id() { return id_; }
 
 void set_position(cv::Point3d point) { point_ = point; }
 cv::Point3d position() { return point_; }
@@ -74,6 +102,7 @@ cv::Point3d position() { return point_; }
           cv::Point3d point_;
           int age_;
           std::string name_;
+          int id_;
      private:
      
      };

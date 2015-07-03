@@ -4,7 +4,7 @@
 /// @file Object.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-16 16:58:00 syllogismrxs>
+/// Time-stamp: <2015-07-03 19:32:57 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -49,9 +49,12 @@ public:
      BoundingBox bbox;
      void set_age(int age) { age_ = age; }
      int age() { return age_; }
+     void set_id(int id) { id_ = id; }
+     int id() { return id_; }
 protected:
      std::string name_;     
      int age_;
+     int id_;
 private:
 };
 

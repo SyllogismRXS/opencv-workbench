@@ -89,6 +89,8 @@ int DisplaceDetector::set_frame(int frame_number, const cv::Mat &original)
           syllo::Track track;
           cv::Point point2d = it->second.getCentroid();          
           track.set_position(cv::Point3d(point2d.x, point2d.y, 0));
+          track.set_id(it->first);
+          track.set_age(it->second.getAge());
           
           if (it->first == ID) {
                // This is the predicted diver
