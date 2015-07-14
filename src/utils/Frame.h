@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-04-29 17:26:24 syllogismrxs>
+/// Time-stamp: <2015-07-13 15:31:04 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -48,6 +48,16 @@ public:
      void set_frame_number(int frame_number) {frame_number_ = frame_number;}
      int frame_number() { return frame_number_; }
      std::map<std::string, Object> objects;
+     
+     bool contains_object(const std::string &name, Object &object) 
+     {
+          if (objects.count(name) > 0) {
+               object = objects[name];
+               return true;
+          } else {
+               return false;
+          }
+     }
      
 protected:
      int frame_number_;

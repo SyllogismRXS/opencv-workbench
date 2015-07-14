@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-16 16:48:37 syllogismrxs>
+/// Time-stamp: <2015-07-14 13:01:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -80,6 +80,9 @@ public:
      void plot_tracks(std::vector<std::string> &names);
 
      void write_gnuplot_data();
+
+     void score_detector(AnnotationParser &truth, 
+                      std::vector<std::string> &names);
 
 protected:
      std::string xml_filename_;     

@@ -4,7 +4,7 @@
 /// @file Track.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-03 19:47:18 syllogismrxs>
+/// Time-stamp: <2015-07-13 15:20:35 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Jul 2015
@@ -76,16 +76,16 @@ namespace syllo {
           {
                switch (type_) {
                case Unknown:
-                    name_ = "Unknown";
+                    name_ = "unknown";
                     break;
                case Diver:
-                    name_ = "Diver";
+                    name_ = "diver";
                     break;
                case Clutter:
-                    name_ = "Clutter";
+                    name_ = "clutter";
                     break;
                default:
-                    name_ = "Unknown";
+                    name_ = "unknown";
                }                             
 
                return name_; 

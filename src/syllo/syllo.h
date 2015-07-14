@@ -22,6 +22,8 @@ namespace syllo
 {
      int str2int(std::string str);
      std::string int2str(int x);     
+
+     void fill_line(std::string ch);
      
      cv::Point getTypeCentroid(EntityType type, std::map<int,syllo::Cluster> &clusters);
 

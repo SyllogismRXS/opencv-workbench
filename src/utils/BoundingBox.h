@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-05-12 16:23:19 syllogismrxs>
+/// Time-stamp: <2015-07-13 15:42:08 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -89,11 +89,25 @@ BoundingBox(int xmin, int xmax, int ymin, int ymax) :
           return p;
      }
 
+     // Given this Bounding Box's centroid and the desired width and height,
+     // Create a rectangle with the centroid at the center of the box with
+     // given width and height
      cv::Rect ForceBox(int width, int height)
      {
           cv::Point centroid = this->centroid();
           cv::Rect rect(centroid.x-width/2, centroid.y-height/2, width, height);
           return rect;
+     }
+
+     // Returns true if the Bounding Box contains the provided point
+     bool contains(cv::Point point)
+     {
+          if (xmin_ < point.x && xmax_ > point.x && 
+              ymin_ < point.y && ymax_ > point.y) { 
+               return true;
+          } else {
+               return false;
+          }
      }
           
 protected:

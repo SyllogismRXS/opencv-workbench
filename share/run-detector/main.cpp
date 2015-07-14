@@ -27,8 +27,11 @@ using std::endl;
 PluginManager<Detector, Detector_maker_t> plugin_manager_;
 
 int main(int argc, char *argv[])
-{
+{     
+     syllo::fill_line("=");
      cout << "Running Detector" << endl;
+     syllo::fill_line("=");
+
      if (argc < 2) {
           cout << "Usage: " << argv[0] << " <input-file>" << endl;
           return -1;
@@ -42,6 +45,15 @@ int main(int argc, char *argv[])
           return -1;
      }
 
+     // Setup Hand Annotated Parser (Truth)
+     bool hand_ann_found = true;
+     AnnotationParser parser_truth;
+     int retcode = parser_truth.CheckForFile(argv[1], AnnotationParser::hand);
+     if (retcode != 0) {
+          cout << "Error parsing hand annotated file." << endl;
+          hand_ann_found = false;          
+     }
+
      // Setup Annotation Parser_Tracks
      AnnotationParser parser_tracks;
      parser_tracks.CheckForFile(argv[1], AnnotationParser::track);
@@ -53,7 +65,7 @@ int main(int argc, char *argv[])
      parser_tracks.set_number_of_frames(stream.get_frame_count());
 
      // Load the Bridge shared library (based on yml file)
-     int retcode = plugin_manager_.search_for_plugins("OPENCV_WORKBENCH_PLUGIN_PATH");
+     retcode = plugin_manager_.search_for_plugins("OPENCV_WORKBENCH_PLUGIN_PATH");
      if (retcode != 0) {
           cout << "Failed to find plugins." << endl;
           return -1;
@@ -121,26 +133,27 @@ int main(int argc, char *argv[])
                break;
           }
           frame_number++;
-     }          
-
-     //// Setup Annotation Parser
-     //AnnotationParser parser;
-     //int status = parser.CheckForFile(argv[1], AnnotationParser::track);
-     //if (status != 0) {
-     //     cout << "Error parsing tracks file." << endl;
-     //     return -1;
-     //}     
+     }
      
      // Which track exhibited the most displacement?
-     
-     
      // Which track is the oldest?
-  
-//plugin_manager_.close_libraries();
-
-
+          
      cout << "Saving tracks to xml file" << endl;
      parser_tracks.write_annotation();
+     
+     // We can only compare the detector to truth data if we have a hand
+     // annotated file.
+     if (hand_ann_found) {
+          cout << "Scoring detector..." << endl;     
+          std::vector<std::string> names;
+          names.push_back("diver");
+          parser_tracks.score_detector(parser_truth, names);
+     } else {
+          cout << "WARNING: Can't score detector because hand annotated "
+               << "file is missing" << endl;
+     }
+     
+     plugin_manager_.close_libraries();
 
      cout << "Done Processing." << endl;
      return 0;

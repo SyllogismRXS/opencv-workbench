@@ -86,6 +86,18 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
 
 namespace syllo {
 
+     void fill_line(std::string ch) 
+     {
+          if (ch.length() > 1) {
+               ch = "=";
+          }
+          
+          for (int i = 0; i < 80; i++) {
+               cout << ch;
+          }
+          cout << endl;
+     }
+     
      int str2int(std::string str)
      {
           int num;
