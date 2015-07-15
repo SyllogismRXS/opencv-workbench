@@ -4,7 +4,7 @@
 /// @file DisplaceDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-02 17:55:44 syllogismrxs>
+/// Time-stamp: <2015-07-14 17:39:11 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -47,8 +47,8 @@ public:
      ~DisplaceDetector();
      void print();
 
-     int set_frame(int frame_number, const cv::Mat &original);
-
+     int set_frame(int frame_number, const cv::Mat &original);     
+     
 protected:
 
      cv::Mat erosionConfig_;
@@ -62,7 +62,7 @@ protected:
      // Running Gaussian Frames
      cv::Mat rg_;
      cv::Mat avgs_;
-     cv::Mat variance_;
+     cv::Mat variance_;     
 
 private:
 };

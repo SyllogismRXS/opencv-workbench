@@ -105,12 +105,14 @@ int DisplaceDetector::set_frame(int frame_number, const cv::Mat &original)
      ///////////////////////////////////////////////////
      // Display images
      ///////////////////////////////////////////////////
-     //cv::imshow("Original", original);
-     //cv::imshow("Gray", gray);
-     cv::imshow("Threshold", threshold);
-     cv::imshow("Running", rg_);
-     cv::imshow("Clusters", blob_img);
-     cv::imshow("Tracks", original_w_tracks);
+     if (!hide_windows_) {
+          //cv::imshow("Original", original);
+          //cv::imshow("Gray", gray);
+          cv::imshow("Threshold", threshold);
+          cv::imshow("Running", rg_);
+          cv::imshow("Clusters", blob_img);
+          cv::imshow("Tracks", original_w_tracks);
+     }
      
      return 0;
 }

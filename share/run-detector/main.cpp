@@ -27,28 +27,77 @@ using std::endl;
 PluginManager<Detector, Detector_maker_t> plugin_manager_;
 
 int main(int argc, char *argv[])
-{     
+{    
+     //int aflag = 0;
+     //int bflag = 0;
+     //char *cvalue = NULL;
+     //int index;
+     int hide_window_flag = 0;
+     int c;
+     std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi";
+     std::string plugin_name = "displace_detector";
+     std::string xml_output_dir = "";
+     int xml_output_dir_flag = 0;
+  
+     while ((c = getopt (argc, argv, "abc:f:hp:o:")) != -1) {
+          switch (c) {
+          //case 'a':
+          //     aflag = 1;
+          //     break;
+          //case 'b':
+          //     bflag = 1;
+          //     break;
+          case 'o':
+               xml_output_dir_flag = 1;
+               xml_output_dir = std::string(optarg);
+               break;
+          case 'h':
+               hide_window_flag = 1;
+               break;
+          case 'p':
+               plugin_name = std::string(optarg);
+               break;
+          case 'f':
+               video_filename = std::string(optarg);
+               break;
+          case '?':
+               if (optopt == 'c') {
+                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+               } else if (optopt == 'f') {
+                    fprintf (stderr, "Option -%c requires a video filename as an argument.\n", optopt);
+               } else if (optopt == 'o') {
+                    fprintf (stderr, "Option -%c requires an output directory as an argument.\n", optopt);
+               } else if (optopt == 'p') {
+                    fprintf (stderr, "Option -%c requires a plugin name as an argument.\n", optopt);
+               } else if (isprint (optopt)) {
+                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+               } else {
+                    fprintf (stderr,
+                             "Unknown option character `\\x%x'.\n",
+                             optopt);
+               }
+               return 1;
+          default:
+               abort ();
+          }
+     }
+          
      syllo::fill_line("=");
      cout << "Running Detector" << endl;
      syllo::fill_line("=");
-
-     if (argc < 2) {
-          cout << "Usage: " << argv[0] << " <input-file>" << endl;
-          return -1;
-     }
-
+     
      syllo::Stream stream;
-     syllo::Status status = stream.open(argv[1]);
+     syllo::Status status = stream.open(video_filename);
 
      if (status != syllo::Success) {
-          cout << "Failed to open: " << argv[1] << endl;
+          cout << "Failed to open: " << video_filename << endl;
           return -1;
      }
 
      // Setup Hand Annotated Parser (Truth)
      bool hand_ann_found = true;
      AnnotationParser parser_truth;
-     int retcode = parser_truth.CheckForFile(argv[1], AnnotationParser::hand);
+     int retcode = parser_truth.CheckForFile(video_filename, AnnotationParser::hand);
      if (retcode != 0) {
           cout << "Error parsing hand annotated file." << endl;
           hand_ann_found = false;          
@@ -56,13 +105,18 @@ int main(int argc, char *argv[])
 
      // Setup Annotation Parser_Tracks
      AnnotationParser parser_tracks;
-     parser_tracks.CheckForFile(argv[1], AnnotationParser::track);
+     parser_tracks.CheckForFile(video_filename, AnnotationParser::track);
      parser_tracks.clear();
      parser_tracks.set_width(stream.width());
      parser_tracks.set_height(stream.height());
      parser_tracks.set_depth(3);
      parser_tracks.set_type("video");
      parser_tracks.set_number_of_frames(stream.get_frame_count());
+     parser_tracks.set_plugin_name(plugin_name);
+
+     if (xml_output_dir_flag == 1) {
+          parser_tracks.set_xml_output_dir(xml_output_dir);
+     }
 
      // Load the Bridge shared library (based on yml file)
      retcode = plugin_manager_.search_for_plugins("OPENCV_WORKBENCH_PLUGIN_PATH");
@@ -71,7 +125,6 @@ int main(int argc, char *argv[])
           return -1;
      }
 
-     std::string plugin_name = "displace_detector";
      retcode = plugin_manager_.open_library(plugin_name);
      if (retcode != 0) {
           cout << "Unable to open library: " << plugin_name << endl;
@@ -83,7 +136,13 @@ int main(int argc, char *argv[])
      
      Detector * detector_;     
      detector_ = plugin_manager_.object();
-     detector_->print();          
+     detector_->print();       
+     
+     if (hide_window_flag) {
+          detector_->hide_windows(true);
+     } else {
+          detector_->hide_windows(false);
+     }
      
      cv::Mat original;
      int frame_number = 0;
@@ -126,20 +185,20 @@ int main(int argc, char *argv[])
           // Save frame to parser
           parser_tracks.frames[frame_number] = frame;
 
-          cv::imshow("Detection", original);
+          if (!hide_window_flag) { 
+               cv::imshow("Detection", original);
+               
+               if (cv::waitKey(10) >= 0) {
+                    cout << "Ending early." << endl;
+                    break;
+               }
+          }          
           
-          if (cv::waitKey(10) >= 0) {
-               cout << "Ending early." << endl;
-               break;
-          }
           frame_number++;
      }
      
      // Which track exhibited the most displacement?
-     // Which track is the oldest?
-          
-     cout << "Saving tracks to xml file" << endl;
-     parser_tracks.write_annotation();
+     // Which track is the oldest?               
      
      // We can only compare the detector to truth data if we have a hand
      // annotated file.
@@ -147,11 +206,14 @@ int main(int argc, char *argv[])
           cout << "Scoring detector..." << endl;     
           std::vector<std::string> names;
           names.push_back("diver");
-          parser_tracks.score_detector(parser_truth, names);
+          parser_tracks.score_detector(parser_truth, names);          
      } else {
           cout << "WARNING: Can't score detector because hand annotated "
                << "file is missing" << endl;
      }
+
+     cout << "Saving tracks to xml file" << endl;
+     parser_tracks.write_annotation();
      
      plugin_manager_.close_libraries();
 

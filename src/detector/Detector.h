@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-02 17:55:22 syllogismrxs>
+/// Time-stamp: <2015-07-14 17:39:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -69,7 +69,8 @@ public:
      virtual int set_frame(int frame_number, const cv::Mat &original)=0;
 
      std::vector<syllo::Track> & tracks() { return tracks_; }
-
+     void hide_windows(bool hide) { hide_windows_ = hide; }
+     
      //virtual Status_t set_own_pose(const AVIA::Pose &pose)=0;
      //virtual Status_t set_command(const Command &command) {return Success;}
      //virtual Status_t set_contacts(const sensor_track_list &sensorTracks) {return Success;}
@@ -82,6 +83,7 @@ public:
 protected:
      //unsigned int own_id_;
      std::vector<syllo::Track> tracks_;
+     bool hide_windows_;
 private:
 };
 

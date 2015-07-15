@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-14 13:01:23 syllogismrxs>
+/// Time-stamp: <2015-07-15 17:51:51 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -51,7 +51,7 @@ namespace fs = boost::filesystem;
 class AnnotationParser {
 public:
 
-     typedef enum {
+     typedef enum AnnotateType{
           hand = 0,
           track = 1,
      }AnnotateType_t;
@@ -84,6 +84,11 @@ public:
      void score_detector(AnnotationParser &truth, 
                       std::vector<std::string> &names);
 
+     void set_xml_output_dir(std::string dir);
+     void set_plugin_name(std::string name) { plugin_name_ = name; }
+
+     std::map<std::string,int> get_metrics();     
+
 protected:
      std::string xml_filename_;     
      AnnotateType_t ann_type_;
@@ -98,6 +103,14 @@ protected:
 
      fs::path dir_;
      fs::path basename_;
+
+     std::string plugin_name_;
+
+     bool metrics_present_;
+     int TPs_;
+     int TNs_;
+     int FPs_;
+     int FNs_;
      
 private:
 };

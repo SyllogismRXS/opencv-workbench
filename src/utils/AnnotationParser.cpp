@@ -21,7 +21,7 @@ using namespace rapidxml;
 
 AnnotationParser::AnnotationParser()
 {
-     
+     this->reset();
 }
 
 void AnnotationParser::reset()
@@ -30,6 +30,7 @@ void AnnotationParser::reset()
      xml_filename_ = "";
      dir_ = "";
      basename_ = "";
+     metrics_present_ = false;
      
      frames.clear();
 }
@@ -43,13 +44,14 @@ int AnnotationParser::CheckForFile(std::string video_file,
                                     AnnotationParser::AnnotateType_t ann_type)
 {
      video_filename_ = video_file;
+     ann_type_ = ann_type;
      
      int lastindex = video_file.find_last_of("."); 
      xml_filename_ = video_file.substr(0, lastindex);
      
-     if (ann_type == hand) {
+     if (ann_type_ == hand) {
           xml_filename_ += ".truth.xml";
-     } else if (ann_type == track) {
+     } else if (ann_type_ == track) {
           xml_filename_ += ".tracks.xml";
      } else {
           cout << "ERROR: Invalid annotation type" << endl;
@@ -59,22 +61,38 @@ int AnnotationParser::CheckForFile(std::string video_file,
      basename_ = fs::path(video_file).filename();
 
      if ( !boost::filesystem::exists( xml_filename_ ) ) {
-          if (ann_type == hand) {
+          if (ann_type_ == hand) {
                cout << "Hand ";
-          } else if (ann_type == track) {
+          } else if (ann_type_ == track) {
                cout << "Track ";
           }
           cout << "annotation file doesn't exist yet." << endl;
           return 1;
      } else {
-          if (ann_type == hand) {
+          if (ann_type_ == hand) {
                cout << "Hand ";
-          } else if (ann_type == track) {
+          } else if (ann_type_ == track) {
                cout << "Track ";
           }
           cout << "annotation file found." << endl;
           return this->ParseFile(xml_filename_);
      }
+}
+
+void AnnotationParser::set_xml_output_dir(std::string dir)
+{
+     // Check existence of output directory
+     if ( !boost::filesystem::exists( dir ) ) {
+          // Create it if it doesn't exist
+          if(!fs::create_directory(fs::path(dir))) {
+               cout << "ERROR: Unable to create output directory: "
+                    << dir << endl;
+               return;
+          }
+     }
+     
+     fs::path filename = fs::path(xml_filename_).filename();
+     xml_filename_ = dir + "/" + filename.c_str();
 }
 
 void AnnotationParser::write_annotation()
@@ -96,6 +114,33 @@ void AnnotationParser::write_header()
 
      xml_node<> *type_node = doc.allocate_node(node_element, "type", "video");
      root_node->append_node(type_node);
+
+     if (ann_type_ == track) {
+          xml_node<> *plugin_name_node = doc.allocate_node(node_element, "plugin_name", plugin_name_.c_str());
+          root_node->append_node(plugin_name_node);
+
+          if (metrics_present_) {
+               xml_node<> *metrics_node = doc.allocate_node(node_element, "metrics");
+               root_node->append_node(metrics_node);
+               
+               char * TPs = doc.allocate_string(syllo::int2str(TPs_).c_str());
+               xml_node<> *TPs_node = doc.allocate_node(node_element, "TPs", TPs);
+               metrics_node->append_node(TPs_node);
+
+               char * TNs = doc.allocate_string(syllo::int2str(TNs_).c_str());
+               xml_node<> *TNs_node = doc.allocate_node(node_element, "TNs", TNs);
+               metrics_node->append_node(TNs_node);
+
+               char * FPs = doc.allocate_string(syllo::int2str(FPs_).c_str());
+               xml_node<> *FPs_node = doc.allocate_node(node_element, "FPs", FPs);
+               metrics_node->append_node(FPs_node);
+
+               char * FNs = doc.allocate_string(syllo::int2str(FNs_).c_str());
+               xml_node<> *FNs_node = doc.allocate_node(node_element, "FNs", FNs);
+               metrics_node->append_node(FNs_node);
+          }
+          
+     }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
      root_node->append_node(size_node);
@@ -209,7 +254,9 @@ void AnnotationParser::write_header()
      
      // Prints the document to screen
      //std::cout << doc;
-    
+     
+     cout << "Writing XML file to: " << xml_filename_ << endl;
+
      std::ofstream outfile;
      outfile.open(xml_filename_.c_str());          
      outfile << doc;
@@ -456,10 +503,23 @@ void AnnotationParser::write_gnuplot_data()
      //TODO, future work, maybe.
 }
 
+std::map<std::string,int> AnnotationParser::get_metrics()
+{
+     std::map<std::string,int> metrics;
+     metrics["TPs"] = TPs_;
+     metrics["TNs"] = TNs_;
+     metrics["FPs"] = FPs_;
+     metrics["FNs"] = FNs_;
+     return metrics;
+}
+
 void AnnotationParser::score_detector(AnnotationParser &truth, 
                                    std::vector<std::string> &names)
 {
-     int TPs = 0, TNs = 0, FPs = 0, FNs = 0;
+     TPs_ = 0;
+     TNs_ = 0;
+     FPs_ = 0;
+     FNs_ = 0;
 
      // Starting with frame number 0, increment through the truth and detector
      // frames until both truth a detector frames are all processed.
@@ -493,7 +553,7 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
           if (!tru_frame_exists && !detect_frame_exists) {
                // Neither a true frame or detected frame exists.
                // Thus, the detector didn't incorrectly detect an object.
-               TNs++;
+               TNs_++;
           } else if (!tru_frame_exists && detect_frame_exists) {
                // If a truth frame doesn't exist, but a detected frame exists
                // determine if the detected frame labelled an object we care
@@ -508,12 +568,12 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (detect_obj_exists) {
                          // The detector labelled an object, but it doesn't 
                          // exist in a truth frame.
-                         FPs++;                         
+                         FPs_++;                         
                     } else {
                          // The object doesn't exist in the sequence of truth
                          // frames. Also, it doesn't exist in the detector
                          // frame.
-                         TNs++;
+                         TNs_++;
                     }
                }               
           } else if (tru_frame_exists && !detect_frame_exists) {
@@ -530,11 +590,11 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (tru_obj_exists) {
                          // The object exists in the truth frame, but doesn't
                          // exist in the detector frame. False Negative.
-                         FNs++;
+                         FNs_++;
                     } else {
                          // The object doesn't exist in the truth frame and it
                          // doesn't exist in the detector frame. True Negative.
-                         TNs++;
+                         TNs_++;
                     }
                }               
           } else if (tru_frame_exists && detect_frame_exists) {
@@ -560,17 +620,17 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (!tru_obj_exists && !obj_exists) {
                          // If the object name doesn't exist in the truth frame
                          // or the detector frame, it is a True Negative
-                         TNs++;                         
+                         TNs_++;                         
                     } else if (!tru_obj_exists && obj_exists) {
                          // If the object doesn't exist in the truth frame, 
                          // but exists in the detector frame, it is a false
                          // positive
-                         FPs++;
+                         FPs_++;
                     } else if (tru_obj_exists && !obj_exists) {
                          // If the object exists in the truth frame, but it 
                          // doesn't exist in the detector frame, it is a false
                          // negative
-                         FNs++;
+                         FNs_++;
                     } else if (tru_obj_exists && obj_exists) {
                          // If the object exists in both the truth frame and
                          // the detector frame, we have to determine if the
@@ -581,11 +641,11 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                          if (contains) {
                               // The detected object's centroid is within the
                               // bounding box of the truth frame's object.
-                              TPs++;
+                              TPs_++;
                          } else {
                               // The detected object's centroid is outside of
                               // the bounding box of the truth frame's object.
-                              FPs++;
+                              FPs_++;
                          }
                     }
                }
@@ -593,9 +653,10 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
      }
          
      syllo::fill_line("+");
-     cout << "True Positives: " << TPs << endl;
-     cout << "True Negatives: " << TNs << endl;
-     cout << "False Positives: " << FPs << endl;
-     cout << "False Negatives: " << FNs << endl;
+     cout << "True Positives: " << TPs_ << endl;
+     cout << "True Negatives: " << TNs_ << endl;
+     cout << "False Positives: " << FPs_ << endl;
+     cout << "False Negatives: " << FNs_ << endl;     
+     metrics_present_ = true;
      syllo::fill_line("+");
 }
