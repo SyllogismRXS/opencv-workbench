@@ -111,6 +111,13 @@ namespace syllo {
           convert << x;      // insert the textual representation of 'Number' in the characters in the stream
           return convert.str();          
      }
+
+     std::string double2str(double x)
+     {
+          std::ostringstream convert;   // stream used for the conversion
+          convert << x;      // insert the textual representation of 'Number' in the characters in the stream
+          return convert.str();          
+     }
      
      int templateDetect(const cv::Mat &inputImg, const cv::Mat &templImg, cv::Mat &outputImg)
      {

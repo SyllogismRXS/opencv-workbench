@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-15 17:51:51 syllogismrxs>
+/// Time-stamp: <2015-07-17 21:47:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -107,10 +107,12 @@ protected:
      std::string plugin_name_;
 
      bool metrics_present_;
-     int TPs_;
-     int TNs_;
-     int FPs_;
-     int FNs_;
+     int TP_;
+     int TN_;
+     int FP_;
+     int FN_;
+     double TPR_;
+     double FPR_;
      
 private:
 };

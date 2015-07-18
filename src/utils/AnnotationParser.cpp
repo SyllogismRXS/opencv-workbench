@@ -123,21 +123,29 @@ void AnnotationParser::write_header()
                xml_node<> *metrics_node = doc.allocate_node(node_element, "metrics");
                root_node->append_node(metrics_node);
                
-               char * TPs = doc.allocate_string(syllo::int2str(TPs_).c_str());
-               xml_node<> *TPs_node = doc.allocate_node(node_element, "TPs", TPs);
-               metrics_node->append_node(TPs_node);
+               char * TP = doc.allocate_string(syllo::int2str(TP_).c_str());
+               xml_node<> *TP_node = doc.allocate_node(node_element, "TP", TP);
+               metrics_node->append_node(TP_node);
 
-               char * TNs = doc.allocate_string(syllo::int2str(TNs_).c_str());
-               xml_node<> *TNs_node = doc.allocate_node(node_element, "TNs", TNs);
-               metrics_node->append_node(TNs_node);
+               char * TN = doc.allocate_string(syllo::int2str(TN_).c_str());
+               xml_node<> *TN_node = doc.allocate_node(node_element, "TN", TN);
+               metrics_node->append_node(TN_node);
 
-               char * FPs = doc.allocate_string(syllo::int2str(FPs_).c_str());
-               xml_node<> *FPs_node = doc.allocate_node(node_element, "FPs", FPs);
-               metrics_node->append_node(FPs_node);
+               char * FP = doc.allocate_string(syllo::int2str(FP_).c_str());
+               xml_node<> *FP_node = doc.allocate_node(node_element, "FP", FP);
+               metrics_node->append_node(FP_node);
 
-               char * FNs = doc.allocate_string(syllo::int2str(FNs_).c_str());
-               xml_node<> *FNs_node = doc.allocate_node(node_element, "FNs", FNs);
-               metrics_node->append_node(FNs_node);
+               char * FN = doc.allocate_string(syllo::int2str(FN_).c_str());
+               xml_node<> *FN_node = doc.allocate_node(node_element, "FN", FN);
+               metrics_node->append_node(FN_node);
+
+               char * TPR = doc.allocate_string(syllo::double2str(TPR_).c_str());
+               xml_node<> *TPR_node = doc.allocate_node(node_element, "TPR", TPR);
+               metrics_node->append_node(TPR_node);
+
+               char * FPR = doc.allocate_string(syllo::double2str(FPR_).c_str());
+               xml_node<> *FPR_node = doc.allocate_node(node_element, "FPR", FPR);
+               metrics_node->append_node(FPR_node);
           }
           
      }
@@ -506,26 +514,27 @@ void AnnotationParser::write_gnuplot_data()
 std::map<std::string,int> AnnotationParser::get_metrics()
 {
      std::map<std::string,int> metrics;
-     metrics["TPs"] = TPs_;
-     metrics["TNs"] = TNs_;
-     metrics["FPs"] = FPs_;
-     metrics["FNs"] = FNs_;
+     metrics["TP"] = TP_;
+     metrics["TN"] = TN_;
+     metrics["FP"] = FP_;
+     metrics["FN"] = FN_;
      return metrics;
 }
 
 void AnnotationParser::score_detector(AnnotationParser &truth, 
                                    std::vector<std::string> &names)
 {
-     TPs_ = 0;
-     TNs_ = 0;
-     FPs_ = 0;
-     FNs_ = 0;
+     TP_ = 0;
+     TN_ = 0;
+     FP_ = 0;
+     FN_ = 0;
+     TPR_ = FPR_ = -1;
 
      // Starting with frame number 0, increment through the truth and detector
      // frames until both truth a detector frames are all processed.
      std::map<int,Frame>::const_iterator it_tru_frame = truth.frames.begin();
      std::map<int,Frame>::iterator it_detect_frame = frames.begin();
-     for (int i = 0; it_tru_frame != truth.frames.end() && 
+     for (int i = 0; it_tru_frame != truth.frames.end() || 
                it_detect_frame != frames.end(); i++) {
           
           // Does the truth vector have an entry for this frame?
@@ -553,7 +562,7 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
           if (!tru_frame_exists && !detect_frame_exists) {
                // Neither a true frame or detected frame exists.
                // Thus, the detector didn't incorrectly detect an object.
-               TNs_++;
+               TN_++;
           } else if (!tru_frame_exists && detect_frame_exists) {
                // If a truth frame doesn't exist, but a detected frame exists
                // determine if the detected frame labelled an object we care
@@ -568,12 +577,12 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (detect_obj_exists) {
                          // The detector labelled an object, but it doesn't 
                          // exist in a truth frame.
-                         FPs_++;                         
+                         FP_++;                         
                     } else {
                          // The object doesn't exist in the sequence of truth
                          // frames. Also, it doesn't exist in the detector
                          // frame.
-                         TNs_++;
+                         TN_++;
                     }
                }               
           } else if (tru_frame_exists && !detect_frame_exists) {
@@ -590,11 +599,11 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (tru_obj_exists) {
                          // The object exists in the truth frame, but doesn't
                          // exist in the detector frame. False Negative.
-                         FNs_++;
+                         FN_++;
                     } else {
                          // The object doesn't exist in the truth frame and it
                          // doesn't exist in the detector frame. True Negative.
-                         TNs_++;
+                         TN_++;
                     }
                }               
           } else if (tru_frame_exists && detect_frame_exists) {
@@ -620,17 +629,17 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                     if (!tru_obj_exists && !obj_exists) {
                          // If the object name doesn't exist in the truth frame
                          // or the detector frame, it is a True Negative
-                         TNs_++;                         
+                         TN_++;                         
                     } else if (!tru_obj_exists && obj_exists) {
                          // If the object doesn't exist in the truth frame, 
                          // but exists in the detector frame, it is a false
                          // positive
-                         FPs_++;
+                         FP_++;
                     } else if (tru_obj_exists && !obj_exists) {
                          // If the object exists in the truth frame, but it 
                          // doesn't exist in the detector frame, it is a false
                          // negative
-                         FNs_++;
+                         FN_++;
                     } else if (tru_obj_exists && obj_exists) {
                          // If the object exists in both the truth frame and
                          // the detector frame, we have to determine if the
@@ -641,22 +650,25 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                          if (contains) {
                               // The detected object's centroid is within the
                               // bounding box of the truth frame's object.
-                              TPs_++;
+                              TP_++;
                          } else {
                               // The detected object's centroid is outside of
                               // the bounding box of the truth frame's object.
-                              FPs_++;
+                              FP_++;
                          }
                     }
                }
           }
      }
-         
+     
+     TPR_ = (double)TP_ / (double)(TP_ + FN_) ; 
+     FPR_ = (double)FP_ / (double)(FP_ + TN_) ; 
+    
      syllo::fill_line("+");
-     cout << "True Positives: " << TPs_ << endl;
-     cout << "True Negatives: " << TNs_ << endl;
-     cout << "False Positives: " << FPs_ << endl;
-     cout << "False Negatives: " << FNs_ << endl;     
+     cout << "True Positives: " << TP_ << endl;
+     cout << "True Negatives: " << TN_ << endl;
+     cout << "False Positives: " << FP_ << endl;
+     cout << "False Negatives: " << FN_ << endl;     
      metrics_present_ = true;
      syllo::fill_line("+");
 }

@@ -91,10 +91,16 @@ int DisplaceDetector::set_frame(int frame_number, const cv::Mat &original)
           track.set_position(cv::Point3d(point2d.x, point2d.y, 0));
           track.set_id(it->first);
           track.set_age(it->second.getAge());
-          
+                    
           if (it->first == ID) {
-               // This is the predicted diver
-               track.set_type(syllo::Diver);
+               // This is track that has moved the farthest.  Make sure the
+               // track is at least a certain age before classifying it as a
+               // diver
+               if (track.age() > 5) {
+                    track.set_type(syllo::Diver);
+               } else {
+                    track.set_type(syllo::Unknown);
+               }               
           } else {
                // Not the predicted diver
                track.set_type(syllo::Unknown);

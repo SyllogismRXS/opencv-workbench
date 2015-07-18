@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-14 17:39:14 syllogismrxs>
+/// Time-stamp: <2015-07-17 21:43:35 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -84,6 +84,9 @@ protected:
      //unsigned int own_id_;
      std::vector<syllo::Track> tracks_;
      bool hide_windows_;
+
+     std::map<std::string,double> params_;
+     
 private:
 };
 

@@ -21,7 +21,8 @@
 namespace syllo
 {
      int str2int(std::string str);
-     std::string int2str(int x);     
+     std::string int2str(int x);
+     std::string double2str(double x);
 
      void fill_line(std::string ch);
      
