@@ -4,7 +4,9 @@
 # $1 - top-level directory of annotated xml files
 # $2 - config file for require tests
 
+OUT_DIR_NAME=$(date +"%m-%d-%Y_%T")
 IN_DIR="/home/syllogismrxs/Documents/Thesis/data/sonar-avi"
+OUT_DIR="/home/syllogismrxs/Documents/Thesis/data/sonar-avi/metrics/${OUT_DIR_NAME}"
 if [ "$#" -ne 1 ]; then
     echo "Missing <input-dir>"
     echo "Using ${IN_DIR}"
@@ -54,7 +56,8 @@ do
     echo "Processing video file:"
     echo  "${i}"
     echo "-----------------------------------------------------------"
-    ~/repos/opencv-workbench/bin/run-detector ${i}
+    ~/repos/opencv-workbench/bin/run-detector -f ${i} -p displace_detector -h -o ${OUT_DIR}
+    #~/repos/opencv-workbench/bin/run-detector -f ${i} -p displace_detector -o ${OUT_DIR}
 done
 
 # Compare detectors results with hand annotated results
