@@ -55,9 +55,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OPENCV_WORKBENCH_BIN_DIR} CACHE PATH
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OPENCV_WORKBENCH_LIB_DIR} CACHE PATH 
   "Output directory for the static libraries (archives)" )
 
-INSTALL(DIRECTORY ${OPENCV_WORKBENCH_INC_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}
-  FILES_MATCHING REGEX .*\\.h|.*\\.proto
-)
+#INSTALL(DIRECTORY ${OPENCV_WORKBENCH_INC_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}
+#  FILES_MATCHING REGEX .*\\.h|.*\\.proto
+#)
 
 #INSTALL(TARGETS ${} 
 #  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
@@ -130,3 +130,59 @@ include_directories(${OPENCV_WORKBENCH_SRC_DIR}/gui/annotate)
 
 add_subdirectory(src)
 add_subdirectory(share)
+
+###############################################################################
+# Installation
+# 
+###############################################################################
+set(PKGCONFIG_INSTALL_ONLY ON CACHE BOOL "Only install pkgconfig file")
+
+if (NOT PKGCONFIG_INSTALL_ONLY)
+  set(CMAKE_INSTALL_PREFIX_SHADOW ${CMAKE_INSTALL_PREFIX})
+  
+  install(DIRECTORY ${OPENCV_WORKBENCH_LIB_DIR}/ 
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/opencv_workbench
+    )
+
+  # Install header files to system
+  # The CMakeLists.txt for each library contains the 
+  # commands to install the library
+  # TODO, since we removed include directory during development builds, we need
+  # to add a new rule here to create the include directory before installation.
+  INSTALL(
+    DIRECTORY ${OPENCV_WORKBENCH_INC_DIR} 
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
+    FILES_MATCHING REGEX .*\\.h|.*\\.proto|.*\\.inl
+    )
+else()
+  # If we are only installing the pkgconfig file, then make the shadow install
+  # prefix set to the current directory
+  set(CMAKE_INSTALL_PREFIX_SHADOW ${CMAKE_SOURCE_DIR})
+endif()
+
+IF(UNIX AND NOT APPLE)
+  # - Add each library to LIBS_STRING 
+  # OPENCV_WORKBENCH_LIBS is a "global" variable that is passed
+  # down to each sub directory and every library that is
+  # generated in this project appends its name to this
+  # variable.
+  foreach(I ${OPENCV_WORKBENCH_LIBS})
+    #get_filename_component(CUR_LIB ${I} NAME)
+    #message("------> : Lib")    
+    #message(${I})
+    set (LIBS_STRING "${LIBS_STRING} -l${I}")    
+  endforeach()    
+
+  # - Use the opencv_workbench.pc.in file to generate the 
+  #     the final opencv_workbench.pc file
+  configure_file (
+    "${CMAKE_MODULE_PATH}/opencv_workbench.pc.in" 
+    "${OPENCV_WORKBENCH_BUILD_DIR}/opencv_workbench.pc" 
+    @ONLY)
+
+  # - Install the opencv_workbench.pc file to lib/pkgconfig
+  install (
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/opencv_workbench.pc"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+    )
+ENDIF()
