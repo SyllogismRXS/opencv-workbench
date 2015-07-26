@@ -136,9 +136,12 @@ namespace syllo
                     sonar.set_input_son_filename(fn);
                     sonar.set_data_mode(Sonar::image);
                     // TODO : this needs to be in a configuration file
-                    sonar.set_color_map("/home/syllogismrxs/repos/sonar-processing/bvtsdk/colormaps/jet.cmap");
+                    //sonar.set_color_map("/home/syllogismrxs/repos/sonar-processing/bvtsdk/colormaps/jet.cmap");
+                    sonar.set_color_map("/home/syllogismrxs/repos/blueview_driver/driver_bvtsdk64/colormaps/jet.cmap");
                     sonar.set_save_directory("/tmp/workbench_sonar_log");                    
-                    sonar.init();
+                    if (sonar.init() == Sonar::Failure) {
+                         return Failure;
+                    }
                     sonar.set_range(0,45);
                     
                     type_ = SonarType;
@@ -186,8 +189,7 @@ namespace syllo
                     cout << "File: " << fn << endl;
 		    cout << "Invalid file extension: " << ext << endl;
 		    status = Failure;
-	       }
-               
+	       }               
                return status;                  
 	  }
 
@@ -338,8 +340,18 @@ namespace syllo
           }          
 
           void step_forward()
-          {                  
-               vcap_->set(CV_CAP_PROP_POS_FRAMES, ++next_frame_number_);
+          {     
+               switch (type_) {
+	       case MovieType:                    
+                    vcap_->set(CV_CAP_PROP_POS_FRAMES, ++next_frame_number_);
+                    break;
+	       case CameraType:
+                    break;
+               case SonarType:
+                    break;
+	       default:
+                    break;
+               }                              
           }
 
           void step_backward()

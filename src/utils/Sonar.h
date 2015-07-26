@@ -14,6 +14,8 @@
 #include <bvt_sdk.h>
 #endif
 
+#define MAX_SONAR_HEADS 5
+
 class Sonar {
 public:
      typedef enum SonarMode{
@@ -73,7 +75,7 @@ protected:
      std::string color_map_;
      
 #if ENABLE_SONAR == 1
-     BVTHead head_;
+     BVTHead heads_[MAX_SONAR_HEADS];
      BVTSonar son_;
 
      BVTMagImage img_;
@@ -85,9 +87,10 @@ protected:
      BVTHead out_head_;
 #endif
 
-     int heads_;
-     int pings_;
+     int num_heads_;
+     int num_pings_;
 
+     int cur_head_;
      int cur_ping_;
 
      double min_range_;

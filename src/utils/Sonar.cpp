@@ -128,26 +128,44 @@ Sonar::Status_t Sonar::init()
      }
 
      // Make sure we have the right number of heads_
-     heads_ = -1;
-     heads_ = BVTSonar_GetHeadCount(son_);
-     printf("BVTSonar_GetHeadCount: %d\n", heads_);
-	  
-     // Get the first head
-     head_ = NULL;
-     ret = BVTSonar_GetHead(son_, 0, &head_);
-     if (ret != 0 ) {
-          // Some sonar heads start at 1
-          ret = BVTSonar_GetHead(son_, 1, &head_);
+     cur_head_ = -1;
+     num_heads_ = -1;
+     num_heads_ = BVTSonar_GetHeadCount(son_);
+     printf("BVTSonar_GetHeadCount: %d\n", num_heads_);
+
+     for (int i = 0; i < num_heads_; i++) {
+          cout << "--------------------------------" << endl;
+          cout << "Head Number: " << i << endl;
+          heads_[i] = NULL;
+          //ret = BVTSonar_GetHead(son_, 0, &heads_[i]);
+          ret = BVTSonar_GetHead(son_, i, heads_+i);
           if (ret != 0) {
-               printf( "BVTSonar_GetHead: ret=%d\n", ret) ;
-               return Sonar::Failure;
-          }               
+               printf("BVTSonar_GetHead for head %d: ret=%s\n", i, BVTError_GetString(ret) );
+               break;
+          } else {
+               //BVTHead_SetRange(heads_[i], 1, 40);
+               // Check the ping count
+               num_pings_ = -1;
+               num_pings_ = BVTHead_GetPingCount(heads_[i]);
+               printf("BVTHead_GetPingCount: %d\n", num_pings_);
+               if (num_pings_ > 0) {
+                    cur_head_ = i;
+               }
+          }
      }
      
+     if (cur_head_ < 0) {
+          cout << "Can't find valid head" << endl;
+          return Sonar::Failure;
+     } else {
+          cout << "--------------------------------" << endl;
+          cout << "Using head: " << cur_head_ << endl;
+     }
+                        
      // Check the ping count
-     pings_ = -1;
-     pings_ = BVTHead_GetPingCount(head_);
-     printf("BVTHead_GetPingCount: %d\n", pings_);
+     num_pings_ = -1;
+     num_pings_ = BVTHead_GetPingCount(heads_[cur_head_]);
+     printf("BVTHead_GetPingCount: %d\n", num_pings_);
      
      // Set the range window
      this->set_range(min_range_, max_range_);
@@ -180,7 +198,7 @@ Sonar::Status_t Sonar::init()
 
 int Sonar::getNumPings()
 {
-     return pings_;
+     return num_pings_;
 }
 
 int Sonar::getCurrentPingNum()
@@ -251,7 +269,7 @@ Sonar::Status_t Sonar::getNextSonarImage(cv::Mat &image)
      Status_t status = Sonar::Failure;
      if (mode_ == Sonar::net) {
           status = getSonarImage(image, -1);
-     } else if (cur_ping_ < pings_) {
+     } else if (cur_ping_ < num_pings_) {
           status = getSonarImage(image, cur_ping_++);
      } else {
           status = Sonar::Failure;
@@ -269,7 +287,7 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
      }
 
      BVTPing ping = NULL;
-     int ret = BVTHead_GetPing(head_, index, &ping);
+     int ret = BVTHead_GetPing(heads_[cur_head_], index, &ping);
 	  
      if(ret != 0) {
           printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -368,7 +386,7 @@ void Sonar::set_range(double min_range, double max_range)
      }
      
 #if ENABLE_SONAR == 1
-     BVTHead_SetRange(head_, min_range_, max_range_);
+     BVTHead_SetRange(heads_[cur_head_], min_range_, max_range_);
 #endif
 }
 
