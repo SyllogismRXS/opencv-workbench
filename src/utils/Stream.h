@@ -325,15 +325,16 @@ namespace syllo
 
           void set_frame_number(int frame_num)
           {
+               next_frame_number_ = frame_num;
+               
                switch (type_) {
 	       case MovieType:                    
-                    vcap_->set(CV_CAP_PROP_POS_FRAMES, frame_num);
-                    next_frame_number_ = frame_num;
+                    vcap_->set(CV_CAP_PROP_POS_FRAMES, frame_num);                    
                     break;
 	       case CameraType:
                     break;
                case SonarType:
-                    sonar.setFrameNum(frame_num);
+                    sonar.setFrameNum(frame_num);                    
                     break;
 	       default:
                     break;
