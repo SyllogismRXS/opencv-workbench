@@ -60,6 +60,7 @@ do
     #~/repos/opencv-workbench/bin/run-detector -f ${i} -p displace_detector -o ${OUT_DIR}
 done
 
-# Compare detectors results with hand annotated results
+# Compute aggregated metrics
+~/repos/opencv-workbench/bin/aggregate -d ${OUT_DIR}
 
 # Plot results / Generate tables

@@ -17,6 +17,7 @@ using namespace std;
 
 #define ENABLE_PF 0
 
+
 uchar valueAt(cv::Mat &img, int row, int col)
 {
      if (col >= 0 && col < img.cols) {
@@ -85,6 +86,23 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
      
 
 namespace syllo {
+
+     void get_files_with_ext(const fs::path& root, const std::string& ext, 
+                             std::vector<fs::path>& ret)
+     {
+          if(!fs::exists(root) || !fs::is_directory(root)) return;
+
+          fs::recursive_directory_iterator it(root);
+          fs::recursive_directory_iterator endit;
+
+          while(it != endit)
+          {
+               if(fs::is_regular_file(*it) && it->path().extension() == ext) ret.push_back(it->path());
+               ++it;
+
+          }
+          
+     }
 
      void fill_line(std::string ch) 
      {

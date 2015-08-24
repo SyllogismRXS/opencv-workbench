@@ -7,4 +7,5 @@ add_subdirectory(xml-test)
 add_subdirectory(periodic-detect)
 add_subdirectory(plot-tracks)
 add_subdirectory(run-detector)
+add_subdirectory(aggregate)
 

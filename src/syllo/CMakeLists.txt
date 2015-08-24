@@ -11,6 +11,7 @@ target_link_libraries(${LIBRARY_NAME}
   ${OpenCV_LIBS}
   track
   yaml-cpp  
+  ${Boost_LIBRARIES}  
   )
 
 # Push up the OPENCV_WORKBENCH_LIBS variable

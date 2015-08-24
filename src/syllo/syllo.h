@@ -18,11 +18,19 @@
 #include <opencv_workbench/syllo/Blob.h>
 #include <opencv_workbench/syllo/Cluster.h>
 
+#include <boost/filesystem.hpp>
+namespace fs = ::boost::filesystem;
+
 namespace syllo
 {
      int str2int(std::string str);
      std::string int2str(int x);
      std::string double2str(double x);
+
+     // return the filenames of all files that have the specified extension
+     // in the specified directory and all subdirectories
+     void get_files_with_ext(const fs::path& root, const std::string& ext, 
+                                  std::vector<fs::path>& ret);
 
      void fill_line(std::string ch);
      

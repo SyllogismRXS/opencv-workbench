@@ -31,6 +31,12 @@ void AnnotationParser::reset()
      dir_ = "";
      basename_ = "";
      metrics_present_ = false;
+
+     TP_ = 0;
+     TN_ = 0;
+     FP_ = 0;
+     FN_ = 0;
+     TPR_ = FPR_ = -1;
      
      frames.clear();
 }
@@ -84,7 +90,8 @@ void AnnotationParser::set_xml_output_dir(std::string dir)
      // Check existence of output directory
      if ( !boost::filesystem::exists( dir ) ) {
           // Create it if it doesn't exist
-          if(!fs::create_directory(fs::path(dir))) {
+          //if(!fs::create_directory(fs::path(dir))) {
+          if(!fs::create_directories(fs::path(dir))) {
                cout << "ERROR: Unable to create output directory: "
                     << dir << endl;
                return;
@@ -275,6 +282,18 @@ int AnnotationParser::ParseFile(std::string file)
 {
      xml_filename_ = file;
 
+     bool is_truth = xml_filename_.find(".truth.xml") != std::string::npos;
+     bool is_track = xml_filename_.find(".tracks.xml") != std::string::npos;
+          
+     if (is_truth) {
+          ann_type_ = hand;
+     } else if (is_track) {
+          ann_type_ = track;
+     } else {
+          cout << "ERROR: Invalid annotation type" << endl;
+          return -1;
+     }         
+
      rapidxml::file<> xmlFile(file.c_str());
      rapidxml::xml_document<> doc;
      doc.parse<0>(xmlFile.data());
@@ -285,11 +304,47 @@ int AnnotationParser::ParseFile(std::string file)
           return -1;
      }
 
+     // Find <metrics>
+     xml_node<> * metrics_node = doc.first_node()->first_node("metrics");
+     if (metrics_node != 0) {
+          // TP
+          xml_node<> * TP_node = metrics_node->first_node("TP");
+          if (TP_node != 0) {
+               TP_ = syllo::str2int(TP_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing TP node" << endl;
+          }
+
+          // TN
+          xml_node<> * TN_node = metrics_node->first_node("TN");
+          if (TN_node != 0) {
+               TN_ = syllo::str2int(TN_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing TN node" << endl;
+          }
+
+          // FP
+          xml_node<> * FP_node = metrics_node->first_node("FP");
+          if (FP_node != 0) {
+               FP_ = syllo::str2int(FP_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing FP node" << endl;
+          }
+
+          // FN
+          xml_node<> * FN_node = metrics_node->first_node("FN");
+          if (FN_node != 0) {
+               FN_ = syllo::str2int(FN_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing FN node" << endl;
+          }
+     }     
+     
      // Find <frames>
      xml_node<> * frames_node = doc.first_node()->first_node("frames");
      if (frames_node == 0) {
           return -1;          
-     }
+     }     
      
      // Loop through all frames
      xml_node<> *frame_node = frames_node->first_node("frame");
@@ -512,7 +567,7 @@ void AnnotationParser::write_gnuplot_data()
 }
 
 std::map<std::string,int> AnnotationParser::get_metrics()
-{
+{     
      std::map<std::string,int> metrics;
      metrics["TP"] = TP_;
      metrics["TN"] = TN_;
