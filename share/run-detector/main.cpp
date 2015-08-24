@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
           if (!hide_window_flag) { 
                cv::imshow("Detection", original);
                
-               if (cv::waitKey(10) >= 0) {
+               if (cv::waitKey(1) >= 0) {
                     cout << "Ending early." << endl;
                     break;
                }
