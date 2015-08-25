@@ -303,37 +303,58 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
           }
      }     
 
+// Grayscale
+#if 0
+
+     //BVTMagImage img ;
+     BVTPing_GetImageXY ( ping , &img_ ) ;
+     height_ = BVTMagImage_GetHeight ( img_ ) ;
+     width_ = BVTMagImage_GetWidth ( img_ ) ;
+     
+     IplImage * gray_img = cvCreateImageHeader ( cvSize ( width_ , height_ ) , IPL_DEPTH_16U , 1 ) ;
+     cvSetImageData ( gray_img , BVTMagImage_GetBits ( img_ ) , width_*2 ) ;
+     
+     //image = cv::cvarrToMat(gray_img);
+     //cv::Mat temp_img(gray_img);
+     //image = temp_img;
+     image = gray_img;
+     
+     cvReleaseImageHeader(&gray_img);     
+     BVTMagImage_Destroy ( img_ );
+     
+// Color
+#else
+     
      ret = BVTPing_GetImage(ping, &img_);
-     //ret = BVTPing_GetImageXY(ping, &img_);
-     //ret = BVTPing_GetImageRTheta(ping, &img_);
      if (ret != 0) {
           printf("BVTPing_GetImage: ret=%d\n", ret);
           return Sonar::Failure;
      }     
-
+     
      // Perform the colormapping
      ret = BVTColorMapper_MapImage(mapper_, img_, &cimg_);
      if (ret != 0) {
           printf("BVTColorMapper_MapImage: ret=%d\n", ret);
           return Sonar::Failure;
      }
-	
+        
      height_ = BVTColorImage_GetHeight(cimg_);
      width_ = BVTColorImage_GetWidth(cimg_);
-
+     
      IplImage* sonarImg;
      sonarImg = cvCreateImageHeader(cvSize(width_,height_), IPL_DEPTH_8U, 4);
-	
+        
      // And set it's data
      cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
-	
-     //cv::Mat tempImg(sonarImg);
-     //image = sonarImg;
-     image = cv::cvarrToMat(sonarImg); // opencv3?
-     
+        
+     image = cv::cvarrToMat(sonarImg);    
      cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
-
+     
      cvReleaseImageHeader(&sonarImg);
+     
+
+#endif
+
      BVTPing_Destroy(ping);
 
      return Sonar::Success;
