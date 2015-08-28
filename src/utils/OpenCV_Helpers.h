@@ -4,7 +4,7 @@
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2014-05-21 16:51:32 syllogismrxs>
+/// Time-stamp: <2015-08-28 16:28:32 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -50,6 +50,12 @@ using std::endl;
 
 namespace syllo 
 {
+     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
+                             double ratio_low, double ratio_high, 
+                             int thresh_step, int max_iter);
+
+     void gradient_sobel(cv::Mat &src, cv::Mat &dst);
+
      void show(const cv::Mat &img)
      {
           cv::imshow("DEBUG!",img);

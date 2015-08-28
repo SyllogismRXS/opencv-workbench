@@ -2,6 +2,7 @@
 #include "RelativeDetector.h"
 
 #include <opencv_workbench/utils/ColorMaps.h>
+#include <opencv_workbench/utils/OpenCV_Helpers.h>
 
 using std::cout;
 using std::endl;
@@ -9,6 +10,8 @@ using std::endl;
 RelativeDetector::RelativeDetector()
 {
      cout << "RelativeDetector Constructor" << endl;
+     thresh_value_ = 255;
+     grad_thresh_value_ = 255;
 }
 
 RelativeDetector::~RelativeDetector()
@@ -21,7 +24,6 @@ void RelativeDetector::print()
      cout << "I am the Relative Detector" << endl;
 }
 
-
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {         
      cv::Mat original_w_tracks;          
@@ -29,41 +31,34 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat gray;
      Jet2Gray_matlab(original,gray);
-     cv::imshow("gray",gray);
+     cv::imshow("gray",gray);        
      
      // Threshold
      cv::Mat thresh;
-     cv::threshold(gray, thresh, 150, 255, cv::THRESH_TOZERO);
-     cv::imshow("thresh",thresh);
+     //cv::threshold(gray, thresh, 150, 255, cv::THRESH_TOZERO);
+     syllo::adaptive_threshold(gray, thresh, thresh_value_, 0.001, 0.002, 10, 5);
+     cv::imshow("thresh",thresh);     
      
      // Compute median
      cv::Mat median;
-     cv::medianBlur(gray,median,3);
+     cv::medianBlur(gray,median,5);
      cv::imshow("median", median);
      
+     //cv::Mat grad;
+     //cv::Mat kernel;
+     //int kernel_size = 10;
+     //kernel = cv::Mat::ones( kernel_size, kernel_size, CV_32F )/ (float)(kernel_size*kernel_size);     
+     //cv::filter2D(median, grad, -1, kernel, cv::Point(-1,-1), 0, cv::BORDER_DEFAULT);
+     //cv::imshow("filter2d",grad);
+     
      // Compute estimated gradient
-     cv::Mat grad_x, grad_y;
-     cv::Mat abs_grad_x, abs_grad_y;
-     cv::Mat grad;
-     cv::Mat grad_thresh;
-     
-     int scale = 1;
-     int delta = 0;
-     int ddepth = CV_16S;
-     
-     /// Gradient X
-     cv::Sobel( median, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT );
-     /// Gradient Y
-     cv::Sobel( median, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT );
-     
-     cv::convertScaleAbs( grad_x, abs_grad_x );
-     cv::convertScaleAbs( grad_y, abs_grad_y );
-     
-     cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+     cv::Mat grad;     
+     syllo::gradient_sobel(median, grad);
      cv::imshow("gradient", grad);
      
      // Only select gradients above a certain threshold
-     cv::threshold(grad, grad_thresh, 150, 255, cv::THRESH_TOZERO);
+     cv::Mat grad_thresh;
+     syllo::adaptive_threshold(grad, grad_thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
      cv::imshow("gradient_thresh", grad_thresh);
      
      ////// cluster the points

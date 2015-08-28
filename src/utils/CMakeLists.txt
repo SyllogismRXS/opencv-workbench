@@ -24,6 +24,7 @@ set( LIBRARY_NAME_2 workbench-utils )
 ADD_LIBRARY( ${LIBRARY_NAME_2} SHARED
   AnnotationParser.cpp
   ColorMaps.cpp
+  OpenCV_Helpers.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_2} 

@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-24 16:42:04 syllogismrxs>
+/// Time-stamp: <2015-08-28 16:23:54 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -50,7 +50,8 @@ public:
      int set_frame(int frame_number, const cv::Mat &original);     
      
 protected:     
-
+     int thresh_value_;
+     int grad_thresh_value_;
 private:
 };
 
