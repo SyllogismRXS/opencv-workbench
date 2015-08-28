@@ -426,10 +426,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO);
      cv::imshow("thresh", threshold);
 
-     //cv::Mat jet_matlab;
-     //Gray2Jet_matlab(gray,jet_matlab);
-     //cv::imshow("jet matlab", jet_matlab);
-     
+     cv::Mat jet_matlab;
+     Gray2Jet_matlab(gray,jet_matlab);
+     cv::imshow("jet matlab", jet_matlab);
+    
      ///cv::Mat grad;
      ///create_gradient(grad);
      ///cv::imshow("gradient", grad);
