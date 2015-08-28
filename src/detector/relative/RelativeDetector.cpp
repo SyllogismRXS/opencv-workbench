@@ -23,37 +23,146 @@ typedef struct Color{
     double r,g,b;
 } Color_t;
 
+//Color_t GetColor_2(double v, double vmin, double vmax)
+//{
+//     Color_t c = {1.0,1.0,1.0}; // white
+//     double dv;
+//
+//     if (v < vmin)
+//          v = vmin;
+//     if (v > vmax)
+//          v = vmax;
+//     dv = vmax - vmin;
+//
+//     if (v < (vmin + 0.25 * dv)) {
+//          c.r = 0;
+//          c.g = 4 * (v - vmin) / dv;
+//     } else if (v < (vmin + 0.5 * dv)) {
+//          c.r = 0;
+//          c.b = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
+//     } else if (v < (vmin + 0.75 * dv)) {
+//          c.r = 4 * (v - vmin - 0.5 * dv) / dv;
+//          c.b = 0;
+//     } else {
+//          c.g = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
+//          c.b = 0;
+//     }
+//
+//     return(c);
+//}
+
 Color_t GetColor(double v, double vmin, double vmax)
 {
-   Color_t c = {1.0,1.0,1.0}; // white
-   double dv;
+     Color_t c = {255.0,255.0,255.0}; // white
+     //Color_t c = {1.0,1.0,1.0}; // white
+     double dv;
 
-   if (v < vmin)
-      v = vmin;
-   if (v > vmax)
-      v = vmax;
-   dv = vmax - vmin;
+     if (v < vmin) {
+          v = vmin;
+     } else if (v > vmax) {
+          v = vmax;
+     }
+     
+     dv = vmax - vmin;
 
-   if (v < (vmin + 0.25 * dv)) {
-      c.r = 0;
-      c.g = 4 * (v - vmin) / dv;
-   } else if (v < (vmin + 0.5 * dv)) {
-      c.r = 0;
-      c.b = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
-   } else if (v < (vmin + 0.75 * dv)) {
-      c.r = 4 * (v - vmin - 0.5 * dv) / dv;
-      c.b = 0;
-   } else {
-      c.g = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
-      c.b = 0;
-   }
+     if (v < (vmin + 0.25 * dv)) {
+          c.r = vmin;
+          c.g = 4.0*v*(vmax-vmin)/vmax;
+          c.b = vmax;
+     } else if (v < (vmin + 0.5 * dv)) {
+          c.r = vmin;
+          c.g = vmax;          
+          c.b = 4.0*v*(vmin-vmax)/vmax-2*(vmin-vmax);
+     } else if (v < (vmin + 0.75 * dv)) {
+          c.r = 4.0*v*(vmax-vmin)/vmax-2*(vmax-vmin);
+          c.g = vmax;
+          c.b = vmin;          
+     } else {
+          c.r = vmax;
+          c.g = 4.0*v*(vmin-vmax)/vmax-4.0*(vmin-vmax);
+          c.b = vmin;
+     }
 
-   return(c);
+     return(c);
 }
+
+Color_t GetColor_matlab(double v, double vmin, double vmax)
+{
+     Color_t c = {255.0,255.0,255.0}; // white
+     double dv;
+
+     if (v < vmin) {
+          v = vmin;
+     } else if (v > vmax) {
+          v = vmax;
+     }
+     
+     dv = vmax - vmin;
+
+     if (v < (vmin + 0.125 * dv)) {
+          c.r = vmin;
+          c.g = vmin;
+          c.b = v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax;
+     } else if (v < (vmin + 0.375 * dv)) {
+          c.r = vmin;
+          c.g = v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax - 0.5*vmax*2;
+          c.b = vmax;
+     } else if (v < (vmin + 0.625 * dv)) {
+          c.r = v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax - 0.5*vmax*2 - 0.5*vmax*2;
+          c.g = vmax;
+          //c.b = -v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax - 0.5*vmax*2 - 0.5*vmax*2;
+          c.b = -v*0.5*vmax / (0.125*vmax - vmin) + (vmax - 1.5*(vmin-vmax));
+     } else if (v < (vmin + 0.875 * dv)) {
+          c.r = vmax;
+          //c.g = -v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax - 0.5*vmax*2 - 0.5*vmax*2 - 0.5*vmax*2;
+          //c.g = -v*0.5*vmax / (0.125*vmax - vmin) + (vmax - 1.5*(vmin-vmax)) - 0.5*vmax*2;
+          c.g = -v*0.5*vmax / (0.125*vmax - vmin) + (vmax - 2.5*(vmin-vmax));
+          c.b = vmin;
+     } else {
+          //c.r = -v*0.5*vmax / (0.125*vmax - vmin) + 0.5*vmax - 0.5*vmax*2 - 0.5*vmax*2 - 0.5*vmax*2;
+          //c.r = -v*0.5*vmax / (0.125*vmax - vmin) + (vmax - 1.5*(vmin-vmax));
+          //c.r = -v*0.5*vmax / (0.125*vmax - vmin) + (vmax - 1.5*(vmin-vmax)) - 0.5*vmax*2 - 0.5*vmax*2;
+          c.r = -v*0.5*vmax / (0.125*vmax - vmin) + 4.5*vmax;
+          c.g = vmin;
+          c.b = vmin;
+     }     
+     return(c);
+}
+
 
 int GetGray(Color_t c, double vmin, double vmax)
 {
-     return 200;
+     int v = 0;
+     
+     if (c.r == vmin && c.b == vmax) {
+          v = c.g * vmax / (4.0*(vmax-vmin));
+     } else if (c.r == vmin && c.g == vmax) {
+          v = (c.b + 2*(vmin-vmax)) / (4.0*(vmin-vmax)/vmax);
+     } else if (c.g == vmax && c.b == vmin) {
+          v = (c.r + 2*(vmax-vmin)) / (4.0*(vmax-vmin)/vmax);
+     } else {
+          v = (c.g + 4.0*(vmin-vmax)) / (4.0*(vmin-vmax)/vmax);
+     }
+     return v;
+}
+
+int GetGray_matlab(Color_t c, double vmin, double vmax)
+{
+     int v = 0;
+     
+     if (c.g == vmin && c.r == vmin) {     
+          v = (c.b - 0.5*vmax) / (0.5*vmax / (0.125*vmax - vmin));
+     } else if (c.b == vmax && c.r == vmin) {
+          v = (c.g - (0.5*vmax - 0.5*vmax*2)) / (0.5*vmax / (0.125*vmax - vmin));
+     } else if (c.g == vmax) {
+          v = (c.r - (0.5*vmax - 0.5*vmax*2 - 0.5*vmax*2)) / (0.5*vmax / (0.125*vmax - vmin));
+     } else if (c.b == vmin && c.r == vmax) {
+          //v = (c.g - ((vmax - 1.5*(vmin-vmax)) - 0.5*vmax*2)) / (-0.5*vmax / (0.125*vmax - vmin));
+          v = (c.g - ((vmax - 2.5*(vmin-vmax)))) / (-0.5*vmax / (0.125*vmax - vmin));
+     } else if (c.g == vmin && c.b == vmin) {
+          v = (c.r - 4.5*vmax) / (-0.5*vmax / (0.125*vmax - vmin));
+     }
+     return v;
 }
 
 int scale(double val)
@@ -86,7 +195,7 @@ void Gray2Jet(cv::Mat& I, cv::Mat& jet)
           for ( j = 0; j < nCols; ++j) {
                if (p[j] != 0) {
                     Color_t c = GetColor(p[j], 0, 255);
-                    jet.at<cv::Vec3b>(i,j) = cv::Vec3b(c.b*255,c.g*255,c.r*255);               
+                    jet.at<cv::Vec3b>(i,j) = cv::Vec3b(c.b,c.g,c.r);               
                } else {
                     jet.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
                }
@@ -94,7 +203,74 @@ void Gray2Jet(cv::Mat& I, cv::Mat& jet)
      }     
 }
 
-void Jet2Gray(cv::Mat &I, cv::Mat &gray)
+void Gray2Jet_matlab(cv::Mat& I, cv::Mat& jet)
+{
+     // accept only char type matrices
+     CV_Assert(I.depth() != sizeof(uchar));
+
+     int channels = I.channels();
+
+     int nRows = I.rows;
+     int nCols = I.cols * channels;
+
+     jet = cv::Mat(I.size(), CV_8UC3);
+     
+     if (I.isContinuous())
+     {
+          nCols *= nRows;
+          nRows = 1;
+     }
+
+     int i,j;
+     uchar* p;     
+     for( i = 0; i < nRows; ++i) {
+          p = I.ptr<uchar>(i);
+          for ( j = 0; j < nCols; ++j) {
+               //if (p[j] != 0) {
+               Color_t c = GetColor_matlab(p[j], 0, 255);
+               jet.at<cv::Vec3b>(i,j) = cv::Vec3b(c.b,c.g,c.r);               
+               //} else {
+               //     cout << "Found a zero" << endl;
+               //     jet.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
+               //}
+          }
+     }     
+}
+
+//void Gray2Jet_2(cv::Mat& I, cv::Mat& jet)
+//{
+//     // accept only char type matrices
+//     CV_Assert(I.depth() != sizeof(uchar));
+//
+//     int channels = I.channels();
+//
+//     int nRows = I.rows;
+//     int nCols = I.cols * channels;
+//
+//     jet = cv::Mat(I.size(), CV_8UC3);
+//     
+//     if (I.isContinuous())
+//     {
+//          nCols *= nRows;
+//          nRows = 1;
+//     }
+//
+//     int i,j;
+//     uchar* p;     
+//     for( i = 0; i < nRows; ++i) {
+//          p = I.ptr<uchar>(i);
+//          for ( j = 0; j < nCols; ++j) {
+//               if (p[j] != 0) {
+//                    Color_t c = GetColor_2(p[j], 0, 255);
+//                    jet.at<cv::Vec3b>(i,j) = cv::Vec3b(c.b*255,c.g*255,c.r*255);               
+//               } else {
+//                    jet.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
+//               }
+//          }
+//     }     
+//}
+
+void Jet2Gray(const cv::Mat &I, cv::Mat &gray)
 {
      gray = cv::Mat(I.size(), CV_8UC1);
 
@@ -131,6 +307,71 @@ void Jet2Gray(cv::Mat &I, cv::Mat &gray)
      }    
 }
 
+void create_gradient(cv::Mat &I)
+{
+     I = cv::Mat(100, 255, CV_8UC1);
+
+     int channels = I.channels();
+
+     int nRows = I.rows;
+     int nCols = I.cols * channels;
+     
+     //if (I.isContinuous())
+     //{
+     //     nCols *= nRows;
+     //     nRows = 1;
+     //}
+
+     int i,j;
+     uchar* p;     
+     for( i = 0; i < nRows; ++i) {
+          int value = 0;
+          p = I.ptr<uchar>(i);
+          for ( j = 0; j < nCols; ++j) {
+               p[j] = value++;
+          }          
+     }    
+     
+     cv::resize(I, I, cv::Size(0,0),3,3,cv::INTER_LINEAR);
+}
+
+void Jet2Gray_matlab(const cv::Mat &I, cv::Mat &gray)
+{
+     gray = cv::Mat(I.size(), CV_8UC1);
+
+     // accept only char type matrices
+     CV_Assert(gray.depth() != sizeof(uchar));
+
+     int channels = gray.channels();
+
+     int nRows = gray.rows;
+     int nCols = gray.cols * channels;
+
+     if (gray.isContinuous())
+     {
+          nCols *= nRows;
+          nRows = 1;
+     }
+
+     int i,j;
+     uchar* p;     
+     for( i = 0; i < nRows; ++i) {
+          p = gray.ptr<uchar>(i);
+          for ( j = 0; j < nCols; ++j) {
+               cv::Vec3b pix = I.at<cv::Vec3b>(i,j);
+               if (pix[0] == 0 && pix[1] == 0 && pix[2] == 0) {
+                    p[j] = 0;
+               } else {               
+                    Color_t c;
+                    c.b = pix[0];
+                    c.g = pix[1];
+                    c.r = pix[2];                   
+                    p[j] = GetGray_matlab(c, 0, 255);
+               }
+          }
+     }    
+}
+
 //Color_t c;
 //c.b = (*it)[0];
 //c.g = (*it)[1];
@@ -141,28 +382,99 @@ void Jet2Gray(cv::Mat &I, cv::Mat &gray)
 
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {
+     
+     //for (int i = 0; i < 256; i++) {
+     //     Color_t c1, c2;
+     //     c1 = GetColor(i, 0.0, 255.0);
+     //     c2 = GetColor_2(i, 0.0, 255.0);           
+     //
+     //     //c1.r *= 255; c1.b *= 255; c1.g *= 255;
+     //     c2.r *= 255.0; c2.b *= 255.0; c2.g *= 255.0;
+     //     
+     //     int c1_r, c1_g, c1_b, c2_r, c2_g, c2_b;
+     //     
+     //     c1_r = c1.r;
+     //     c1_g = c1.g;
+     //     c1_b = c1.b;
+     //
+     //     c2_r = c2.r;
+     //     c2_g = c2.g;
+     //     c2_b = c2.b;          
+     //     
+     //     //if (c1_r != c2_r || c1_g != c2_g || c1_b != c2_b) {
+     //     if (c1_g != c2_g) {
+     //          cout << "--------------" << endl;
+     //          cout << "value: " << i << endl;
+     //          cout << "r: " << c1_r << " " << c2_r << endl;
+     //          cout << "b: " << c1_b << " " << c2_b << endl;
+     //          cout << "g: " << c1_g << " " << c2_g << endl;
+     //     }
+     //}
+
      cv::Mat original_w_tracks;
-     cv::Mat gray;
      cv::Mat median;
      
-     cv::imshow("original", original);
+     //cv::imshow("original", original);
 
      original_w_tracks = original;
      
-     cv::cvtColor(original, gray, CV_BGR2GRAY);     
-     cv::imshow("gray", gray);
-
-     cv::Mat jet;
-     Gray2Jet(gray, jet);
-     cv::imshow("my jet", jet);
-
-     cv::Mat back;
-     Jet2Gray(jet, back);
-     cv::imshow("back", back);
+     cv::Mat gray;
+     Jet2Gray_matlab(original,gray);
+     cv::imshow("gray",gray);
 
      cv::Mat threshold;
      cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO);
      cv::imshow("thresh", threshold);
+
+     //cv::Mat jet_matlab;
+     //Gray2Jet_matlab(gray,jet_matlab);
+     //cv::imshow("jet matlab", jet_matlab);
+     
+     ///cv::Mat grad;
+     ///create_gradient(grad);
+     ///cv::imshow("gradient", grad);
+     ///
+     ///cv::Mat jet_matlab;
+     ///Gray2Jet_matlab(grad,jet_matlab);
+     ///cv::imshow("jet matlab", jet_matlab);
+     ///
+     ///cv::Mat gray_2;
+     ///Jet2Gray_matlab(jet_matlab,gray_2);
+     ///cv::imshow("gray_2",gray_2);
+     ///
+     ///cv::Mat diff = gray_2 - grad;
+     ///cv::imshow("diff",diff);
+
+     //cv::Mat jet_opencv;
+     //cv::cvtColor(grad, jet_opencv, CV_BGR2GRAY);
+     //cv::imshow("jet opencv",jet_opencv);
+
+     //cv::Mat jet_mine;
+     //Gray2Jet(grad,jet_mine);
+     //cv::imshow("jet min",jet_mine);
+     
+     ////cv::cvtColor(original, gray, CV_BGR2GRAY);     
+     //Jet2Gray_matlab(original, gray);
+     //cv::imshow("gray", gray);
+     //
+     //cv::Mat jet;
+     //Gray2Jet_matlab(gray, jet);
+     //cv::imshow("my jet", jet);
+     
+     //cv::Mat second_gray;
+     //Jet2Gray(jet, second_gray);
+     //cv::imshow("second gray", second_gray);
+     //
+     //cv::Mat diff = (second_gray - gray) * 100;
+     //cv::imshow("diff", diff);
+     //
+     //cv::Mat back;
+     //Jet2Gray(jet, back);
+     //cv::imshow("back", back);
+     
+     //cv::Mat threshold;
+     //cv::threshold(gray, threshold, 200, 255, cv::THRESH_TOZERO);
+     //cv::imshow("thresh", threshold);
 
      // Compute median
      //cv::medianBlur(gray,median,1);
