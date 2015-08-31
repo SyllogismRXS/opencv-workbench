@@ -1,13 +1,13 @@
-#ifndef OPENCV_HELPERS_H_
-#define OPENCV_HELPERS_H_
+#ifndef POINT_H_
+#define POINT_H_
 /// ---------------------------------------------------------------------------
-/// @file OpenCV_Helpers.h
+/// @file Point.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 14:52:44 syllogismrxs>
+/// Time-stamp: <2015-08-31 15:00:59 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 21 May 2014
+/// Created: 31 Aug 2015
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,32 +35,48 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The OpenCV_Helpers class ...
+/// The Point class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <iostream>
-#include <stdio.h>
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
-using std::cout;
-using std::endl;
+//#include "Cluster.h"
 
-namespace wb
-{    
-     void show(const cv::Mat &img)
-     {
-          cv::imshow("DEBUG!",img);
-          cv::waitKey(0);
-     }
-
-     void print_size(const cv::Mat &img)
-     {
-          //cout << img.rows << "x" < img.cols << endl;
-          printf("%dx%d\n",img.rows,img.cols);
-     }
+namespace wb {
      
+     class Cluster;
+     
+     class Point {
+     public:
+          Point();   
+          
+          void set_position(cv::Point point) { point_ = point; }
+          cv::Point position() { return point_; }
+          
+          int value() { return value_; }
+          void set_value(int value) { value_ = value; }
+          
+          float distance() { return distance_; }
+          void set_distance(float distance) { distance_ = distance; }
+          
+          Cluster * parent() { return parent_; }
+          void set_parent(wb::Cluster *parent) { parent_ = parent; }
+
+          float distance(Point &other);
+
+          bool assigned() { return assigned_; }
+          void set_assigned(bool assigned) { assigned_ = assigned; }
+
+     protected:
+     private:          
+          cv::Point point_;
+          int value_;
+          bool assigned_;
+          float distance_;
+          Cluster * parent_;
+     };
 }
+
 #endif

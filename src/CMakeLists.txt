@@ -1,3 +1,4 @@
+add_subdirectory(wb)
 add_subdirectory(plot)
 add_subdirectory(opencv-built-in)
 add_subdirectory(syllo)

@@ -1,13 +1,13 @@
-#ifndef OPENCV_HELPERS_H_
-#define OPENCV_HELPERS_H_
+#ifndef CLUSTER_H_
+#define CLUSTER_H_
 /// ---------------------------------------------------------------------------
-/// @file OpenCV_Helpers.h
+/// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 14:52:44 syllogismrxs>
+/// Time-stamp: <2015-08-31 16:39:06 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 21 May 2014
+/// Created: 31 Aug 2015
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,32 +35,30 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The OpenCV_Helpers class ...
+/// The Cluster class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <iostream>
-#include <stdio.h>
+#include <vector>
+#include "Point.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/highgui/highgui.hpp"
+namespace wb {
 
-using std::cout;
-using std::endl;
+     class Cluster {
+     public:
+          Cluster();
+          
+          void add_point(Point *p) { points_.push_back(p); }
+          int size() { return points_.size(); }
 
-namespace wb
-{    
-     void show(const cv::Mat &img)
-     {
-          cv::imshow("DEBUG!",img);
-          cv::waitKey(0);
-     }
+          std::vector<Point*> & points() { return points_; }
 
-     void print_size(const cv::Mat &img)
-     {
-          //cout << img.rows << "x" < img.cols << endl;
-          printf("%dx%d\n",img.rows,img.cols);
-     }
-     
+          cv::Point centroid();
+          
+          
+     protected:
+     private:
+          std::vector<Point*> points_;
+     };
 }
+
 #endif

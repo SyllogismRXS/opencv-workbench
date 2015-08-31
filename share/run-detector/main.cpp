@@ -34,8 +34,9 @@ int main(int argc, char *argv[])
      //int index;
      int hide_window_flag = 0;
      int c;
-     std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi";
-     std::string plugin_name = "displace_detector";
+     //std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi";
+     std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
+     std::string plugin_name = "relative_detector";
      std::string xml_output_dir = "";
      int xml_output_dir_flag = 0;
   
@@ -188,10 +189,18 @@ int main(int argc, char *argv[])
           if (!hide_window_flag) { 
                cv::imshow("Detection", original);
                
+#if 1
+               int key = cv::waitKey(0);
+               if (key == 1048689) { // 'q' key
+                    cout << "Ending early." << endl;
+                    break;
+               }               
+#else
                if (cv::waitKey(1) >= 0) {
                     cout << "Ending early." << endl;
                     break;
                }
+#endif
           }          
           
           frame_number++;
