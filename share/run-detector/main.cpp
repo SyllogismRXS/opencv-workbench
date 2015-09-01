@@ -191,7 +191,8 @@ int main(int argc, char *argv[])
                
 #if 1
                int key = cv::waitKey(0);
-               if (key == 1048689) { // 'q' key
+               //cout << "Key: " << key << endl;
+               if (key == 'q') { // 'q' key
                     cout << "Ending early." << endl;
                     break;
                }               

@@ -119,6 +119,7 @@ namespace wb {
           for (it = clusters.begin(); it != clusters.end(); it++) {
                //Point *pref = (*it)->points().front();                                   
                //cv::Point circle_point = cv::Point(pref->position().y, pref->position().x);
+               (*it)->compute_metrics();
                cv::Point circle_point = (*it)->centroid();
                //cout << "--------" << endl;
                //cout << circle_point.x << endl;
@@ -128,12 +129,18 @@ namespace wb {
                convert << cluster_count;
                const std::string& text = convert.str();
                cv::circle(cluster_display, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-               cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                  
+               cv::rectangle(cluster_display, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
+               cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                              
                
                cluster_count++;               
           }
 
-          cv::imshow("clusters display", cluster_display);          
+          cv::imshow("clusters display", cluster_display);
+
+          cv::Mat large;
+          cv::resize(cluster_display, large, cv::Size(0,0), 2, 2, cv::INTER_LINEAR );
+          cv::imshow("large", large);
+
           
           ///// cluster the points
           ///cv::Mat src = thresh;//grad_thresh;

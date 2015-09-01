@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 16:39:06 syllogismrxs>
+/// Time-stamp: <2015-09-01 16:59:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -52,12 +52,15 @@ namespace wb {
 
           std::vector<Point*> & points() { return points_; }
 
+          void compute_metrics();
           cv::Point centroid();
-          
+          cv::Rect rectangle();          
           
      protected:
      private:
           std::vector<Point*> points_;
+          cv::Point centroid_;
+          cv::Rect rectangle_;
      };
 }
 
