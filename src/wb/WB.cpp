@@ -19,15 +19,14 @@ using std::endl;
 
 namespace wb {
      void cluster_points(cv::Mat &src, int thresh, float gate)
-     {
-          // Find all points that are greater than some threshold (zero, usually).
-          // Organize into array of points. (cv::Point, value)
-          
+     {                  
           CV_Assert(src.depth() != sizeof(uchar));
           int channels = src.channels();
           int nRows = src.rows;
           int nCols = src.cols * channels;          
 
+          // Find all points that are greater than some threshold (zero, usually).
+          // Organize into array of points. (cv::Point, value)
           std::vector<wb::Point> points;
           int i,j;
           uchar* p;                         
@@ -43,11 +42,21 @@ namespace wb {
                }
           }
 
+          // Outer-loop through all points
+          int cluster_id = 1;
           std::list<wb::Cluster*> clusters;
           std::vector<wb::Point>::iterator it1 = points.begin();
           for (; it1 != points.end(); it1++) {
                std::vector<wb::Point>::iterator it2 = points.begin();
                for (; it2 != points.end(); it2++) {     
+
+                    // Skip if this is the same point:
+                    if (it1->position() == it2->position()) {
+                         continue;
+                    }
+                    
+                    // Calculate distance between all outer-loop points and
+                    // inner-loop points
                     float dist = it1->distance(*it2);
                     if ( dist < gate) {
                          // Only assign this pixel to the new cluster if it 
@@ -58,6 +67,8 @@ namespace wb {
                               // to a cluster yet, create one.
                               if (!(it1->assigned())) {
                                    Cluster *c = new Cluster;
+                                   c->set_id(cluster_id++);
+                                   
                                    it1->set_assigned(true);
                                    it1->set_distance(dist);
                                    it1->set_parent(c);
@@ -80,13 +91,13 @@ namespace wb {
                                    it2->set_distance(dist);
                                    it2->set_parent(it1->parent());
                                    
-                                   it2->parent()->add_point(&(*it2));
+                                   it1->parent()->add_point(&(*it2));
                               }
                          } 
                     }
                }
-          }
-
+          }          
+          
           // Loop through all clusters. remove small clusters, draw points in 
           // remaining clusters on image
           cv::Mat cluster_img = cv::Mat::zeros(src.size(), src.type());
@@ -115,7 +126,6 @@ namespace wb {
           cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);          
 
           // Draw cluster labels
-          int cluster_count = 0;
           for (it = clusters.begin(); it != clusters.end(); it++) {
                //Point *pref = (*it)->points().front();                                   
                //cv::Point circle_point = cv::Point(pref->position().y, pref->position().x);
@@ -126,13 +136,40 @@ namespace wb {
                //cout << circle_point.y << endl;
 
                std::ostringstream convert;
-               convert << cluster_count;
+               convert << (*it)->id();
                const std::string& text = convert.str();
                cv::circle(cluster_display, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
                cv::rectangle(cluster_display, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
-               cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                              
-               
-               cluster_count++;               
+               cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                            
+          }
+
+          // Do any points in a cluster, belong in another cluster?
+          it = clusters.begin();
+          for (; it != clusters.end(); it++) {                              
+               std::list<wb::Cluster*>::iterator it2 = clusters.begin();
+               for (; it2 != clusters.end(); it2++) {
+                    // Continue if looking at same cluster
+                    if (it == it2) {
+                         continue;
+                    }                    
+                    std::vector<wb::Point*>::iterator it_points1 = (*it)->points().begin();
+                    for (; it_points1 != (*it)->points().end(); it_points1++) {
+                         std::vector<wb::Point*>::iterator it_points2 = (*it2)->points().begin();
+                         for (; it_points2 != (*it2)->points().end(); it_points2++) {
+                              if ( (*it_points1)->position() == (*it_points2)->position()) {
+                                   cout << "----------------" << endl;
+                                   cout << "Cluster IDs: " << (*it)->id() << ", " << (*it2)->id() << endl;
+                                   cout << "Point1: " << (*it_points1)->position().x << ", " << (*it_points1)->position().y << endl;
+                                   cout << "Point2: " << (*it_points2)->position().x << ", " << (*it_points2)->position().y << endl;
+                                   // cluster_display.at<uchar>((*it_points2)->position().y,(*it_points2)->position().x)(0) = 0;
+                                   cluster_display.at<cv::Vec3b>((*it_points2)->position().y,(*it_points2)->position().x) = cv::Vec3b(0,0,0);
+
+                                   
+                                   //cout << cluster_display((*it_points2)->position().y,(*it_points2)->position().x);
+                              }
+                         }
+                    }
+               }
           }
 
           cv::imshow("clusters display", cluster_display);
