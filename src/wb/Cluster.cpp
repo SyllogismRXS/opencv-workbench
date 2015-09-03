@@ -11,6 +11,20 @@ namespace wb {
      {
      
      }
+
+     void Cluster::remove_point(wb::Point &p)
+     {
+          //cout << "From Cluster: " << id_ << endl;
+          //cout << "\tRemoving: (" << p.position().x << "," << p.position().y << ")" << endl;
+          //seg fault here
+          std::vector<Point*>::iterator it = points_.begin();
+          for (; it != points_.end(); it++) {               
+               if ((*it)->position() == p.position()) {
+                    points_.erase(it);
+                    break;
+               }
+          }
+     }
      
      void Cluster::compute_metrics()
      {

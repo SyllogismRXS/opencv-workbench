@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
           if (!hide_window_flag) { 
                cv::imshow("Detection", original);
                
-#if 1
+#if 0
                int key = cv::waitKey(0);
                //cout << "Key: " << key << endl;
                if (key == 'q') { // 'q' key

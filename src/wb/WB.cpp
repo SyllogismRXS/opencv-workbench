@@ -19,7 +19,9 @@ using std::endl;
 
 namespace wb {
      void cluster_points(cv::Mat &src, int thresh, float gate)
-     {                  
+     {             
+          bool wait = false;
+
           CV_Assert(src.depth() != sizeof(uchar));
           int channels = src.channels();
           int nRows = src.rows;
@@ -58,11 +60,11 @@ namespace wb {
                     // Calculate distance between all outer-loop points and
                     // inner-loop points
                     float dist = it1->distance(*it2);
-                    if ( dist < gate) {
+                    if ( dist <= gate) {
                          // Only assign this pixel to the new cluster if it 
                          // hasn't been assigned or if it's old distance is
                          // greater than the new distance
-                         if (!(it2->assigned()) || it2->distance() > dist ) {
+                         if (!(it2->assigned()) || it2->distance() >= dist ) {
                               // If the outer loop's point hasn't been assigned
                               // to a cluster yet, create one.
                               if (!(it1->assigned())) {
@@ -72,6 +74,18 @@ namespace wb {
                                    it1->set_assigned(true);
                                    it1->set_distance(dist);
                                    it1->set_parent(c);
+
+                                   // If it2 is assigned make sure to remove it
+                                   // from old parent
+                                   if (it2->assigned()) {
+                                        Cluster *c_temp = it2->parent();
+                                        if (c_temp != NULL) {
+                                             c_temp->remove_point(*it2);
+                                        } else {
+                                             cout << "Point is assigned, but has no parent" << endl;
+                                             cout << "Point: " << it2->position() << endl;
+                                        }
+                                   }
                                    
                                    it2->set_assigned(true);
                                    it2->set_distance(dist);
@@ -83,9 +97,19 @@ namespace wb {
                               } else {
                                    // Assign the inner loop's point to the
                                    // outer loop's cluster
-                                   if (dist < it1->distance()) {
+                                   if (dist <= it1->distance()) {
                                         it1->set_distance(dist);
                                    }
+                                   
+                                   if (it2->assigned()) {
+                                        Cluster *c = it2->parent();
+                                        if (c != NULL) {
+                                             c->remove_point(*it2);
+                                        } else {
+                                             cout << "Point is assigned, but has no parent" << endl;
+                                             cout << "Point: " << it2->position() << endl;
+                                        }
+                                   }                                    
                                    
                                    it2->set_assigned(true);
                                    it2->set_distance(dist);
@@ -164,8 +188,8 @@ namespace wb {
                                    // cluster_display.at<uchar>((*it_points2)->position().y,(*it_points2)->position().x)(0) = 0;
                                    cluster_display.at<cv::Vec3b>((*it_points2)->position().y,(*it_points2)->position().x) = cv::Vec3b(0,0,0);
 
-                                   
-                                   //cout << cluster_display((*it_points2)->position().y,(*it_points2)->position().x);
+                                   cv::circle(cluster_display, cv::Point((*it_points2)->position().x,(*it_points2)->position().y), 5, cv::Scalar(0,0,255), 1, 8, 0);
+                                   wait = true;                                   
                               }
                          }
                     }
@@ -178,6 +202,9 @@ namespace wb {
           cv::resize(cluster_display, large, cv::Size(0,0), 2, 2, cv::INTER_LINEAR );
           cv::imshow("large", large);
 
+          if (wait) { 
+               cv::waitKey(0);
+          }
           
           ///// cluster the points
           ///cv::Mat src = thresh;//grad_thresh;

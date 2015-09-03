@@ -4,7 +4,7 @@
 /// @file Point.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 15:00:59 syllogismrxs>
+/// Time-stamp: <2015-09-02 18:09:44 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -62,7 +62,7 @@ namespace wb {
           void set_distance(float distance) { distance_ = distance; }
           
           Cluster * parent() { return parent_; }
-          void set_parent(wb::Cluster *parent) { parent_ = parent; }
+          void set_parent(wb::Cluster *parent);
 
           float distance(Point &other);
 

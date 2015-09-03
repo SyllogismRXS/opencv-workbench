@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-02 17:49:14 syllogismrxs>
+/// Time-stamp: <2015-09-02 18:55:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -47,14 +47,15 @@ namespace wb {
      public:
           Cluster();
           
-          void add_point(Point *p) { points_.push_back(p); }
+          void add_point(wb::Point *p) { points_.push_back(p); }
+          void remove_point(wb::Point &p);
           
           void set_id(int id) { id_ = id; }
           int id() { return id_; }
           
           int size() { return points_.size(); }
 
-          std::vector<Point*> & points() { return points_; }
+          std::vector<wb::Point*> & points() { return points_; }
 
           void compute_metrics();
           cv::Point centroid();
@@ -63,7 +64,7 @@ namespace wb {
      protected:
      private:
           int id_;
-          std::vector<Point*> points_;
+          std::vector<wb::Point*> points_;
           cv::Point centroid_;
           cv::Rect rectangle_;
      };
