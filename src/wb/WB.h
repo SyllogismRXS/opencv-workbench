@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 14:53:51 syllogismrxs>
+/// Time-stamp: <2015-09-03 12:15:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -47,13 +47,15 @@
 
 namespace wb {
 
-void cluster_points(cv::Mat &src, int thresh, float gate);
+     void cluster_points(cv::Mat &src, int thresh, float gate, 
+                         int min_cluster_size);
 
-void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
+     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
                              double ratio_low, double ratio_high, 
                              int thresh_step, int max_iter);
-
-void gradient_sobel(cv::Mat &src, cv::Mat &dst);
+     
+     void gradient_sobel(cv::Mat &src, cv::Mat &dst);
+     void gradient_simple(cv::Mat &src, cv::Mat &dst);
 
 }
 

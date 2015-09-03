@@ -18,7 +18,7 @@ using std::cout;
 using std::endl;
 
 namespace wb {
-     void cluster_points(cv::Mat &src, int thresh, float gate)
+     void cluster_points(cv::Mat &src, int thresh, float gate, int min_cluster_size)
      {             
           bool wait = false;
 
@@ -129,7 +129,7 @@ namespace wb {
           int cluster_color_count = 2;
           while(it != clusters.end()) {
                // Remove small clusters
-               if ((*it)->size() < 30) {
+               if ((*it)->size() < min_cluster_size) {
                     delete *it;
                     it = clusters.erase(it);
                } else {
@@ -167,6 +167,7 @@ namespace wb {
                cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                            
           }
 
+#if 0
           // Do any points in a cluster, belong in another cluster?
           it = clusters.begin();
           for (; it != clusters.end(); it++) {                              
@@ -195,6 +196,7 @@ namespace wb {
                     }
                }
           }
+#endif
 
           cv::imshow("clusters display", cluster_display);
 
@@ -310,5 +312,49 @@ namespace wb {
           cv::convertScaleAbs( grad_y, abs_grad_y );
      
           cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, dst );
+     }
+
+     void gradient_simple(cv::Mat &src, cv::Mat &dst)
+     {
+          CV_Assert(src.depth() != sizeof(uchar));
+          
+          int ksize = 15;
+          
+          cv::Mat I;
+          cv::copyMakeBorder(src, I, 0, 0, ksize/2, ksize/2, cv::BORDER_REPLICATE);
+          
+          dst = cv::Mat::zeros(I.size(), I.type());
+
+          int channels = I.channels();
+          int nRows = I.rows;
+          int nCols = I.cols * channels;          
+
+          int i,j;
+          uchar *p;
+          uchar *d;
+          for( i = 0; i < nRows; ++i) {
+               p = I.ptr<uchar>(i);
+               d = dst.ptr<uchar>(i); 
+               for ( j = 0; j < nCols; ++j) {
+                    if (j >= ksize) {
+                         int sum = 0;
+                         int count = 0;
+                         for (int k = 1; k <= ksize; k++) {
+                              sum += p[j-k];
+                              sum += I.ptr<uchar>(i-k)[j];
+                              count++;
+                         }
+                         double mean = (double)sum / ((double)count*2.0);
+                         d[j] = abs(p[j] - mean);
+                    } else {
+                         d[j] = p[j];
+                    }
+               }
+          }
+          //cv::Rect rect = cv::Rect(ksize/2, ksize/2, src.rows, src.cols);
+          //dst = cv::Mat(dst, rect);
+
+          cout << "Source - " << src.rows << " x " << src.cols << endl;
+          cout << "Dest - " << dst.rows << " x " << dst.cols << endl;
      }
 }

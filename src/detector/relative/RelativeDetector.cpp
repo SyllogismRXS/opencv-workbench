@@ -38,13 +38,36 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      Jet2Gray_matlab(original,gray);
      cv::imshow("gray",gray);        
      
+     // Compute median
+     cv::Mat median;
+     cv::medianBlur(gray, median,5);
+     cv::imshow("median", median);          
+     
+     //// Compute estimated gradient
+     //cv::Mat grad;     
+     //wb::gradient_sobel(median, grad);
+     //cv::imshow("gradient", grad);
+
+     cv::Mat thresh_amp;
+     wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
+     cv::imshow("thresh amp", thresh_amp);
+     
+     cv::Mat grad;     
+     wb::gradient_simple(median, grad);
+     cv::imshow("gradient", grad);
+     
      // Threshold
      cv::Mat thresh;
-     //cv::threshold(gray, thresh, 150, 255, cv::THRESH_TOZERO);
-     wb::adaptive_threshold(gray, thresh, thresh_value_, 0.001, 0.002, 10, 5);
-     cv::imshow("thresh",thresh);     
+     wb::adaptive_threshold(grad, thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
+     //wb::adaptive_threshold(median, thresh, thresh_value_, 0.003, 0.005, 10, 5);
+     //wb::adaptive_threshold(median, thresh, thresh_value_, 0.002, 0.003, 10, 5);
+     cv::imshow("thresh",thresh);    
+
+     //cv::Mat thresh_plus_grad = thresh + thresh_amp;     
      
-     wb::cluster_points(thresh, 0, 15);     
+     int gate = 15;
+     int min_cluster_size = 30;
+     wb::cluster_points(thresh, 0, gate, min_cluster_size);  
      
      //// Compute median
      //cv::Mat median;
