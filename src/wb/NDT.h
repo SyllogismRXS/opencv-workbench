@@ -1,13 +1,13 @@
-#ifndef WB_H_
-#define WB_H_
+#ifndef NDT_H_
+#define NDT_H_
 /// ---------------------------------------------------------------------------
-/// @file WB.h
+/// @file NDT.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-03 17:05:47 syllogismrxs>
+/// Time-stamp: <2015-09-06 19:04:48 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 31 Aug 2015
+/// Created: 06 Sep 2015
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,33 +35,22 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The WB class ...
+/// The NDT class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <iostream>
-#include <stdio.h>
-
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 
-#include <opencv_workbench/wb/Cluster.h>
-
-namespace wb {
-
-     void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
-                         int thresh, float gate, int min_cluster_size);
-
-     void draw_clusters(cv::Mat &src, cv::Mat &dst, 
-                        std::list<wb::Cluster*> &clusters);
-
-     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
-                             double ratio_low, double ratio_high, 
-                             int thresh_step, int max_iter);
-     
-     void gradient_sobel(cv::Mat &src, cv::Mat &dst);
-     void gradient_simple(cv::Mat &src, cv::Mat &dst);
-
-}
+class NDT {
+public:
+     NDT();
+     void set_frame(cv::Mat &src, cv::Mat &dst);
+protected:
+     int cell_length_;
+private:
+};
 
 #endif

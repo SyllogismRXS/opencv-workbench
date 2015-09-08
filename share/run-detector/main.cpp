@@ -197,7 +197,8 @@ int main(int argc, char *argv[])
                     break;
                }               
 #else
-               if (cv::waitKey(1) >= 0) {
+               int key = cv::waitKey(1);
+               if (key == 'q') {
                     cout << "Ending early." << endl;
                     break;
                }

@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-28 16:23:54 syllogismrxs>
+/// Time-stamp: <2015-09-06 19:10:58 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -40,6 +40,8 @@
 /// ---------------------------------------------------------------------------
 #include <opencv_workbench/detector/Detector.h>
 #include <opencv_workbench/syllo/syllo.h>
+#include <opencv_workbench/wb/ClusterProcess.h>
+#include <opencv_workbench/wb/NDT.h>
 
 class RelativeDetector : public Detector{
 public:
@@ -52,6 +54,8 @@ public:
 protected:     
      int thresh_value_;
      int grad_thresh_value_;
+     ClusterProcess cluster_process_;
+     NDT ndt_;
 private:
 };
 

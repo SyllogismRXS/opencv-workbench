@@ -1,13 +1,13 @@
-#ifndef WB_H_
-#define WB_H_
+#ifndef CLUSTERPROCESS_H_
+#define CLUSTERPROCESS_H_
 /// ---------------------------------------------------------------------------
-/// @file WB.h
+/// @file ClusterProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-03 17:05:47 syllogismrxs>
+/// Time-stamp: <2015-09-07 13:17:41 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 31 Aug 2015
+/// Created: 04 Sep 2015
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,33 +35,40 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The WB class ...
+/// The ClusterProcess class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <iostream>
-#include <stdio.h>
+#include <list>
+
+#include <opencv_workbench/wb/Cluster.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
-#include <opencv_workbench/wb/Cluster.h>
+class ClusterProcess {
+public:
+     ClusterProcess();
 
-namespace wb {
-
-     void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
-                         int thresh, float gate, int min_cluster_size);
-
-     void draw_clusters(cv::Mat &src, cv::Mat &dst, 
-                        std::list<wb::Cluster*> &clusters);
-
-     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
-                             double ratio_low, double ratio_high, 
-                             int thresh_step, int max_iter);
+     void set_threshold(int threshold) { threshold_ = threshold; }
+     void set_gate(float gate) { gate_ = gate; }
+     void set_min_cluster_size(int min_cluster_size) 
+     { min_cluster_size_ = min_cluster_size; }
      
-     void gradient_sobel(cv::Mat &src, cv::Mat &dst);
-     void gradient_simple(cv::Mat &src, cv::Mat &dst);
+     void process_frame(cv::Mat &src);
+     void overlay_clusters(cv::Mat &src, cv::Mat &dst);
+     
+protected:
+private:
+     std::vector<wb::Point> points_;
+     std::list<wb::Cluster*> clusters_;
 
-}
+     std::vector<wb::Point> prev_points_;
+     std::list<wb::Cluster*> prev_clusters_;
+     
+     int threshold_;
+     float gate_;
+     int min_cluster_size_;
+};
 
 #endif

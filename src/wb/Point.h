@@ -1,10 +1,10 @@
-#ifndef POINT_H_
-#define POINT_H_
+#ifndef _WB_POINT_H_
+#define _WB_POINT_H_
 /// ---------------------------------------------------------------------------
 /// @file Point.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-02 18:09:44 syllogismrxs>
+/// Time-stamp: <2015-09-03 16:56:59 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015

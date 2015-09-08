@@ -1,8 +1,13 @@
 #include <iostream>
 #include "RelativeDetector.h"
 
+#include <list>
+
 #include <opencv_workbench/utils/ColorMaps.h>
 #include <opencv_workbench/wb/WB.h>
+#include <opencv_workbench/wb/Cluster.h>
+#include <opencv_workbench/wb/ClusterProcess.h>
+#include <opencv_workbench/wb/NDT.h>
 
 using std::cout;
 using std::endl;
@@ -12,6 +17,10 @@ RelativeDetector::RelativeDetector()
      cout << "RelativeDetector Constructor" << endl;
      thresh_value_ = 255;
      grad_thresh_value_ = 255;
+
+     cluster_process_.set_threshold(0);
+     cluster_process_.set_gate(15);
+     cluster_process_.set_min_cluster_size(30);     
 }
 
 RelativeDetector::~RelativeDetector()
@@ -26,8 +35,9 @@ void RelativeDetector::print()
 
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {         
-     cv::Mat original_w_tracks;          
+     cv::Mat original_w_tracks, original_copy;          
      original_w_tracks = original;
+     original_copy = original;
      
      //cv::Mat bad_gray;
      ////cv::applyColorMap(original, bad_gray, CV_BGR2GRAY);
@@ -36,7 +46,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat gray;
      Jet2Gray_matlab(original,gray);
-     cv::imshow("gray",gray);        
+     cv::imshow("gray",gray); 
+
+     //cv::Mat ndt_img;
+     //ndt_.set_frame(gray, ndt_img);
+     //cv::imshow("ndt", ndt_img);
      
      // Compute median
      cv::Mat median;
@@ -52,39 +66,33 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
      cv::imshow("thresh amp", thresh_amp);
      
-     cv::Mat grad;     
-     wb::gradient_simple(median, grad);
-     cv::imshow("gradient", grad);
-     
-     // Threshold
-     cv::Mat thresh;
-     wb::adaptive_threshold(grad, thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
-     //wb::adaptive_threshold(median, thresh, thresh_value_, 0.003, 0.005, 10, 5);
-     //wb::adaptive_threshold(median, thresh, thresh_value_, 0.002, 0.003, 10, 5);
-     cv::imshow("thresh",thresh);    
-
-     //cv::Mat thresh_plus_grad = thresh + thresh_amp;     
-     
-     int gate = 15;
-     int min_cluster_size = 30;
-     wb::cluster_points(thresh, 0, gate, min_cluster_size);  
-     
-     //// Compute median
-     //cv::Mat median;
-     //cv::medianBlur(gray,median,5);
-     //cv::imshow("median", median);          
-     //
-     //// Compute estimated gradient
      //cv::Mat grad;     
-     //syllo::gradient_sobel(median, grad);
+     //wb::gradient_simple(median, grad);
      //cv::imshow("gradient", grad);
      //
-     //// Only select gradients above a certain threshold
-     //cv::Mat grad_thresh;
-     //syllo::adaptive_threshold(grad, grad_thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
-     //cv::imshow("gradient_thresh", grad_thresh);
+     //// Threshold
+     //cv::Mat thresh;
+     //wb::adaptive_threshold(grad, thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
+     ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.003, 0.005, 10, 5);
+     ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.002, 0.003, 10, 5);
+     //cv::imshow("thresh",thresh);    
+
+     //cv::Mat thresh_plus_grad = thresh_amp + thresh;
+     //cv::imshow("thrush_plus_grad", thresh_plus_grad);
      
-     
+     cluster_process_.process_frame(thresh_amp);
+
+     cv::Mat cluster_img;
+     cluster_process_.overlay_clusters(gray, cluster_img);
+     cv::imshow("overlay", cluster_img);
+     //int gate = 15;
+     //int min_cluster_size = 30;
+     //std::list<wb::Cluster*> clusters;
+     //wb::cluster_points(thresh_amp, clusters, 0, gate, min_cluster_size);  
+     //
+     //cv::Mat cluster_img;
+     //wb::draw_clusters(original_copy, cluster_img, clusters);
+     //cv::imshow("clusters", cluster_img);
      
      //////////////////////////////////////////////////////////////
      /// Tracking     

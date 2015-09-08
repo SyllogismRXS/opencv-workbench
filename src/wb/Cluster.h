@@ -1,10 +1,10 @@
-#ifndef CLUSTER_H_
-#define CLUSTER_H_
+#ifndef _WB_CLUSTER_H_
+#define _WB_CLUSTER_H_
 /// ---------------------------------------------------------------------------
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-02 18:55:14 syllogismrxs>
+/// Time-stamp: <2015-09-07 13:30:17 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -61,12 +61,18 @@ namespace wb {
           cv::Point centroid();
           cv::Rect rectangle();          
           
+          void inc_age();
+          void dec_age();
+
+          int age() { return age_; }
+          
      protected:
      private:
           int id_;
           std::vector<wb::Point*> points_;
           cv::Point centroid_;
           cv::Rect rectangle_;
+          int age_;
      };
 }
 

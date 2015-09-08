@@ -12,11 +12,18 @@ namespace wb {
      
      }
 
-     void Cluster::remove_point(wb::Point &p)
+     void Cluster::inc_age()
      {
-          //cout << "From Cluster: " << id_ << endl;
-          //cout << "\tRemoving: (" << p.position().x << "," << p.position().y << ")" << endl;
-          //seg fault here
+          age_++;
+     }
+
+     void Cluster::dec_age()
+     {
+          age_--;
+     }
+
+     void Cluster::remove_point(wb::Point &p)
+     {          
           std::vector<Point*>::iterator it = points_.begin();
           for (; it != points_.end(); it++) {               
                if ((*it)->position() == p.position()) {

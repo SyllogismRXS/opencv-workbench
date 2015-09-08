@@ -18,10 +18,9 @@ using std::cout;
 using std::endl;
 
 namespace wb {
-     void cluster_points(cv::Mat &src, int thresh, float gate, int min_cluster_size)
+     void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
+                         int thresh, float gate, int min_cluster_size)
      {             
-          bool wait = false;
-
           CV_Assert(src.depth() != sizeof(uchar));
           int channels = src.channels();
           int nRows = src.rows;
@@ -45,8 +44,7 @@ namespace wb {
           }
 
           // Outer-loop through all points
-          int cluster_id = 1;
-          std::list<wb::Cluster*> clusters;
+          int cluster_id = 1;        
           std::vector<wb::Point>::iterator it1 = points.begin();
           for (; it1 != points.end(); it1++) {
                std::vector<wb::Point>::iterator it2 = points.begin();
@@ -132,7 +130,10 @@ namespace wb {
                if ((*it)->size() < min_cluster_size) {
                     delete *it;
                     it = clusters.erase(it);
-               } else {
+                    //} else {
+                    //it++;
+               }
+               else {
                     std::vector<Point*> points = (*it)->points();
                     std::vector<Point*>::iterator it_p = points.begin();                                                            
                     
@@ -142,13 +143,15 @@ namespace wb {
                     cluster_color_count += 10;
                     it++;
                }
-          }          
-          cv::imshow("clusters", cluster_img);
+          }    
+
+          //cout << "Cluster count: " << clusters.size() << endl;
           
+          cv::imshow("clusters", cluster_img);          
           cv::Mat cluster_display;
           cv::normalize(cluster_img, cluster_display, 0, 255, cv::NORM_MINMAX, CV_8UC1);
           cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);          
-
+           
           // Draw cluster labels
           for (it = clusters.begin(); it != clusters.end(); it++) {
                //Point *pref = (*it)->points().front();                                   
@@ -158,7 +161,7 @@ namespace wb {
                //cout << "--------" << endl;
                //cout << circle_point.x << endl;
                //cout << circle_point.y << endl;
-
+           
                std::ostringstream convert;
                convert << (*it)->id();
                const std::string& text = convert.str();
@@ -167,7 +170,9 @@ namespace wb {
                cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                            
           }
 
-#if 0
+           
+#if 1
+          bool wait = false;
           // Do any points in a cluster, belong in another cluster?
           it = clusters.begin();
           for (; it != clusters.end(); it++) {                              
@@ -188,7 +193,7 @@ namespace wb {
                                    cout << "Point2: " << (*it_points2)->position().x << ", " << (*it_points2)->position().y << endl;
                                    // cluster_display.at<uchar>((*it_points2)->position().y,(*it_points2)->position().x)(0) = 0;
                                    cluster_display.at<cv::Vec3b>((*it_points2)->position().y,(*it_points2)->position().x) = cv::Vec3b(0,0,0);
-
+                                   
                                    cv::circle(cluster_display, cv::Point((*it_points2)->position().x,(*it_points2)->position().y), 5, cv::Scalar(0,0,255), 1, 8, 0);
                                    wait = true;                                   
                               }
@@ -199,47 +204,51 @@ namespace wb {
 #endif
 
           cv::imshow("clusters display", cluster_display);
+           
+          //cv::Mat large;
+          //cv::resize(cluster_display, large, cv::Size(0,0), 2, 2, cv::INTER_LINEAR );
+          //cv::imshow("large", large);
+           
+          //if (wait) { 
+          //     cv::waitKey(0);
+          //}                   
+     }
 
-          cv::Mat large;
-          cv::resize(cluster_display, large, cv::Size(0,0), 2, 2, cv::INTER_LINEAR );
-          cv::imshow("large", large);
-
-          if (wait) { 
-               cv::waitKey(0);
-          }
+     void draw_clusters(cv::Mat &src, cv::Mat &dst, 
+                        std::list<wb::Cluster*> &clusters)
+     {
+          dst = src.clone();
           
-          ///// cluster the points
-          ///cv::Mat src = thresh;//grad_thresh;
-          ///cv::Mat samples(src.rows * src.cols, 1, CV_32F);
-          ///for( int y = 0; y < src.rows; y++ ) {
-          ///     for( int x = 0; x < src.cols; x++ ) {
-          ///          //for( int z = 0; z < 3; z++) {
-          ///          samples.at<float>(y + x*src.rows, 0) = src.at<uchar>(y,x); //src.at<cv::Vec3b>(y,x)[z];
-          ///          //}
-          ///     }
-          ///}
-          ///
-          ///int clusterCount = 15;
-          ///cv::Mat labels;
-          ///int attempts = 2;
-          ///cv::Mat centers;
-          ///cv::kmeans(samples, clusterCount, labels, cv::TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, cv::KMEANS_PP_CENTERS, centers );
-          ///
-          ///cv::Mat new_image( src.size(), src.type() );
-          ///for( int y = 0; y < src.rows; y++ ) {
-          ///     for( int x = 0; x < src.cols; x++ ) { 
-          ///          int cluster_idx = labels.at<int>(y + x*src.rows,0);
-          ///          new_image.at<uchar>(y,x) = centers.at<float>(cluster_idx);
-          ///          //new_image.at<Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
-          ///          //new_image.at<Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
-          ///          //new_image.at<Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
-          ///     }
-          ///}
-          ///
-          ///cv::normalize(new_image, new_image, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-          ///cv::applyColorMap(new_image, new_image, cv::COLORMAP_JET);
-          /////cv::imshow("centers", centers);
-          ///cv::imshow("clusters", new_image);    
+          std::list<wb::Cluster*>::iterator it = clusters.begin();
+          for(; it != clusters.end(); it++) {
+               
+               std::vector<Point*> points = (*it)->points();
+               std::vector<Point*>::iterator it_p = points.begin();                                                            
+                    
+               for (; it_p != points.end(); it_p++) {
+                    //dst.at<cv::Vec3b>((*it_p)->position().y, (*it_p)->position().x) = cv::Vec3b(0,255,0);
+               }                                                 
+          }
+
+          //cv::Mat cluster_display;
+          //cv::normalize(cluster_img, cluster_display, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+          //cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);          
+          
+          // Draw cluster labels
+          for (it = clusters.begin(); it != clusters.end(); it++) {
+               (*it)->compute_metrics();
+               cv::Point circle_point = (*it)->centroid();
+               //cout << "--------" << endl;
+               //cout << circle_point.x << endl;
+               //cout << circle_point.y << endl;
+          
+               std::ostringstream convert;
+               convert << (*it)->id();
+               const std::string& text = convert.str();
+               cv::circle(dst, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
+               cv::rectangle(dst, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
+               cv::putText(dst, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);
+          }
      }
 
      
@@ -352,9 +361,40 @@ namespace wb {
                }
           }
           //cv::Rect rect = cv::Rect(ksize/2, ksize/2, src.rows, src.cols);
-          //dst = cv::Mat(dst, rect);
-
-          cout << "Source - " << src.rows << " x " << src.cols << endl;
-          cout << "Dest - " << dst.rows << " x " << dst.cols << endl;
+          //dst = cv::Mat(dst, rect);          
      }
 }
+
+// KMEAN OPENCV Clustering
+///// cluster the points
+///cv::Mat src = thresh;//grad_thresh;
+///cv::Mat samples(src.rows * src.cols, 1, CV_32F);
+///for( int y = 0; y < src.rows; y++ ) {
+///     for( int x = 0; x < src.cols; x++ ) {
+///          //for( int z = 0; z < 3; z++) {
+///          samples.at<float>(y + x*src.rows, 0) = src.at<uchar>(y,x); //src.at<cv::Vec3b>(y,x)[z];
+///          //}
+///     }
+///}
+///
+///int clusterCount = 15;
+///cv::Mat labels;
+///int attempts = 2;
+///cv::Mat centers;
+///cv::kmeans(samples, clusterCount, labels, cv::TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, cv::KMEANS_PP_CENTERS, centers );
+///
+///cv::Mat new_image( src.size(), src.type() );
+///for( int y = 0; y < src.rows; y++ ) {
+///     for( int x = 0; x < src.cols; x++ ) { 
+///          int cluster_idx = labels.at<int>(y + x*src.rows,0);
+///          new_image.at<uchar>(y,x) = centers.at<float>(cluster_idx);
+///          //new_image.at<Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
+///          //new_image.at<Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
+///          //new_image.at<Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
+///     }
+///}
+///
+///cv::normalize(new_image, new_image, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+///cv::applyColorMap(new_image, new_image, cv::COLORMAP_JET);
+/////cv::imshow("centers", centers);
+///cv::imshow("clusters", new_image);    
