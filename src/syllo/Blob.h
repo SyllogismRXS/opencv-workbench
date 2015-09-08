@@ -4,7 +4,7 @@
 /// @file Blob.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-17 12:23:27 syllogismrxs>
+/// Time-stamp: <2015-09-08 16:31:18 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 17 Jun 2015
@@ -68,7 +68,7 @@ class Blob {
 	  Eigen::VectorXf estVel;
 	  bool velDet;
 	  int detectCount;
-
+          
 	  cv::Point lastDetCentroid;
 	  int lastDetTime;
 	  cv::Point lastEstCentroid;

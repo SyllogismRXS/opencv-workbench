@@ -4,7 +4,7 @@
 /// @file ClusterProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-07 13:17:41 syllogismrxs>
+/// Time-stamp: <2015-09-08 14:16:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Sep 2015
@@ -57,18 +57,25 @@ public:
      
      void process_frame(cv::Mat &src);
      void overlay_clusters(cv::Mat &src, cv::Mat &dst);
+     void overlay_tracks(cv::Mat &src, cv::Mat &dst);
+     
+     int next_available_id();
+     
+     void cluster_maintenance();         
      
 protected:
 private:
      std::vector<wb::Point> points_;
      std::list<wb::Cluster*> clusters_;
-
+     
      std::vector<wb::Point> prev_points_;
      std::list<wb::Cluster*> prev_clusters_;
      
      int threshold_;
      float gate_;
      int min_cluster_size_;
+
+     int next_id_;
 };
 
 #endif

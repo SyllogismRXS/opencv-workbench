@@ -4,7 +4,7 @@
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-08-31 14:52:44 syllogismrxs>
+/// Time-stamp: <2015-09-08 17:50:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -61,6 +61,11 @@ namespace wb
           //cout << img.rows << "x" < img.cols << endl;
           printf("%dx%d\n",img.rows,img.cols);
      }
-     
+
+     void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d)
+     {
+          cv::line(img, cv::Point(center.x - d, center.y - d), cv::Point(center.x + d, center.y + d), color, 2, CV_AA, 0);
+          cv::line(img, cv::Point(center.x + d, center.y - d), cv::Point(center.x - d, center.y + d), color, 2, CV_AA, 0 );
+     }              
 }
 #endif

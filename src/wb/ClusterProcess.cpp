@@ -2,6 +2,7 @@
 
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/wb/Cluster.h>
+#include <opencv_workbench/utils/OpenCV_Helpers.h>
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/contrib/contrib.hpp>
@@ -19,7 +20,32 @@ ClusterProcess::ClusterProcess()
      threshold_ = 0;
      gate_ = 15;
      min_cluster_size_ = 30;
+     next_id_ = 0;
 }
+
+int ClusterProcess::next_available_id()
+{
+     return next_id_++;
+     //return prev_clusters_.back()->id() + 1;
+}
+
+void ClusterProcess::cluster_maintenance()
+{
+     // cull dead.
+     std::list<wb::Cluster*>::iterator it = clusters_.begin();
+     while(it != clusters_.end()) {
+          (*it)->set_matched(false);
+          (*it)->set_match(NULL);          
+          
+          if ((*it)->is_dead()) {
+               delete *it;
+               it = clusters_.erase(it);
+          } else {
+               it++;
+          }
+     }    
+}
+
 
 void ClusterProcess::overlay_clusters(cv::Mat &src, cv::Mat &dst)
 {
@@ -34,10 +60,35 @@ void ClusterProcess::overlay_clusters(cv::Mat &src, cv::Mat &dst)
 
           std::vector<wb::Point*>::iterator it_p = points.begin();                    
           for (; it_p != points.end(); it_p++) {
-               dst.at<cv::Vec3b>((*it_p)->position().y, (*it_p)->position().x) = cv::Vec3b(0,255,255);               
+               dst.at<cv::Vec3b>((*it_p)->position().y, (*it_p)->position().x) = cv::Vec3b(20,255,57);               
           }                                                 
      }
-}          
+}
+
+void ClusterProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
+{
+     cv::Mat color;
+     //cv::cvtColor(src, color, CV_GRAY2BGR);
+          
+     dst = src;
+     std::list<wb::Cluster*>::iterator it = clusters_.begin();
+     for (; it != clusters_.end(); it++) {
+          if ((*it)->is_visible()) {
+               cv::Point centroid_point = (*it)->centroid();
+               cv::Point est_centroid = (*it)->estimated_centroid();
+               cv::Rect rect = (*it)->rectangle();
+               
+               std::ostringstream convert;
+               convert << (*it)->id();               
+               const std::string& text = convert.str();
+               
+               cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
+               cv::rectangle(dst, rect, cv::Scalar(255,255,255), 1, 8, 0);
+               cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
+               wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
+          }
+     }
+}
 
 void ClusterProcess::process_frame(cv::Mat &src)
 {
@@ -140,20 +191,19 @@ void ClusterProcess::process_frame(cv::Mat &src)
                     } 
                }
           }
-     }          
+     } 
           
      // Loop through all clusters. remove small clusters, draw points in 
      // remaining clusters on image
-     cv::Mat cluster_img = cv::Mat::zeros(src.size(), src.type());
+     //cv::Mat cluster_img = cv::Mat::zeros(src.size(), src.type());
      std::list<wb::Cluster*>::iterator it = clusters_.begin();
-     int cluster_color_count = 2;
      while(it != clusters_.end()) {
           // Remove small clusters
           if ((*it)->size() < min_cluster_size_) {
                delete *it;
                it = clusters_.erase(it);
           } else {
-               (*it)->compute_metrics();
+               (*it)->init();
                it++;
           }
           //} else {
@@ -168,11 +218,17 @@ void ClusterProcess::process_frame(cv::Mat &src)
           //}
      }    
 
+     // Update all previous cluster's motion models
+     std::list<wb::Cluster*>::iterator it_prev = prev_clusters_.begin();
+     for(; it_prev != prev_clusters_.end(); it_prev++) {
+          (*it_prev)->predict_tracker();
+     }
+     
      // Greedy correlation between this iteration's clusters and previous
      // iteration's clusters
      it = clusters_.begin();
      for(; it != clusters_.end(); it++) {
-          double min_dist = 50;
+          double min_dist = 500;
           wb::Cluster * champ_cluster = NULL;
           
           std::list<wb::Cluster*>::iterator it_prev = prev_clusters_.begin();
@@ -188,40 +244,84 @@ void ClusterProcess::process_frame(cv::Mat &src)
           }
           
           if (champ_cluster != NULL) {
-               // Found a cluster match. 
-               (*it)->set_id( champ_cluster->id() );
+               // Found a cluster match.
+               
+               // has the previous cluster been matched already
+               if (champ_cluster->matched()) {
+                    if (min_dist < champ_cluster->distance()) {
+                         // a better match was found
+                         
+                         // unassign old match, new cluster?
+                         wb::Cluster * c = champ_cluster->match();
+                         if (c != NULL) {
+                              // Possible new cluster
+                              c->set_id( next_available_id() );
+                              //c->set_age( 1 );
+                              c->set_distance(999999);
+                              c->set_matched(false);
+                              c->set_match(NULL);
+                              // tracker change?
+                              cout << "Reassign" << endl;
+                         } else {
+                              cout << "Matched is null" << endl;
+                         }
+                         
+                         // Assign better match                         
+                         (*it)->set_id( champ_cluster->id() );
+                         (*it)->set_age( champ_cluster->age() );
+                         (*it)->inc_age();
+                         (*it)->set_tracker(champ_cluster->tracker());
+                         (*it)->correct_tracker();
+                         
+                         champ_cluster->set_distance(min_dist);
+                         champ_cluster->set_match(*it);
+                         champ_cluster->set_matched(true);
+                         
+                         
+                    } else {
+                         // the previous match is better
+                         // Possible new cluster
+                         (*it)->set_id( next_available_id() ); // what's next id?
+                         //(*it)->set_age( 1 );                         
+                         (*it)->set_distance(999999);
+                         (*it)->set_matched(false);
+                    }
+               } else {
+                    // matched
+                    (*it)->set_id( champ_cluster->id() );
+                    (*it)->set_age( champ_cluster->age() );
+                    (*it)->inc_age();
+                    (*it)->set_tracker(champ_cluster->tracker());
+                    (*it)->correct_tracker();
+                    champ_cluster->set_distance(min_dist);
+                    champ_cluster->set_match(*it);
+                    champ_cluster->set_matched(true);
+               }
+               
           } else {
                // Possible new cluster
-               
+               (*it)->set_id( next_available_id() ); // what's next id?
+               //(*it)->set_age( 1 );
+               (*it)->set_distance(999999);
+               (*it)->set_matched(false);
           }
-
      }
-     
 
-     // Save points and clusters for next iteration
-     prev_clusters_.clear();
-     prev_points_.clear();          
-     prev_clusters_ = clusters_;                
-     prev_points_ = points_;
-     
+     // Copy over the previous clusters that weren't detected.
+     it_prev = prev_clusters_.begin();
+     for(; it_prev != prev_clusters_.end(); it_prev++) {
+          if (!(*it_prev)->matched()) {     
+               (*it_prev)->dec_age();
+               clusters_.push_back((*it_prev));
+          }
+     }
+
+     this->cluster_maintenance();          
 
      //cv::imshow("clusters", cluster_img);          
      //cv::Mat cluster_display;
      //cv::normalize(cluster_img, cluster_display, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-     //cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);          
-     //      
-     //// Draw cluster labels
-     //for (it = clusters_.begin(); it != clusters_.end(); it++) {
-     //     (*it)->compute_metrics();
-     //     cv::Point circle_point = (*it)->centroid();
-     //                
-     //     std::ostringstream convert;
-     //     convert << (*it)->id();
-     //     const std::string& text = convert.str();
-     //     cv::circle(cluster_display, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-     //     cv::rectangle(cluster_display, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
-     //     cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                            
-     //}
+     //cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);     
            
 #define ENABLE_CHECK 0
 #if ENABLE_CHECK
@@ -267,17 +367,23 @@ void ClusterProcess::process_frame(cv::Mat &src)
      }
 #endif     
 
-     it = clusters_.begin();
-     for (; it != clusters_.end(); it++) {
-          std::vector<wb::Point*> points = (*it)->points();
+     //it = clusters_.begin();
+     //for (; it != clusters_.end(); it++) {
+     //     std::vector<wb::Point*> points = (*it)->points();
+     //
+     //     std::vector<wb::Point*>::iterator it_p = points.begin();                    
+     //     for (; it_p != points.end(); it_p++) {
+     //          if ((*it_p)->position().x > src.cols || (*it_p)->position().x < 0 || (*it_p)->position().y < 0 || (*it_p)->position().y > src.rows) {
+     //               cout << "Cluster ID: " << (*it)->id() << endl;
+     //               cout << "Point out of bounds: ";
+     //               cout << (*it_p)->position().x << ", " << (*it_p)->position().y << endl;
+     //          } 
+     //     }                                                 
+     //}
 
-          std::vector<wb::Point*>::iterator it_p = points.begin();                    
-          for (; it_p != points.end(); it_p++) {
-               if ((*it_p)->position().x > cluster_img.cols || (*it_p)->position().x < 0 || (*it_p)->position().y < 0 || (*it_p)->position().y > cluster_img.rows) {
-                    cout << "2-----------" << endl;
-                    cout << "Point out of bounds: ";
-                    cout << (*it_p)->position().x << ", " << (*it_p)->position().y << endl;
-               } 
-          }                                                 
-     }
+     //// Save points and clusters for next iteration
+     prev_clusters_.clear();
+     prev_points_.clear();          
+     prev_clusters_ = clusters_;                
+     prev_points_ = points_;
 }

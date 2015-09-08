@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
      //char *cvalue = NULL;
      //int index;
      int hide_window_flag = 0;
+     int step_flag = 0;
      int c;
      //std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi";
      std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
      std::string xml_output_dir = "";
      int xml_output_dir_flag = 0;
   
-     while ((c = getopt (argc, argv, "abc:f:hp:o:")) != -1) {
+     while ((c = getopt (argc, argv, "abc:f:hp:o:s")) != -1) {
           switch (c) {
           //case 'a':
           //     aflag = 1;
@@ -60,6 +61,9 @@ int main(int argc, char *argv[])
                break;
           case 'f':
                video_filename = std::string(optarg);
+               break;
+          case 's':
+               step_flag = 1;
                break;
           case '?':
                if (optopt == 'c') {
@@ -189,20 +193,20 @@ int main(int argc, char *argv[])
           if (!hide_window_flag) { 
                cv::imshow("Detection", original);
                
-#if 0
-               int key = cv::waitKey(0);
-               //cout << "Key: " << key << endl;
-               if (key == 'q') { // 'q' key
-                    cout << "Ending early." << endl;
-                    break;
-               }               
-#else
-               int key = cv::waitKey(1);
-               if (key == 'q') {
-                    cout << "Ending early." << endl;
-                    break;
+               if (step_flag) {
+                    int key = cv::waitKey(0);               
+                    if (key == 'q' || key == 1048689) { // 'q' key
+                         cout << "Ending early." << endl;
+                         break;
+                    }               
+               } else {
+                    int key = cv::waitKey(1);               
+                    if (key == 'q' || key == 1048689) {
+                         cout << "Ending early." << endl;
+                         break;
+                    }
                }
-#endif
+
           }          
           
           frame_number++;

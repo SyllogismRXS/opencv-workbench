@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-07 13:30:17 syllogismrxs>
+/// Time-stamp: <2015-09-08 17:46:20 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -39,16 +39,26 @@
 /// 
 /// ---------------------------------------------------------------------------
 #include <vector>
+
 #include "Point.h"
+
+#include <opencv2/video/tracking.hpp>
+//#include <opencv_workbench/track/EKF.h>
+
+//#include <Eigen/Dense>
 
 namespace wb {
 
      class Cluster {
      public:
+          //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
           Cluster();
           
           void add_point(wb::Point *p) { points_.push_back(p); }
           void remove_point(wb::Point &p);
+
+          void init();
           
           void set_id(int id) { id_ = id; }
           int id() { return id_; }
@@ -60,19 +70,60 @@ namespace wb {
           void compute_metrics();
           cv::Point centroid();
           cv::Rect rectangle();          
-          
+           
+          cv::Point estimated_centroid() { return est_centroid_; }
+
           void inc_age();
           void dec_age();
 
           int age() { return age_; }
+          void set_age(int age) { age_ = age; }
+          
+          void set_matched(bool matched) { matched_ = matched; }
+          bool matched() { return matched_; }
+          
+          void set_distance(float distance) { distance_ = distance; }
+          float distance() { return distance_; }
+
+          void set_match(Cluster * match) { match_ = match; }
+          Cluster * match() { return match_; }
+          
+          bool is_visible();
+          bool is_dead();
+
+          void predict_tracker();
+          void correct_tracker();
+
+          void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}
+          cv::KalmanFilter tracker() { return KF_; }
           
      protected:
      private:
           int id_;
           std::vector<wb::Point*> points_;
           cv::Point centroid_;
+          cv::Point est_centroid_;
           cv::Rect rectangle_;
           int age_;
+
+          float distance_;
+          bool matched_;
+          Cluster * match_;  
+          
+          //syllo::EKF ekf_;
+          //
+          //Eigen::MatrixXf A;
+	  //Eigen::MatrixXf B;
+	  //Eigen::VectorXf C;
+	  //Eigen::MatrixXf R;
+	  //Eigen::MatrixXf Q;
+	  //Eigen::VectorXf mu;
+	  //Eigen::MatrixXf covar;
+	  //Eigen::VectorXf u;
+          //
+	  //Eigen::VectorXf estVel;
+          cv::KalmanFilter KF_;
+          
      };
 }
 
