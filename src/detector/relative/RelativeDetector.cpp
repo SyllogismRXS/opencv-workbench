@@ -88,6 +88,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat cluster_tracks_img;
      cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);
      cv::imshow("tracks", cluster_tracks_img);
+     
      //int gate = 15;
      //int min_cluster_size = 30;
      //std::list<wb::Cluster*> clusters;

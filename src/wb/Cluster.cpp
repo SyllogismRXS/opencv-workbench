@@ -46,7 +46,9 @@ namespace wb {
           
           KF_ = cv::KalmanFilter(4, 2, 0);
           
-          KF_.transitionMatrix = *(cv::Mat_<float>(4, 4) << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1);
+          transition_matrix_ = cv::Mat_<float>(4,4);
+          transition_matrix_  << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1;
+          KF_.transitionMatrix = transition_matrix_;
      }
      
      void Cluster::init()
@@ -129,9 +131,9 @@ namespace wb {
 
      void Cluster::remove_point(wb::Point &p)
      {          
-          std::vector<Point*>::iterator it = points_.begin();
+          std::vector<Point>::iterator it = points_.begin();
           for (; it != points_.end(); it++) {               
-               if ((*it)->position() == p.position()) {
+               if (it->position() == p.position()) {
                     points_.erase(it);
                     break;
                }
@@ -145,10 +147,10 @@ namespace wb {
           ////////////////////////////////////////////////////////
           int sum_x = 0, sum_y = 0;
           int xmin = 999999999, ymin = 999999999, xmax = -999, ymax = -999;
-          std::vector<Point*>::iterator it = points_.begin();
+          std::vector<Point>::iterator it = points_.begin();
           for (; it != points_.end(); it++) {               
-               int x = (*it)->position().x;
-               int y = (*it)->position().y;
+               int x = it->position().x;
+               int y = it->position().y;
                
                sum_x += x;
                sum_y += y;

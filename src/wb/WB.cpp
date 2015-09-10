@@ -89,8 +89,8 @@ namespace wb {
                                    it2->set_distance(dist);
                                    it2->set_parent(c);
                                    
-                                   c->add_point(&(*it1));
-                                   c->add_point(&(*it2));
+                                   c->add_point(*it1);
+                                   c->add_point(*it2);
                                    clusters.push_back(c);
                               } else {
                                    // Assign the inner loop's point to the
@@ -113,7 +113,7 @@ namespace wb {
                                    it2->set_distance(dist);
                                    it2->set_parent(it1->parent());
                                    
-                                   it1->parent()->add_point(&(*it2));
+                                   it1->parent()->add_point(*it2);
                               }
                          } 
                     }
@@ -134,11 +134,11 @@ namespace wb {
                     //it++;
                }
                else {
-                    std::vector<Point*> points = (*it)->points();
-                    std::vector<Point*>::iterator it_p = points.begin();                                                            
+                    std::vector<Point> points = (*it)->points();
+                    std::vector<Point>::iterator it_p = points.begin();                                                            
                     
                     for (; it_p != points.end(); it_p++) {
-                         cluster_img.at<uchar>((*it_p)->position().y, (*it_p)->position().x) = cluster_color_count;
+                         cluster_img.at<uchar>(it_p->position().y, it_p->position().x) = cluster_color_count;
                     }                                                 
                     cluster_color_count += 10;
                     it++;
@@ -182,19 +182,19 @@ namespace wb {
                     if (it == it2) {
                          continue;
                     }                    
-                    std::vector<wb::Point*>::iterator it_points1 = (*it)->points().begin();
+                    std::vector<wb::Point>::iterator it_points1 = (*it)->points().begin();
                     for (; it_points1 != (*it)->points().end(); it_points1++) {
-                         std::vector<wb::Point*>::iterator it_points2 = (*it2)->points().begin();
+                         std::vector<wb::Point>::iterator it_points2 = (*it2)->points().begin();
                          for (; it_points2 != (*it2)->points().end(); it_points2++) {
-                              if ( (*it_points1)->position() == (*it_points2)->position()) {
+                              if ( it_points1->position() == it_points2->position()) {
                                    cout << "----------------" << endl;
                                    cout << "Cluster IDs: " << (*it)->id() << ", " << (*it2)->id() << endl;
-                                   cout << "Point1: " << (*it_points1)->position().x << ", " << (*it_points1)->position().y << endl;
-                                   cout << "Point2: " << (*it_points2)->position().x << ", " << (*it_points2)->position().y << endl;
+                                   cout << "Point1: " << it_points1->position().x << ", " << it_points1->position().y << endl;
+                                   cout << "Point2: " << it_points2->position().x << ", " << it_points2->position().y << endl;
                                    // cluster_display.at<uchar>((*it_points2)->position().y,(*it_points2)->position().x)(0) = 0;
-                                   cluster_display.at<cv::Vec3b>((*it_points2)->position().y,(*it_points2)->position().x) = cv::Vec3b(0,0,0);
+                                   cluster_display.at<cv::Vec3b>(it_points2->position().y,it_points2->position().x) = cv::Vec3b(0,0,0);
                                    
-                                   cv::circle(cluster_display, cv::Point((*it_points2)->position().x,(*it_points2)->position().y), 5, cv::Scalar(0,0,255), 1, 8, 0);
+                                   cv::circle(cluster_display, cv::Point(it_points2->position().x,it_points2->position().y), 5, cv::Scalar(0,0,255), 1, 8, 0);
                                    wait = true;                                   
                               }
                          }
@@ -222,8 +222,8 @@ namespace wb {
           std::list<wb::Cluster*>::iterator it = clusters.begin();
           for(; it != clusters.end(); it++) {
                
-               std::vector<Point*> points = (*it)->points();
-               std::vector<Point*>::iterator it_p = points.begin();                                                            
+               std::vector<Point> points = (*it)->points();
+               std::vector<Point>::iterator it_p = points.begin();                                                            
                     
                for (; it_p != points.end(); it_p++) {
                     //dst.at<cv::Vec3b>((*it_p)->position().y, (*it_p)->position().x) = cv::Vec3b(0,255,0);

@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-08 17:46:20 syllogismrxs>
+/// Time-stamp: <2015-09-09 17:10:33 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -55,7 +55,7 @@ namespace wb {
 
           Cluster();
           
-          void add_point(wb::Point *p) { points_.push_back(p); }
+          void add_point(wb::Point &p) { points_.push_back(p); }
           void remove_point(wb::Point &p);
 
           void init();
@@ -65,7 +65,7 @@ namespace wb {
           
           int size() { return points_.size(); }
 
-          std::vector<wb::Point*> & points() { return points_; }
+          std::vector<wb::Point> & points() { return points_; }
 
           void compute_metrics();
           cv::Point centroid();
@@ -100,7 +100,7 @@ namespace wb {
      protected:
      private:
           int id_;
-          std::vector<wb::Point*> points_;
+          std::vector<wb::Point> points_;
           cv::Point centroid_;
           cv::Point est_centroid_;
           cv::Rect rectangle_;
@@ -123,6 +123,8 @@ namespace wb {
           //
 	  //Eigen::VectorXf estVel;
           cv::KalmanFilter KF_;
+
+          cv::Mat_<float> transition_matrix_;
           
      };
 }
