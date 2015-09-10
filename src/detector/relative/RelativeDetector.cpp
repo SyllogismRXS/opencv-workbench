@@ -19,7 +19,7 @@ RelativeDetector::RelativeDetector()
      grad_thresh_value_ = 255;
 
      cluster_process_.set_threshold(0);
-     cluster_process_.set_gate(15);
+     cluster_process_.set_gate(50); // 15, 100
      cluster_process_.set_min_cluster_size(30);     
 }
 
@@ -84,10 +84,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 
      cv::Mat cluster_img;
      cluster_process_.overlay_clusters(gray, cluster_img);
-
-     cv::Mat cluster_tracks_img;
-     cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);
-     cv::imshow("tracks", cluster_tracks_img);
+     cv::imshow("clusters", cluster_img);
+     
+     // cv::Mat cluster_tracks_img;
+     // cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);
+     // cv::imshow("tracks", cluster_tracks_img);
      
      //int gate = 15;
      //int min_cluster_size = 30;

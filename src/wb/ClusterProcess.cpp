@@ -61,7 +61,18 @@ void ClusterProcess::overlay_clusters(cv::Mat &src, cv::Mat &dst)
           std::vector<wb::Point>::iterator it_p = points.begin();                    
           for (; it_p != points.end(); it_p++) {
                dst.at<cv::Vec3b>(it_p->position().y, it_p->position().x) = cv::Vec3b(20,255,57);               
-          }                                                 
+          }        
+
+          cv::Point centroid_point = (*it)->centroid();
+          cv::Rect rect = (*it)->rectangle();
+               
+          std::ostringstream convert;
+          convert << (*it)->id();               
+          const std::string& text = convert.str();
+          
+          cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
+          cv::rectangle(dst, rect, cv::Scalar(255,255,255), 1, 8, 0);
+          cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
      }
 }
 
@@ -110,17 +121,13 @@ void ClusterProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      std::list<wb::Cluster*>::iterator it = clusters_.begin();
      for (; it != clusters_.end(); it++) {
           if ((*it)->is_visible()) {
-               cv::Point centroid_point = (*it)->centroid();
                cv::Point est_centroid = (*it)->estimated_centroid();
                cv::Rect rect = (*it)->rectangle();
                
                std::ostringstream convert;
                convert << (*it)->id();               
                const std::string& text = convert.str();
-               
-               cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-               cv::rectangle(dst, rect, cv::Scalar(255,255,255), 1, 8, 0);
-               cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
+                              
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
           }
      }
@@ -235,7 +242,7 @@ void ClusterProcess::process_frame(cv::Mat &src)
                     } 
                }
           }
-     } 
+     }     
      
      //////////////////////////////////////////////////////////////////////////
      // Clustering algorithm check. Determines if a point has been assigned
@@ -297,6 +304,13 @@ void ClusterProcess::process_frame(cv::Mat &src)
      }    
 
      //////////////////////////////////////////////////////////////////////////
+     // Generate image of current frame's cluster assignments
+     //////////////////////////////////////////////////////////////////////////
+     cv::Mat cluster_this_frame;
+     overlay_clusters(src, cluster_this_frame);
+     cv::imshow("This frame", cluster_this_frame);
+
+     //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on clusters from previous iteration
      //////////////////////////////////////////////////////////////////////////
      std::list<wb::Cluster*>::iterator it_prev = prev_clusters_.begin();
@@ -311,14 +325,16 @@ void ClusterProcess::process_frame(cv::Mat &src)
      //////////////////////////////////////////////////////////////////////////
      it = clusters_.begin();
      for(; it != clusters_.end(); it++) {
-          double min_dist = 500;
+          double min_dist = 50;
           wb::Cluster * champ_cluster = NULL;
           
           std::list<wb::Cluster*>::iterator it_prev = prev_clusters_.begin();
           for(; it_prev != prev_clusters_.end(); it_prev++) {
                cv::Point p1 = (*it)->centroid();
                cv::Point p2 = (*it_prev)->centroid();
-               double dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2); //sqrt doesn't change comparative distances
+               //cv::Point p1 = (*it)->estimated_centroid();
+               //cv::Point p2 = (*it_prev)->estimated_centroid();
+               double dist = sqrt( pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2) ); //sqrt doesn't change comparative distances
                if (dist < min_dist) {
                     min_dist = dist;
                     champ_cluster = *it_prev;

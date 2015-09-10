@@ -194,21 +194,24 @@ int main(int argc, char *argv[])
                cv::imshow("Detection", original);
                
                if (step_flag) {
-                    int key = cv::waitKey(0);               
+                    int key = cv::waitKey(0);    
                     if (key == 'q' || key == 1048689) { // 'q' key
                          cout << "Ending early." << endl;
                          break;
-                    }               
+                    } else if (key == 'p' || key == 1048688) {
+                         step_flag = 0;
+                    }     
                } else {
                     int key = cv::waitKey(1);               
                     if (key == 'q' || key == 1048689) {
                          cout << "Ending early." << endl;
                          break;
-                    }
+                    } else if (key == 'p' || key == 1048688) {
+                         step_flag = 1;
+                    } 
                }
 
-          }          
-          
+          }                    
           frame_number++;
      }
      
