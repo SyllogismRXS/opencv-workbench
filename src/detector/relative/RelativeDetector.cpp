@@ -19,8 +19,21 @@ RelativeDetector::RelativeDetector()
      grad_thresh_value_ = 255;
 
      cluster_process_.set_threshold(0);
-     cluster_process_.set_gate(50); // 15, 100
+     cluster_process_.set_gate(25); // 15, 50, 100
      cluster_process_.set_min_cluster_size(30);     
+
+     int erosionElem = cv::MORPH_ELLIPSE;
+     int erosionSize = 2;
+     int dilationElem = cv::MORPH_ELLIPSE; // MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE
+     int dilationSize = 1;          
+
+     erosionConfig_ = cv::getStructuringElement( erosionElem,
+                                                 cv::Size(2*erosionSize+1, 2*erosionSize+1),
+                                                 cv::Point(erosionSize, erosionSize) );
+     
+     dilationConfig_ = cv::getStructuringElement( dilationElem,
+                                                  cv::Size(2*dilationSize+1, 2*dilationSize+1),
+                                                  cv::Point(dilationSize, dilationSize) );
 }
 
 RelativeDetector::~RelativeDetector()
@@ -65,6 +78,21 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat thresh_amp;
      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
      cv::imshow("thresh amp", thresh_amp);
+     
+     cv::Mat erode;
+     cv::erode(thresh_amp, erode, erosionConfig_);
+     cv::imshow("erode", erode);
+     
+     cv::Mat dilate;
+     cv::dilate(erode, dilate, dilationConfig_);
+     cv::imshow("dilate", dilate);
+     
+     // Blob
+     cv::Mat blob_img;
+     blob_process_.process_frame(dilate, blob_img);
+     cv::normalize(blob_img, blob_img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+     cv::applyColorMap(blob_img, blob_img, cv::COLORMAP_JET);
+     cv::imshow("blobs", blob_img);
      
      //cv::Mat grad;     
      //wb::gradient_simple(median, grad);
