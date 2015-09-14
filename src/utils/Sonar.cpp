@@ -6,6 +6,8 @@
 #include "Sonar.h"
 //#include <syllo_common/Utils.h>
 
+#define PI 3.14159265359
+
 #if ENABLE_SONAR == 1
 #include <bvt_sdk.h>
 #endif
@@ -17,7 +19,7 @@ Sonar::Sonar()
      : initialized_(false), fn_(""), ip_addr_(""), logging_(false), 
        mode_(Sonar::net), data_mode_(Sonar::image), save_directory_("./"), 
        color_map_(""), min_range_(0), max_range_(40)
-{
+{     
 }
 
 Sonar::~Sonar()
@@ -161,6 +163,10 @@ Sonar::Status_t Sonar::init()
           cout << "--------------------------------" << endl;
           cout << "Using head: " << cur_head_ << endl;
      }
+
+     // Set the stop and start ranges;
+     stop_range_ = BVTHead_GetStopRange(heads_[cur_head_]);
+     start_range_ = BVTHead_GetStartRange(heads_[cur_head_]);
                         
      // Check the ping count
      num_pings_ = -1;
@@ -270,7 +276,7 @@ Sonar::Status_t Sonar::getNextSonarImage(cv::Mat &image)
      if (mode_ == Sonar::net) {
           status = getSonarImage(image, -1);
      } else if (cur_ping_ < num_pings_) {
-          status = getSonarImage(image, cur_ping_++);
+          status = getSonarImage(image, cur_ping_++);          
      } else {
           status = Sonar::Failure;
      }
@@ -301,57 +307,144 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
                printf("BVTHead_PutPing: ret=%d\n", ret);
                return Sonar::Failure;
           }
-     }     
+     }
+
+     if (data_mode_ == Sonar::image) {
 
 // Grayscale
 #if 0
-
-     //BVTMagImage img ;
-     BVTPing_GetImageXY ( ping , &img_ ) ;
-     height_ = BVTMagImage_GetHeight ( img_ ) ;
-     width_ = BVTMagImage_GetWidth ( img_ ) ;
+          //BVTMagImage img ;
+          BVTPing_GetImageXY ( ping , &img_ ) ;
+          height_ = BVTMagImage_GetHeight ( img_ ) ;
+          width_ = BVTMagImage_GetWidth ( img_ ) ;
      
-     IplImage * gray_img = cvCreateImageHeader ( cvSize ( width_ , height_ ) , IPL_DEPTH_16U , 1 ) ;
-     cvSetImageData ( gray_img , BVTMagImage_GetBits ( img_ ) , width_*2 ) ;
+          IplImage * gray_img = cvCreateImageHeader ( cvSize ( width_ , height_ ) , IPL_DEPTH_16U , 1 ) ;
+          cvSetImageData ( gray_img , BVTMagImage_GetBits ( img_ ) , width_*2 ) ;
      
-     //image = cv::cvarrToMat(gray_img);
-     //cv::Mat temp_img(gray_img);
-     //image = temp_img;
-     image = gray_img;
+          //image = cv::cvarrToMat(gray_img);
+          //cv::Mat temp_img(gray_img);
+          //image = temp_img;
+          image = gray_img;
      
-     cvReleaseImageHeader(&gray_img);     
-     BVTMagImage_Destroy ( img_ );
+          cvReleaseImageHeader(&gray_img);     
+          BVTMagImage_Destroy ( img_ );
      
 // Color
 #else
      
-     ret = BVTPing_GetImage(ping, &img_);
-     if (ret != 0) {
-          printf("BVTPing_GetImage: ret=%d\n", ret);
-          return Sonar::Failure;
-     }     
+          ret = BVTPing_GetImage(ping, &img_);
+          if (ret != 0) {
+               printf("BVTPing_GetImage: ret=%d\n", ret);
+               return Sonar::Failure;
+          }     
      
-     // Perform the colormapping
-     ret = BVTColorMapper_MapImage(mapper_, img_, &cimg_);
-     if (ret != 0) {
-          printf("BVTColorMapper_MapImage: ret=%d\n", ret);
-          return Sonar::Failure;
-     }
+          // Perform the colormapping
+          ret = BVTColorMapper_MapImage(mapper_, img_, &cimg_);
+          if (ret != 0) {
+               printf("BVTColorMapper_MapImage: ret=%d\n", ret);
+               return Sonar::Failure;
+          }
         
-     height_ = BVTColorImage_GetHeight(cimg_);
-     width_ = BVTColorImage_GetWidth(cimg_);
+          height_ = BVTColorImage_GetHeight(cimg_);
+          width_ = BVTColorImage_GetWidth(cimg_);
      
-     IplImage* sonarImg;
-     sonarImg = cvCreateImageHeader(cvSize(width_,height_), IPL_DEPTH_8U, 4);
+          IplImage* sonarImg;
+          sonarImg = cvCreateImageHeader(cvSize(width_,height_), IPL_DEPTH_8U, 4);
         
-     // And set it's data
-     cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
+          // And set it's data
+          cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
         
-     image = cv::cvarrToMat(sonarImg);    
-     cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
+          image = cv::cvarrToMat(sonarImg);    
+          cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
      
-     cvReleaseImageHeader(&sonarImg);
-     
+          cvReleaseImageHeader(&sonarImg);
+
+     } else {
+          // Generate image from range data
+          BVTRangeData rangeData;
+          ret=BVTPing_GetRangeData(ping, &rangeData);
+          if(ret!=0) {
+               printf("BVTPing_GetRangeData:ret=%d\n",ret);
+               return Sonar::Failure;
+          }
+
+          int range_count = BVTRangeData_GetCount(rangeData);
+          
+          height_ = 600;
+          width_ = 600;
+          float rotate = PI/2;
+          image = cv::Mat::zeros(height_, width_, CV_8UC1);
+          cv::Point origin(width_/2,0);          
+
+          double min_intensity = 1e9;
+          double max_intensity = -1e9;
+          
+          for (int i = 0; i < range_count; i++) {
+               double range = BVTRangeData_GetRangeValue(rangeData,i);               
+               if (range < 1000) {
+                    double intensity = BVTRangeData_GetIntensityValue(rangeData, i);
+          
+                    if (intensity > max_intensity) {
+                         max_intensity = intensity;
+                    } else if (intensity < min_intensity) {
+                         min_intensity = intensity;
+                    }
+                    
+                    double theta = BVTRangeData_GetBearingValue(rangeData,i) * PI / 180.0;
+                    
+                    double x = range * cos(theta+rotate);
+                    double y = range * sin(theta+rotate);
+                    cv::Point p(origin.x + x, origin.y + y);
+                    
+                    x =  x / stop_range_ * width_;
+                    y =  y / stop_range_ * height_;
+                    
+                    cv::Point p2(origin.x + x, origin.y + y);
+                    
+                    //cout << "-------------" << endl;
+                    //cout << "Intensity: " << intensity << endl;
+                    //cout << "Theta: " << theta << endl;
+                    //cout << "Range: " << range << endl;
+                    //cout << "Point before: " << endl;
+                    //cout << "\t(" << p.x << "," << p.y << ")" << endl;
+                    //cout << "Point transform: " << endl;
+                    //cout << "\t(" << p2.x << "," << p2.y << ")" << endl;
+                    //cv::circle(img, p, 4, cv::Scalar(0,0,255), -1, 8, 0);
+                    //cv::circle(img, p2, 4, cv::Scalar(255,0,0), -1, 8, 0);
+                    //cv::line(img, p, p2, cv::Scalar(255,255,255), 1, 8, 0);
+                    
+                    image.at<uchar>(p2) = intensity;
+               }               
+          }
+          
+          // Normalize range elements that are greater than zero.
+          // Norm from 1 to 255;
+          int nRows = image.rows;
+          int nCols = image.cols;
+          
+          int i,j;
+          uchar* p;                         
+          for( i = 0; i < nRows; ++i) {
+               p = image.ptr<uchar>(i);
+               for ( j = 0; j < nCols; ++j) {
+                    if (p[j] > 0) {
+                         p[j] = round((p[j] - min_intensity) / (max_intensity - min_intensity) * 255.0);
+                         //printf("p[j]: %d\n", p[j]);
+                    }
+               }
+          }
+          
+          //////////////////////////////////////////////
+          // Rotate the sonar image to pointing "up"
+          //////////////////////////////////////////////
+          cv::Point center = cv::Point( image.cols/2, image.rows/2 );
+          double angle = 180.0;
+          double rot_scale = 1.0;
+          
+          cv::Mat rot_mat(2,3,CV_8UC1);
+          rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
+          cv::warpAffine(image, image, rot_mat, image.size());
+     } 
 
 #endif
 

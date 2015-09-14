@@ -120,14 +120,24 @@ int main(int argc, char*argv[])
           //double max_angle_ = 0.392699082;
           //double y_max = sin(max_angle_)*x_max*2;
           
+          double min_intensity = 1e9;
+          double max_intensity = -1e9;
+          
           for (int i = 0; i < numberOfRanges; i++) {
                //cout << "------------------------" << endl;
                //cout << "Bearing: " << BVTRangeData_GetBearingValue(rangeData,i) << endl;
                //cout << "Range: " << BVTRangeData_GetRangeValue(rangeData,i) << endl;
                //cout << "Intensity: " << BVTRangeData_GetIntensityValue(rangeData,i) << endl;               
-               double range = BVTRangeData_GetRangeValue(rangeData,i);
+               double range = BVTRangeData_GetRangeValue(rangeData,i);               
                if (range < 1000) {
                     double intensity = BVTRangeData_GetIntensityValue(rangeData, i);
+
+                    if (intensity > max_intensity) {
+                         max_intensity = intensity;
+                    } else if (intensity < min_intensity) {
+                         min_intensity = intensity;
+                    }
+                    
                     double theta = BVTRangeData_GetBearingValue(rangeData,i) * 3.14159265359 / 180.0;
                     
                     double x = range * cos(theta+rotate);
@@ -155,7 +165,27 @@ int main(int argc, char*argv[])
                     img.at<uchar>(p2) = intensity;
                }               
           }
-          cv::normalize(img, img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+          
+          {
+               // Normalize range elements that are greater than zero.
+               // Norm from 1 to 255;
+               int nRows = img.rows;
+               int nCols = img.cols;
+
+               int i,j;
+               uchar* p;                         
+               for( i = 0; i < nRows; ++i) {
+                    p = img.ptr<uchar>(i);
+                    for ( j = 0; j < nCols; ++j) {
+                         if (p[j] > 0) {
+                              p[j] = round((p[j] - min_intensity) / (max_intensity - min_intensity) * 255.0);
+                              //printf("p[j]: %d\n", p[j]);
+                         }
+                    }
+               }
+          }
+          
+          //cv::normalize(img, img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
           // Rotate the sonar image to pointing "up"
           cv::Point center = cv::Point( img.cols/2, img.rows/2 );

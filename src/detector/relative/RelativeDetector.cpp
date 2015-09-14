@@ -48,94 +48,99 @@ void RelativeDetector::print()
 
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {         
-     cv::Mat original_w_tracks, original_copy;          
-     original_w_tracks = original;
-     original_copy = original;
-     
-     //cv::Mat bad_gray;
-     ////cv::applyColorMap(original, bad_gray, CV_BGR2GRAY);
-     //cv::cvtColor(original, bad_gray, CV_BGR2GRAY);
-     //cv::imshow("bad", bad_gray);
-     
-     cv::Mat gray;
-     Jet2Gray_matlab(original,gray);
-     cv::imshow("gray",gray); 
-
-     //cv::Mat ndt_img;
-     //ndt_.set_frame(gray, ndt_img);
-     //cv::imshow("ndt", ndt_img);
-     
-     // Compute median
-     cv::Mat median;
-     cv::medianBlur(gray, median,5);
-     cv::imshow("median", median);          
-     
-     //// Compute estimated gradient
-     //cv::Mat grad;     
-     //wb::gradient_sobel(median, grad);
-     //cv::imshow("gradient", grad);
-
-     cv::Mat thresh_amp;
-     wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
-     cv::imshow("thresh amp", thresh_amp);
-     
-     cv::Mat erode;
-     cv::erode(thresh_amp, erode, erosionConfig_);
-     cv::imshow("erode", erode);
-     
-     cv::Mat dilate;
-     cv::dilate(erode, dilate, dilationConfig_);
-     cv::imshow("dilate", dilate);
-     
-     // Blob
-     cv::Mat blob_img;
-     blob_process_.process_frame(dilate, blob_img);
-     cv::normalize(blob_img, blob_img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-     cv::applyColorMap(blob_img, blob_img, cv::COLORMAP_JET);
-     cv::imshow("blobs", blob_img);
-     
-     //cv::Mat grad;     
-     //wb::gradient_simple(median, grad);
-     //cv::imshow("gradient", grad);
-     //
-     //// Threshold
-     //cv::Mat thresh;
-     //wb::adaptive_threshold(grad, thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
-     ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.003, 0.005, 10, 5);
-     ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.002, 0.003, 10, 5);
-     //cv::imshow("thresh",thresh);    
-
-     //cv::Mat thresh_plus_grad = thresh_amp + thresh;
-     //cv::imshow("thrush_plus_grad", thresh_plus_grad);
-     
-     cluster_process_.process_frame(thresh_amp);
-
-     cv::Mat cluster_img;
-     cluster_process_.overlay_clusters(gray, cluster_img);
-     cv::imshow("clusters", cluster_img);
-     
-     // cv::Mat cluster_tracks_img;
-     // cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);
-     // cv::imshow("tracks", cluster_tracks_img);
-     
-     //int gate = 15;
-     //int min_cluster_size = 30;
-     //std::list<wb::Cluster*> clusters;
-     //wb::cluster_points(thresh_amp, clusters, 0, gate, min_cluster_size);  
-     //
-     //cv::Mat cluster_img;
-     //wb::draw_clusters(original_copy, cluster_img, clusters);
-     //cv::imshow("clusters", cluster_img);
-     
-     //////////////////////////////////////////////////////////////
-     /// Tracking     
-     tracks_.clear(); // clear out the tracks from previous loop
-     
-     ///////////////////////////////////////////////////
-     // Display images
-     ///////////////////////////////////////////////////
-     if (!hide_windows_) {          
-     }
+      cv::Mat original_w_tracks, original_copy;          
+      original_w_tracks = original;
+      original_copy = original;
+      
+      //cv::Mat bad_gray;
+      ////cv::applyColorMap(original, bad_gray, CV_BGR2GRAY);
+      //cv::cvtColor(original, bad_gray, CV_BGR2GRAY);
+      //cv::imshow("bad", bad_gray);
+      
+      cv::Mat gray;
+      if (original.channels() != 1) {           
+           Jet2Gray_matlab(original,gray);
+           cv::imshow("gray",gray); 
+      } else {
+           gray = original.clone();
+      }
+      cv::imshow("Gray", gray);
+      
+      /// //cv::Mat ndt_img;
+      /// //ndt_.set_frame(gray, ndt_img);
+      /// //cv::imshow("ndt", ndt_img);
+      /// 
+      /// // Compute median
+      /// cv::Mat median;
+      /// cv::medianBlur(gray, median,5);
+      /// cv::imshow("median", median);          
+      /// 
+      /// //// Compute estimated gradient
+      /// //cv::Mat grad;     
+      /// //wb::gradient_sobel(median, grad);
+      /// //cv::imshow("gradient", grad);
+      /// 
+      /// cv::Mat thresh_amp;
+      /// wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
+      /// cv::imshow("thresh amp", thresh_amp);
+      /// 
+      /// cv::Mat erode;
+      /// cv::erode(thresh_amp, erode, erosionConfig_);
+      /// cv::imshow("erode", erode);
+      /// 
+      /// cv::Mat dilate;
+      /// cv::dilate(erode, dilate, dilationConfig_);
+      /// cv::imshow("dilate", dilate);
+      /// 
+      /// // Blob
+      /// cv::Mat blob_img;
+      /// blob_process_.process_frame(dilate, blob_img);
+      /// cv::normalize(blob_img, blob_img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+      /// cv::applyColorMap(blob_img, blob_img, cv::COLORMAP_JET);
+      /// cv::imshow("blobs", blob_img);
+      /// 
+      /// //cv::Mat grad;     
+      /// //wb::gradient_simple(median, grad);
+      /// //cv::imshow("gradient", grad);
+      /// //
+      /// //// Threshold
+      /// //cv::Mat thresh;
+      /// //wb::adaptive_threshold(grad, thresh, grad_thresh_value_, 0.001, 0.002, 10, 5);
+      /// ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.003, 0.005, 10, 5);
+      /// ////wb::adaptive_threshold(median, thresh, thresh_value_, 0.002, 0.003, 10, 5);
+      /// //cv::imshow("thresh",thresh);    
+      /// 
+      /// //cv::Mat thresh_plus_grad = thresh_amp + thresh;
+      /// //cv::imshow("thrush_plus_grad", thresh_plus_grad);
+      /// 
+      /// cluster_process_.process_frame(thresh_amp);
+      /// 
+      /// cv::Mat cluster_img;
+      /// cluster_process_.overlay_clusters(gray, cluster_img);
+      /// cv::imshow("clusters", cluster_img);
+      /// 
+      /// // cv::Mat cluster_tracks_img;
+      /// // cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);
+      /// // cv::imshow("tracks", cluster_tracks_img);
+      /// 
+      /// //int gate = 15;
+      /// //int min_cluster_size = 30;
+      /// //std::list<wb::Cluster*> clusters;
+      /// //wb::cluster_points(thresh_amp, clusters, 0, gate, min_cluster_size);  
+      /// //
+      /// //cv::Mat cluster_img;
+      /// //wb::draw_clusters(original_copy, cluster_img, clusters);
+      /// //cv::imshow("clusters", cluster_img);
+      
+      //////////////////////////////////////////////////////////////
+      /// Tracking     
+      tracks_.clear(); // clear out the tracks from previous loop
+      
+      ///////////////////////////////////////////////////
+      // Display images
+      ///////////////////////////////////////////////////
+      if (!hide_windows_) {          
+      }
      
      return 0;
 }

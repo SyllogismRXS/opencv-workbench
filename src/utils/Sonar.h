@@ -69,6 +69,9 @@ protected:
      SonarMode_t mode_;
      DataMode_t data_mode_;
      
+     float stop_range_;
+     float start_range_;
+     
      std::string cur_log_file_;
      std::string save_directory_;
 

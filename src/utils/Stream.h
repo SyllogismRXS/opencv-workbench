@@ -44,6 +44,11 @@ namespace syllo
           MOTION_JPG
      }Codec_t;
 
+     typedef enum{
+          image = 0,
+          range
+     }SonarDataMode_t;
+
      class Stream {
      protected:
 	  cv::VideoCapture *vcap_;
@@ -97,6 +102,19 @@ namespace syllo
                     //return CV_FOURCC('I', 'Y', 'U', 'V');
                     return CV_FOURCC('M','J','P','G');
                }
+          }
+
+          Status set_sonar_data_mode(SonarDataMode_t mode)
+          {
+               if (mode == image) {
+                    sonar.set_data_mode(Sonar::image);
+               } else if (mode == range) {
+                    sonar.set_data_mode(Sonar::range);
+               } else {
+                    cout << "Invalid Sonar Data Mode" << endl;
+                    return Failure;
+               }
+               return Success;
           }
 
           Status open(int num)
