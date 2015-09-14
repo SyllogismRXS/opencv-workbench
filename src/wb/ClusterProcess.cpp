@@ -46,7 +46,6 @@ void ClusterProcess::cluster_maintenance()
      }    
 }
 
-
 void ClusterProcess::overlay_clusters(cv::Mat &src, cv::Mat &dst)
 {
      //dst = src.clone();
