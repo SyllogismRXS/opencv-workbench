@@ -32,13 +32,24 @@ int main() {
      //                       1, 0, 0, 
      //0, 2, 0 };
      
-
-     int rows = 3;
-     int cols = 3;
-     int r[3*3] =  {  250, 400, 350, 
-                      400, 600, 350, 
-                      200, 400, 250
+#define ROWS 3
+#define COLS 3
+     int r[ROWS*COLS] =  {  250, 400, 350, 
+                            400, 600, 350, 
+                            200, 400, 250
      };
+
+//#define ROWS 4
+//#define COLS 4
+//     int r[ROWS*COLS] =  {  250, 400, 350, 600, 
+//                            400, 600, 350, 600,
+//                            200, 400, 250, 600,
+//                            200, 500, 300, 600
+//     };
+
+     //std::vector<Point
+     
+     
      
      //int rows = 4;
      //int cols = 4;
@@ -55,17 +66,17 @@ int main() {
      //};
 
      
-     int** m = array_to_matrix(r,rows,cols);
+     int** m = array_to_matrix(r,ROWS,COLS);
      
      // initialize the gungarian_problem using the cost matrix
-     int matrix_size = hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST) ;
+     int matrix_size = hungarian_init(&p, m, ROWS, COLS, HUNGARIAN_MODE_MINIMIZE_COST) ;
 
      fprintf(stderr, "assignment matrix now has a size %d rows and %d columns.\n\n",  matrix_size, matrix_size);
 
      // some output
      fprintf(stderr, "cost-matrix:");
      hungarian_print_costmatrix(&p);
-
+     
      // solve the assignement problem
      hungarian_solve(&p);
 

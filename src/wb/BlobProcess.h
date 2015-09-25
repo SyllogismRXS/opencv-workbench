@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 13:42:36 syllogismrxs>
+/// Time-stamp: <2015-09-25 15:47:59 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -63,6 +63,7 @@ protected:
                               uchar label, int i, int j);
 
      std::map<int,wb::Blob> blobs_;
+     std::map<int,wb::Blob> prev_blobs_;
 
 private:
      int count_;

@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <opencv_workbench/wb/Point.h>
+#include <opencv_workbench/track/hungarian.h>
 
 #include "BlobProcess.h"
 
@@ -79,6 +80,27 @@ void BlobProcess::labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable,
      }		    
 }
 
+int** array_to_matrix(int* m, int rows, int cols) {
+     int i,j;
+     int** r;
+     r = (int**)calloc(rows,sizeof(int*));
+     for(i=0;i<rows;i++)
+     {
+          r[i] = (int*)calloc(cols,sizeof(int));
+          for(j=0;j<cols;j++)
+               r[i][j] = m[i*cols+j];
+     }
+     return r;
+}
+
+void delete_matrix(int **array, int rows, int cols)
+{
+     for (int r = 0; r < rows; r++) {
+          free (array[r]);
+     }
+     free (array);
+}
+
 int BlobProcess::process_frame(cv::Mat &input)
 {
      blobs_.clear();
@@ -149,6 +171,104 @@ int BlobProcess::process_frame(cv::Mat &input)
           }
      }    
 
+     //////////////////////////////////////////////////////////////////////////
+     // Use the Hungarian Method to match new blob measurements with previous
+     // blob tracks
+     //////////////////////////////////////////////////////////////////////////
+
+     // Create cost matrix using the euclidean distance between previous and 
+     // current blob centroids
+     int blob_count = blobs_.size();
+     int prev_blob_count = prev_blobs_.size();
+
+     // Determine max of blob_count and prev_blob_count
+     int rows = -1, cols = -1;
+          
+     int r_start = 0, r_end = 0;
+     int c_start = 0, c_end = 0;
+     
+     if (blob_count == prev_blob_count) {
+          rows = cols = blob_count;          
+     } else if (blob_count > prev_blob_count) {
+          rows = cols = blob_count;
+          
+          r_start = 0;
+          r_end = rows;
+          c_start = prev_blob_count;
+          c_end = blob_count;          
+     } else {
+          rows = cols = prev_blob_count;
+          
+          r_start = blob_count;
+          r_end = prev_blob_count;
+          c_start = 0;
+          c_end = cols;
+     }
+
+     int * cost = new int[rows*cols];
+          
+     // New blob measurements are along the Y-axis (left hand side)
+     // Old Blob tracks are along x-axis (top-side)
+     it = blobs_.begin();
+     int r = 0;
+     int max_cost = -1e3;
+     for(; it != blobs_.end(); it++) {          
+          std::map<int,wb::Blob>::iterator it_prev = prev_blobs_.begin();
+          int c = 0;
+          for (; it_prev != prev_blobs_.end(); it_prev++) {
+               cv::Point p1 = it->second.centroid();
+               cv::Point p2 = it_prev->second.centroid();
+               int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+               
+               cost[r*cols + c] = dist;
+
+               if (dist > max_cost) {
+                    max_cost = dist;
+               }
+               
+               c++;
+          }
+          r++;
+     }
+
+     // If necessary, pad cost matrix with appropriate number of dummy rows or
+     // columns          
+     for (int r = r_start; r < r_end; r++) {
+          for (int c = c_start; c < c_end; c++) {
+               cost[r*cols + c] = max_cost;
+          }
+     }
+          
+     int** m = array_to_matrix(cost,rows, cols);
+     delete[] cost;
+     
+     hungarian_problem_t p;
+     int matrix_size = hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
+     hungarian_solve(&p);
+
+     // Get assignment matrix;
+     int * assignment = new int[rows*cols];
+     hungarian_get_assignment(&p, assignment);
+     
+     // Use the assignment to update the old tracks with new blob measurement
+     r = 0;
+     for(; it != blobs_.end(); it++) {          
+          std::map<int,wb::Blob>::iterator it_prev = prev_blobs_.begin();
+          int c = 0;
+          for (; it_prev != prev_blobs_.end(); it_prev++) {
+               if (assignment[r*cols + c] == 1) {
+                    // Found an assignment
+               }
+               
+               c++;
+          }
+          r++;
+     }
+     
+     hungarian_free(&p);
+     free(m);               
+     delete[] assignment;
+     
      //std::map<int,syllo::Blob>::iterator it;
      //for(it=blobs_.begin();it!=blobs_.end();it++)
      //{
@@ -156,6 +276,8 @@ int BlobProcess::process_frame(cv::Mat &input)
      //}
 
      //output = reduced;
+     prev_blobs_ = blobs_;
+     
      return blobs_.size();
 }
 

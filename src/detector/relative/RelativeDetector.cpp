@@ -125,11 +125,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       //cv::Mat thresh_plus_grad = thresh_amp + thresh;
       //cv::imshow("thrush_plus_grad", thresh_plus_grad);
       
-      cluster_process_.process_frame(thresh_amp);
-      
-      cv::Mat cluster_img;
-      cluster_process_.overlay_clusters(gray, cluster_img);
-      cv::imshow("clusters", cluster_img);
+      /// cluster_process_.process_frame(thresh_amp);
+      /// 
+      /// cv::Mat cluster_img;
+      /// cluster_process_.overlay_clusters(gray, cluster_img);
+      /// cv::imshow("clusters", cluster_img);
       
       // cv::Mat cluster_tracks_img;
       // cluster_process_.overlay_tracks(cluster_img, cluster_tracks_img);

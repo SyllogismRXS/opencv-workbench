@@ -68,6 +68,8 @@ void hungarian_print_costmatrix(hungarian_problem_t* p);
 /** Print cost matrix and assignment matrix. **/
 void hungarian_print_status(hungarian_problem_t* p);
 
+void hungarian_get_assignment(hungarian_problem_t *p, int *assignment);
+
 #ifdef __cplusplus
 }
 #endif
