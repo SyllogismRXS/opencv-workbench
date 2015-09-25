@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-09 17:10:33 syllogismrxs>
+/// Time-stamp: <2015-09-25 12:34:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -45,40 +45,22 @@
 #include <opencv2/video/tracking.hpp>
 //#include <opencv_workbench/track/EKF.h>
 
+#include <opencv_workbench/wb/Entity.h>
+
 //#include <Eigen/Dense>
 
 namespace wb {
 
-     class Cluster {
+     class Cluster : public Entity {
      public:
           //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-          Cluster();
-          
-          void add_point(wb::Point &p) { points_.push_back(p); }
-          void remove_point(wb::Point &p);
+          Cluster();                    
 
           void init();
           
-          void set_id(int id) { id_ = id; }
-          int id() { return id_; }
-          
-          int size() { return points_.size(); }
-
-          std::vector<wb::Point> & points() { return points_; }
-
-          void compute_metrics();
-          cv::Point centroid();
-          cv::Rect rectangle();          
-           
           cv::Point estimated_centroid() { return est_centroid_; }
 
-          void inc_age();
-          void dec_age();
-
-          int age() { return age_; }
-          void set_age(int age) { age_ = age; }
-          
           void set_matched(bool matched) { matched_ = matched; }
           bool matched() { return matched_; }
           
@@ -86,10 +68,7 @@ namespace wb {
           float distance() { return distance_; }
 
           void set_match(Cluster * match) { match_ = match; }
-          Cluster * match() { return match_; }
-          
-          bool is_visible();
-          bool is_dead();
+          Cluster * match() { return match_; }                   
 
           void predict_tracker();
           void correct_tracker();
@@ -99,13 +78,6 @@ namespace wb {
           
      protected:
      private:
-          int id_;
-          std::vector<wb::Point> points_;
-          cv::Point centroid_;
-          cv::Point est_centroid_;
-          cv::Rect rectangle_;
-          int age_;
-
           float distance_;
           bool matched_;
           Cluster * match_;  

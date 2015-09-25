@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <opencv_workbench/wb/Point.h>
+
 #include "BlobProcess.h"
 
 using std::cout;
@@ -7,7 +9,7 @@ using std::endl;
 
 BlobProcess::BlobProcess()
 {
-     
+     min_blob_size_ = 30;
 }
 
 uchar BlobProcess::valueAt(cv::Mat &img, int row, int col)
@@ -77,7 +79,7 @@ void BlobProcess::labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable,
      }		    
 }
 
-int BlobProcess::process_frame(cv::Mat &input, cv::Mat &output)
+int BlobProcess::process_frame(cv::Mat &input)
 {
      blobs_.clear();
      
@@ -118,17 +120,34 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &output)
           for( int j = 0; j < img.cols; ++j ) {
                if (img.at<uchar>(i,j) != 0) {
                     int id = labelTable[img.at<uchar>(i,j)];
-                    img.at<uchar>(i,j) = id;
+                    //img.at<uchar>(i,j) = id;
 
                     // If the ID is new, add it to the blob map
                     if (blobs_.count(id) == 0) {
                          wb::Blob blob(id);
                          blobs_[id] = blob;
                     }
-                    blobs_[id].inc_size();
+                    wb::Point p;
+                    p.set_position(cv::Point(j,i));
+                    blobs_[id].add_point(p);
                }
           }
-     }
+     }     
+
+     //////////////////////////////////////////////////////////////////////////
+     // Remove small blobs
+     //////////////////////////////////////////////////////////////////////////
+     std::map<int,wb::Blob>::iterator it = blobs_.begin();
+     while(it != blobs_.end()) {
+          if (it->second.size() < min_blob_size_) {
+               //delete it;
+               //it = blobs_.erase(it);
+               blobs_.erase(it++);
+          } else {
+               it->second.compute_metrics();
+               it++;
+          }
+     }    
 
      //std::map<int,syllo::Blob>::iterator it;
      //for(it=blobs_.begin();it!=blobs_.end();it++)
@@ -136,7 +155,34 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &output)
      //     printf("id: %d \t size:%d\n",it->first,it->second.getSize());
      //}
 
-     output = img;
+     //output = reduced;
      return blobs_.size();
 }
 
+void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
+{
+     cv::Mat color;
+     cv::cvtColor(src, color, CV_GRAY2BGR);     
+     dst = color;
+     
+     std::map<int,wb::Blob>::iterator it = blobs_.begin();
+     for(; it != blobs_.end(); it++) {
+          // Draw all blob points in the image
+          std::vector<wb::Point> points = it->second.points();
+          std::vector<wb::Point>::iterator it_points = points.begin();
+          for(; it_points != points.end(); it_points++) {                    
+               dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = cv::Vec3b(20,255,57);
+          }
+
+          cv::Point centroid_point = it->second.centroid();
+          cv::Rect rect = it->second.rectangle();
+               
+          std::ostringstream convert;
+          convert << it->second.id();               
+          const std::string& text = convert.str();
+          
+          cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
+          cv::rectangle(dst, rect, cv::Scalar(255,255,255), 1, 8, 0);
+          cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
+     }
+}

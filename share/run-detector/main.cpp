@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
      
      syllo::Stream stream;
      syllo::Status status = stream.open(video_filename);
-     //stream.set_sonar_data_mode(syllo::image);
-     stream.set_sonar_data_mode(syllo::range);
+     stream.set_sonar_data_mode(syllo::image);
+     //stream.set_sonar_data_mode(syllo::range);
 
      if (status != syllo::Success) {
           cout << "Failed to open: " << video_filename << endl;

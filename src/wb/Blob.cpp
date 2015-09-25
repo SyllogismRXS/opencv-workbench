@@ -7,12 +7,14 @@ using std::endl;
 
 namespace wb {
 
-Blob::Blob() : id_(-1)
+Blob::Blob()
 {
+     set_id(-1);
 }
 
-Blob::Blob(int id) : id_(id)
+Blob::Blob(int id)
 {     
+     set_id(id);
 }
 
 }

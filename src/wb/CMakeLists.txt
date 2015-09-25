@@ -11,6 +11,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   NDT.cpp
   BlobProcess.cpp
   Blob.cpp
+  Entity.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 

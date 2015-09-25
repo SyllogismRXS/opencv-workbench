@@ -4,7 +4,7 @@
 /// @file Point.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-03 16:56:59 syllogismrxs>
+/// Time-stamp: <2015-09-25 13:05:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -51,6 +51,7 @@ namespace wb {
      class Point {
      public:
           Point();   
+          Point(int x, int y);
           
           void set_position(cv::Point point) { point_ = point; }
           cv::Point position() { return point_; }
@@ -68,6 +69,9 @@ namespace wb {
 
           bool assigned() { return assigned_; }
           void set_assigned(bool assigned) { assigned_ = assigned; }
+
+          int x() { return point_.x; }
+          int y() { return point_.y; }
 
      protected:
      private:          

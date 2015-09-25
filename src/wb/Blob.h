@@ -4,7 +4,7 @@
 /// @file Blob.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-10 19:24:49 syllogismrxs>
+/// Time-stamp: <2015-09-25 12:43:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -38,23 +38,16 @@
 /// The Blob class ...
 /// 
 /// ---------------------------------------------------------------------------
+#include <opencv_workbench/wb/Entity.h>
 
 namespace wb {
 
-     class Blob {
+     class Blob : public Entity{
      public:
           Blob(); 
           Blob(int id);
 
-          void set_id(int id) { id_ = id; }
-          int id() { return id_; }
-
-          void inc_size() { size_++; }
-          int size() { return size_; }
-          
      protected:
-          int id_;
-          int size_;
      private:
      };
 

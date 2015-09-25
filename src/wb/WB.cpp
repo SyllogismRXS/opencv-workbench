@@ -171,7 +171,7 @@ namespace wb {
           }
 
            
-#if 1
+#if 0
           bool wait = false;
           // Do any points in a cluster, belong in another cluster?
           it = clusters.begin();

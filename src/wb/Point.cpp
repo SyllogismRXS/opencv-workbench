@@ -12,6 +12,11 @@ namespace wb {
           assigned_ = false;
      }
 
+     Point::Point(int x, int y)
+     {
+          point_ = cv::Point(x,y);
+     }
+
      float Point::distance(Point &other)
      {
           return sqrt( pow(this->point_.x-other.point_.x,2) + 

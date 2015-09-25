@@ -1,13 +1,13 @@
-#ifndef BLOBPROCESS_H_
-#define BLOBPROCESS_H_
+#ifndef ENTITY_H_
+#define ENTITY_H_
 /// ---------------------------------------------------------------------------
-/// @file BlobProcess.h
+/// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 13:42:36 syllogismrxs>
+/// Time-stamp: <2015-09-25 12:43:14 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 10 Sep 2015
+/// Created: 25 Sep 2015
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,38 +35,55 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The BlobProcess class ...
+/// The Entity class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <map>
+#include <vector>
 
-#include <cv.h>
-#include <highgui.h>
-#include <opencv2/contrib/contrib.hpp>
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/highgui/highgui.hpp"
 
-#include "Blob.h"
+#include <opencv_workbench/wb/Point.h>
 
-class BlobProcess {
-public:
-     BlobProcess();
-     
-     int process_frame(cv::Mat &input);
-     void overlay_blobs(cv::Mat &src, cv::Mat &dst);
-     
-protected:
-     
-     uchar valueAt(cv::Mat &img, int row, int col);
-     uchar findMin(uchar NE, uchar N, uchar NW, uchar W);
-     void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
-                              uchar label, int i, int j);
+namespace wb {
 
-     std::map<int,wb::Blob> blobs_;
+     class Entity {
+     public:
+          Entity();
 
-private:
-     int count_;
-     int min_blob_size_;
-};
+          void set_id(int id) { id_ = id; }
+          int id() { return id_; }
+          
+          void compute_metrics();
+
+          cv::Point centroid();
+          cv::Rect rectangle();
+
+          // Point related
+          std::vector<wb::Point> & points() { return points_; }
+          int size() { return points_.size(); }
+          void add_point(wb::Point &p) { points_.push_back(p); }
+          void remove_point(wb::Point &p);
+               
+          // Age related functions
+          void inc_age();
+          void dec_age();
+          int age() { return age_; }
+          void set_age(int age) { age_ = age; }          
+          bool is_visible();
+          bool is_dead();
+          
+     protected:
+          int id_;          
+          std::vector<wb::Point> points_;
+          cv::Point centroid_;
+          cv::Point est_centroid_;
+          cv::Rect rectangle_;
+          int age_;
+     private:
+     };
+
+}
 
 #endif
