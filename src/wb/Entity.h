@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 17:00:22 syllogismrxs>
+/// Time-stamp: <2015-09-26 16:37:32 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -61,6 +61,7 @@ namespace wb {
           cv::Rect rectangle();
 
           void set_centroid(cv::Point p) { centroid_ = p; }
+          void set_rectangle(cv::Rect rect) { rectangle_ = rect; }
 
           // Point related
           std::vector<wb::Point> & points() { return points_; }

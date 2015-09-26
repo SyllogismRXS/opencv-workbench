@@ -11,6 +11,12 @@ using std::endl;
 BlobProcess::BlobProcess()
 {
      min_blob_size_ = 30;
+     next_id_ = 0;
+}
+
+int BlobProcess::next_available_id()
+{
+     return next_id_++;
 }
 
 uchar BlobProcess::valueAt(cv::Mat &img, int row, int col)
@@ -138,6 +144,7 @@ int BlobProcess::process_frame(cv::Mat &input)
      }
           
      // Second pass to fix connected components that have different labels
+     std::map<int,wb::Blob> blobs_temp;
      for( int i = 0; i < img.rows; ++i) {
           for( int j = 0; j < img.cols; ++j ) {
                if (img.at<uchar>(i,j) != 0) {
@@ -145,29 +152,27 @@ int BlobProcess::process_frame(cv::Mat &input)
                     //img.at<uchar>(i,j) = id;
 
                     // If the ID is new, add it to the blob map
-                    if (blobs_.count(id) == 0) {
+                    if (blobs_temp.count(id) == 0) {
                          wb::Blob blob(id);
-                         blobs_[id] = blob;
+                         blobs_temp[id] = blob;
                     }
                     wb::Point p;
                     p.set_position(cv::Point(j,i));
-                    blobs_[id].add_point(p);
+                    blobs_temp[id].add_point(p);
                }
           }
      }     
 
      //////////////////////////////////////////////////////////////////////////
-     // Remove small blobs
+     // Remove small blobs / convert map to vector
      //////////////////////////////////////////////////////////////////////////
-     std::map<int,wb::Blob>::iterator it = blobs_.begin();
-     while(it != blobs_.end()) {
-          if (it->second.size() < min_blob_size_) {
-               //delete it;
-               //it = blobs_.erase(it);
-               blobs_.erase(it++);
-          } else {
-               it->second.compute_metrics();
-               it++;
+     std::map<int,wb::Blob>::iterator it_temp = blobs_temp.begin();
+     std::vector<wb::Blob> new_blobs;
+     for(; it_temp != blobs_temp.end(); it_temp++) {
+          // Only copy over blobs that are of a minimum size
+          if (it_temp->second.size() >= min_blob_size_) {
+               it_temp->second.compute_metrics();
+               new_blobs.push_back(it_temp->second);
           }
      }    
 
@@ -178,7 +183,7 @@ int BlobProcess::process_frame(cv::Mat &input)
 
      // Create cost matrix using the euclidean distance between previous and 
      // current blob centroids
-     int blob_count = blobs_.size();
+     int blob_count = new_blobs.size();
      int prev_blob_count = prev_blobs_.size();
 
      // Determine max of blob_count and prev_blob_count
@@ -186,17 +191,20 @@ int BlobProcess::process_frame(cv::Mat &input)
           
      int r_start = 0, r_end = 0;
      int c_start = 0, c_end = 0;
-     
+
      if (blob_count == prev_blob_count) {
+          // Equal number of tracks and measurements
           rows = cols = blob_count;          
      } else if (blob_count > prev_blob_count) {
+          // More measurements than tracks
           rows = cols = blob_count;
           
           r_start = 0;
           r_end = rows;
           c_start = prev_blob_count;
-          c_end = blob_count;          
+          c_end = blob_count;
      } else {
+          // More tracks than measurements
           rows = cols = prev_blob_count;
           
           r_start = blob_count;
@@ -209,15 +217,15 @@ int BlobProcess::process_frame(cv::Mat &input)
           
      // New blob measurements are along the Y-axis (left hand side)
      // Old Blob tracks are along x-axis (top-side)
-     it = blobs_.begin();
+     std::vector<wb::Blob>::iterator it = new_blobs.begin();
      int r = 0;
      int max_cost = -1e3;
-     for(; it != blobs_.end(); it++) {          
-          std::map<int,wb::Blob>::iterator it_prev = prev_blobs_.begin();
+     for(; it != new_blobs.end(); it++) {          
+          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
           int c = 0;
           for (; it_prev != prev_blobs_.end(); it_prev++) {
-               cv::Point p1 = it->second.centroid();
-               cv::Point p2 = it_prev->second.centroid();
+               cv::Point p1 = it->centroid();
+               cv::Point p2 = it_prev->centroid();
                int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
                
                cost[r*cols + c] = dist;
@@ -249,21 +257,42 @@ int BlobProcess::process_frame(cv::Mat &input)
      // Get assignment matrix;
      int * assignment = new int[rows*cols];
      hungarian_get_assignment(&p, assignment);
-     
-     // Use the assignment to update the old tracks with new blob measurement
+         
+     // Use the assignment to update the old tracks with new blob measurement     
      r = 0;
-     for(; it != blobs_.end(); it++) {          
-          std::map<int,wb::Blob>::iterator it_prev = prev_blobs_.begin();
-          int c = 0;
-          for (; it_prev != prev_blobs_.end(); it_prev++) {
+     it = new_blobs.begin();
+     for(int r = 0; r < rows; r++) {          
+          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
+          for (int c = 0; c < cols; c++) {
                if (assignment[r*cols + c] == 1) {
-                    // Found an assignment
+                    if (r < blob_count && c < prev_blob_count) {
+                         // Found an assignment. Update the new measurement
+                         // with the track ID and age of older track. Add
+                         // to blobs_ vector
+                         it->set_id(it_prev->id());
+                         it->set_age(it_prev->age()+1);
+                         blobs_.push_back(*it);
+                    } else if (r >= blob_count) {
+                         // Possible missed track (dec age and copy over)
+                         it_prev->dec_age();
+                         blobs_.push_back(*it_prev);
+                         // TODO
+                    } else if (c >= prev_blob_count) {
+                         // Possible new track
+                         it->set_id(next_available_id());
+                         it->set_age(1);
+                         blobs_.push_back(*it);
+                    }
+                    break; // There is only one assignment per row
                }
-               
-               c++;
+               if (c < prev_blob_count-1) {
+                    it_prev++;
+               }
           }
-          r++;
-     }
+          if (r < blob_count-1) {
+               it++;
+          }
+     }     
      
      hungarian_free(&p);
      free(m);               
@@ -287,20 +316,20 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
      cv::cvtColor(src, color, CV_GRAY2BGR);     
      dst = color;
      
-     std::map<int,wb::Blob>::iterator it = blobs_.begin();
+     std::vector<wb::Blob>::iterator it = blobs_.begin();
      for(; it != blobs_.end(); it++) {
           // Draw all blob points in the image
-          std::vector<wb::Point> points = it->second.points();
+          std::vector<wb::Point> points = it->points();
           std::vector<wb::Point>::iterator it_points = points.begin();
           for(; it_points != points.end(); it_points++) {                    
                dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = cv::Vec3b(20,255,57);
           }
 
-          cv::Point centroid_point = it->second.centroid();
-          cv::Rect rect = it->second.rectangle();
+          cv::Point centroid_point = it->centroid();
+          cv::Rect rect = it->rectangle();
                
           std::ostringstream convert;
-          convert << it->second.id();               
+          convert << it->id();               
           const std::string& text = convert.str();
           
           cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);

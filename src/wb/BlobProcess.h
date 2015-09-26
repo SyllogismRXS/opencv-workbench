@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 15:47:59 syllogismrxs>
+/// Time-stamp: <2015-09-26 17:19:32 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -39,6 +39,7 @@
 /// 
 /// ---------------------------------------------------------------------------
 #include <map>
+#include <vector>
 
 #include <cv.h>
 #include <highgui.h>
@@ -61,13 +62,17 @@ protected:
      uchar findMin(uchar NE, uchar N, uchar NW, uchar W);
      void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
                               uchar label, int i, int j);
+     int next_available_id();
 
-     std::map<int,wb::Blob> blobs_;
-     std::map<int,wb::Blob> prev_blobs_;
+     //std::map<int,wb::Blob> blobs_;
+     //std::map<int,wb::Blob> prev_blobs_;
+     std::vector<wb::Blob> blobs_;
+     std::vector<wb::Blob> prev_blobs_;
 
 private:
      int count_;
      int min_blob_size_;
+     int next_id_;
 };
 
 #endif
