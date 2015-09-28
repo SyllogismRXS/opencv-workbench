@@ -105,8 +105,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       blob_process_.process_frame(dilate);
 
       cv::Mat blob_img;
-      blob_process_.overlay_blobs(gray, blob_img);
+      blob_process_.overlay_blobs(gray, blob_img);      
+
+      //blob_process_.overlay_tracks(blob_img, blob_img);
       cv::imshow("Blobs", blob_img);
+      
       //cv::normalize(blob_img, blob_img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
       //cv::applyColorMap(blob_img, blob_img, cv::COLORMAP_JET);
       //cv::imshow("blobs", blob_img);

@@ -2,6 +2,7 @@
 
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/hungarian.h>
+#include <opencv_workbench/utils/OpenCV_Helpers.h>
 
 #include "BlobProcess.h"
 
@@ -10,7 +11,7 @@ using std::endl;
 
 BlobProcess::BlobProcess()
 {
-     min_blob_size_ = 30;
+     min_blob_size_ = 30;//15, 20, 30;
      next_id_ = 0;
 }
 
@@ -171,11 +172,27 @@ int BlobProcess::process_frame(cv::Mat &input)
      for(; it_temp != blobs_temp.end(); it_temp++) {
           // Only copy over blobs that are of a minimum size
           if (it_temp->second.size() >= min_blob_size_) {
-               it_temp->second.compute_metrics();
+               //it_temp->second.compute_metrics();
+               it_temp->second.init();
                new_blobs.push_back(it_temp->second);
           }
-     }    
+     }  
 
+     //////////////////////////////////////////////////////////////////////////
+     // Run Kalman filter update on blobs from previous iteration
+     //////////////////////////////////////////////////////////////////////////
+     std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
+     for(; it != prev_blobs_.end(); it++) {
+          if (it->is_visible()) {
+               it->predict_tracker();
+          }
+     }
+
+#if 1
+
+     // Before using the Hungarian method, remove blobs and measurements
+     // that align almost perfectly. TODO
+     
      //////////////////////////////////////////////////////////////////////////
      // Use the Hungarian Method to match new blob measurements with previous
      // blob tracks
@@ -217,7 +234,7 @@ int BlobProcess::process_frame(cv::Mat &input)
           
      // New blob measurements are along the Y-axis (left hand side)
      // Old Blob tracks are along x-axis (top-side)
-     std::vector<wb::Blob>::iterator it = new_blobs.begin();
+     it = new_blobs.begin();
      int r = 0;
      int max_cost = -1e3;
      for(; it != new_blobs.end(); it++) {          
@@ -251,7 +268,8 @@ int BlobProcess::process_frame(cv::Mat &input)
      delete[] cost;
      
      hungarian_problem_t p;
-     int matrix_size = hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
+     //int matrix_size = hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
+     hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
      hungarian_solve(&p);
 
      // Get assignment matrix;
@@ -271,16 +289,20 @@ int BlobProcess::process_frame(cv::Mat &input)
                          // to blobs_ vector
                          it->set_id(it_prev->id());
                          it->set_age(it_prev->age()+1);
+                         it->set_occluded(false);
+                         it->set_tracker(it_prev->tracker());
+                         it->correct_tracker();
                          blobs_.push_back(*it);
                     } else if (r >= blob_count) {
                          // Possible missed track (dec age and copy over)
                          it_prev->dec_age();
+                         it_prev->set_occluded(true);
                          blobs_.push_back(*it_prev);
-                         // TODO
                     } else if (c >= prev_blob_count) {
                          // Possible new track
                          it->set_id(next_available_id());
                          it->set_age(1);
+                         it->set_occluded(false);
                          blobs_.push_back(*it);
                     }
                     break; // There is only one assignment per row
@@ -297,6 +319,46 @@ int BlobProcess::process_frame(cv::Mat &input)
      hungarian_free(&p);
      free(m);               
      delete[] assignment;
+
+#else
+     // Greedy Global Nearest Neighbors
+     double gate = 40;
+     it = new_blobs.begin();
+     for(; it != new_blobs.end(); it++) {
+          double min_dist = 1e9;
+          std::vector<wb::Blob>::iterator it_match;          
+          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
+          for(; it_prev != prev_blobs_.end(); it_prev++) {
+               cv::Point p1 = it->centroid();
+               cv::Point p2 = it_prev->centroid();
+               double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+
+               if (dist < min_dist) {
+                    min_dist = dist;
+                    it_match = it_prev;
+               }
+          }
+
+          if (min_dist < gate) {
+               // Match               
+               it->set_id(it_match->id());
+               it->set_age(it_match->age()+1);
+               it->set_occluded(false);
+               it->set_tracker(it_match->tracker());
+               it->correct_tracker();
+               blobs_.push_back(*it);
+               
+               //prev_blobs_.erase(it_match); // remove old blob track from previous
+          } else {
+               // New target?
+               it->set_id(next_available_id());
+               it->set_age(1);
+               it->set_occluded(false);
+               blobs_.push_back(*it);
+          }
+     }
+
+#endif
      
      //std::map<int,syllo::Blob>::iterator it;
      //for(it=blobs_.begin();it!=blobs_.end();it++)
@@ -305,9 +367,29 @@ int BlobProcess::process_frame(cv::Mat &input)
      //}
 
      //output = reduced;
+
+     blob_maintenance();
+     
+     prev_blobs_.clear();
      prev_blobs_ = blobs_;
      
      return blobs_.size();
+}
+
+void BlobProcess::blob_maintenance()
+{
+     // cull dead.
+     std::vector<wb::Blob>::iterator it = blobs_.begin();
+     while(it != blobs_.end()) {
+          //(*it)->set_matched(false);
+          //it->set_match(NULL);          
+          
+          if (it->is_dead()) {
+               it = blobs_.erase(it);
+          } else {
+               it++;
+          }
+     }    
 }
 
 void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
@@ -315,14 +397,20 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
      cv::Mat color;
      cv::cvtColor(src, color, CV_GRAY2BGR);     
      dst = color;
-     
+          
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for(; it != blobs_.end(); it++) {
+
+          cv::Vec3b point_color = cv::Vec3b(20,255,57);
+          if (it->occluded()) {
+               point_color = cv::Vec3b(0,0,0);
+          }
+          
           // Draw all blob points in the image
           std::vector<wb::Point> points = it->points();
           std::vector<wb::Point>::iterator it_points = points.begin();
           for(; it_points != points.end(); it_points++) {                    
-               dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = cv::Vec3b(20,255,57);
+               dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = point_color;
           }
 
           cv::Point centroid_point = it->centroid();
@@ -335,5 +423,26 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
           cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
           cv::rectangle(dst, rect, cv::Scalar(255,255,255), 1, 8, 0);
           cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
+     }
+}
+
+void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
+{
+     cv::Mat color;
+     //cv::cvtColor(src, color, CV_GRAY2BGR);
+          
+     dst = src.clone();
+     std::vector<wb::Blob>::iterator it = blobs_.begin();
+     for (; it != blobs_.end(); it++) {
+          if (it->is_visible()) {
+               cv::Point est_centroid = it->estimated_centroid();
+               //cv::Rect rect = (*it)->rectangle();
+               
+               std::ostringstream convert;
+               convert << it->id();               
+               //const std::string& text = convert.str();
+                              
+               wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
+          }
      }
 }

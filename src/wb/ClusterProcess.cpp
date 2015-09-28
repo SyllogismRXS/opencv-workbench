@@ -121,11 +121,11 @@ void ClusterProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      for (; it != clusters_.end(); it++) {
           if ((*it)->is_visible()) {
                cv::Point est_centroid = (*it)->estimated_centroid();
-               cv::Rect rect = (*it)->rectangle();
+               //cv::Rect rect = (*it)->rectangle();
                
                std::ostringstream convert;
                convert << (*it)->id();               
-               const std::string& text = convert.str();
+               //const std::string& text = convert.str();
                               
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
           }

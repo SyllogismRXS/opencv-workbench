@@ -1,10 +1,10 @@
-#ifndef OPENCV_HELPERS_H_
-#define OPENCV_HELPERS_H_
+#ifndef _OPENCV_HELPERS_H_
+#define _OPENCV_HELPERS_H_
 /// ---------------------------------------------------------------------------
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-08 17:50:13 syllogismrxs>
+/// Time-stamp: <2015-09-28 15:33:30 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -50,22 +50,9 @@ using std::endl;
 
 namespace wb
 {    
-     void show(const cv::Mat &img)
-     {
-          cv::imshow("DEBUG!",img);
-          cv::waitKey(0);
-     }
-
-     void print_size(const cv::Mat &img)
-     {
-          //cout << img.rows << "x" < img.cols << endl;
-          printf("%dx%d\n",img.rows,img.cols);
-     }
-
-     void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d)
-     {
-          cv::line(img, cv::Point(center.x - d, center.y - d), cv::Point(center.x + d, center.y + d), color, 2, CV_AA, 0);
-          cv::line(img, cv::Point(center.x + d, center.y - d), cv::Point(center.x - d, center.y + d), color, 2, CV_AA, 0 );
-     }              
+     void show(const cv::Mat &img);
+     void print_size(const cv::Mat &img);
+     void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d);
 }
+
 #endif

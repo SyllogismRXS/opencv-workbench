@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-26 16:37:32 syllogismrxs>
+/// Time-stamp: <2015-09-28 16:57:19 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -42,7 +42,8 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/video/tracking.hpp>
 
 #include <opencv_workbench/wb/Point.h>
 
@@ -77,6 +78,20 @@ namespace wb {
           bool is_visible();
           bool is_dead();
           
+          bool occluded() { return occluded_; }
+          void set_occluded(bool occluded) { occluded_ = occluded; }
+
+          void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}          
+          cv::KalmanFilter tracker() { return KF_; }
+
+          void init();
+          void predict_tracker();
+          void correct_tracker();
+          cv::Point estimated_centroid() { return est_centroid_; }
+          
+          void set_matched(bool matched) { matched_ = matched; }
+          bool matched() { return matched_; }
+          
      protected:
           int id_;          
           std::vector<wb::Point> points_;
@@ -84,6 +99,17 @@ namespace wb {
           cv::Point est_centroid_;
           cv::Rect rectangle_;
           int age_;
+          bool occluded_;
+
+          cv::KalmanFilter KF_;
+          cv::Mat_<float> transition_matrix_;
+
+          float distance_;
+          bool matched_;
+
+          void set_distance(float distance) { distance_ = distance; }
+          float distance() { return distance_; }
+
      private:
      };
 

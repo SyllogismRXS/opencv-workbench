@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-26 17:19:32 syllogismrxs>
+/// Time-stamp: <2015-09-28 15:56:25 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -55,6 +55,7 @@ public:
      
      int process_frame(cv::Mat &input);
      void overlay_blobs(cv::Mat &src, cv::Mat &dst);
+     void overlay_tracks(cv::Mat &src, cv::Mat &dst);
      
 protected:
      
@@ -63,6 +64,8 @@ protected:
      void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
                               uchar label, int i, int j);
      int next_available_id();
+
+     void blob_maintenance();
 
      //std::map<int,wb::Blob> blobs_;
      //std::map<int,wb::Blob> prev_blobs_;

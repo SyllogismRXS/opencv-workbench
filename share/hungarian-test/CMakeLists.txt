@@ -19,4 +19,5 @@ target_link_libraries(${APP_NAME_2}
   ${OpenCV_LIBS}
   track
   wb
+  workbench-utils
   )

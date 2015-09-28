@@ -4,7 +4,7 @@
 /// @file Cluster.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 12:34:13 syllogismrxs>
+/// Time-stamp: <2015-09-28 16:59:19 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -42,12 +42,7 @@
 
 #include "Point.h"
 
-#include <opencv2/video/tracking.hpp>
-//#include <opencv_workbench/track/EKF.h>
-
 #include <opencv_workbench/wb/Entity.h>
-
-//#include <Eigen/Dense>
 
 namespace wb {
 
@@ -55,49 +50,17 @@ namespace wb {
      public:
           //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-          Cluster();                    
-
-          void init();
-          
-          cv::Point estimated_centroid() { return est_centroid_; }
-
-          void set_matched(bool matched) { matched_ = matched; }
-          bool matched() { return matched_; }
+          Cluster();                                        
           
           void set_distance(float distance) { distance_ = distance; }
           float distance() { return distance_; }
-
+          
           void set_match(Cluster * match) { match_ = match; }
-          Cluster * match() { return match_; }                   
-
-          void predict_tracker();
-          void correct_tracker();
-
-          void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}
-          cv::KalmanFilter tracker() { return KF_; }
+          Cluster * match() { return match_; }
           
      protected:
-     private:
-          float distance_;
-          bool matched_;
-          Cluster * match_;  
-          
-          //syllo::EKF ekf_;
-          //
-          //Eigen::MatrixXf A;
-	  //Eigen::MatrixXf B;
-	  //Eigen::VectorXf C;
-	  //Eigen::MatrixXf R;
-	  //Eigen::MatrixXf Q;
-	  //Eigen::VectorXf mu;
-	  //Eigen::MatrixXf covar;
-	  //Eigen::VectorXf u;
-          //
-	  //Eigen::VectorXf estVel;
-          cv::KalmanFilter KF_;
-
-          cv::Mat_<float> transition_matrix_;
-          
+     private:          
+          Cluster * match_;                   
      };
 }
 
