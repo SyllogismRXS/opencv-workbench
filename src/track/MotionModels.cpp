@@ -97,7 +97,7 @@ namespace syllo {
 	  
 	  //typedef controlled_runge_kutta< state_3d_type > controlled_stepper_type;
 	  //controlled_stepper_type controlled_stepper;
-	  
+          
 	  for( double t = t0 ; t < tend ; t += dt ) {
 	       xPos.push_back(x[0]);
 	       yPos.push_back(x[1]);

@@ -26,7 +26,7 @@ namespace syllo
           
      }
 
-     void Plot::plot(std::vector< std::vector<cv::Point> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point2f> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles)
@@ -34,23 +34,34 @@ namespace syllo
           //gp_ << "plot sin(x)" << endl;                   
           //return;
 
+          // used to plot "tracks"
+          /// gp_ << "reset\n";
+          /// //gp_ << "set terminal wxt\n";
+          /// gp_ << "set title '" << title << "'\n";
+          /// gp_ << "set size ratio -1\n";
+          /// //gp_ << "set view equal xy\n";
+          /// gp_ << "set grid xtics ytics\n";
+          /// gp_ << "set size 1,1\n";
+          /// gp_ << "set yrange [*:] reverse\n";          
+          /// gp_ << "plot";
+
           gp_ << "reset\n";
           //gp_ << "set terminal wxt\n";
           gp_ << "set title '" << title << "'\n";
-          gp_ << "set size ratio -1\n";
+          //gp_ << "set size ratio -1\n";
           //gp_ << "set view equal xy\n";
           gp_ << "set grid xtics ytics\n";
-          gp_ << "set size 1,1\n";
-          gp_ << "set yrange [*:] reverse\n";          
+          //gp_ << "set size 1,1\n";
+          //gp_ << "set yrange [*:] reverse\n";          
           gp_ << "plot";
 
           int count = 0;
-          std::vector< std::vector<cv::Point> >::iterator it;
+          std::vector< std::vector<cv::Point2f> >::iterator it;
           for (it = vectors.begin(); it != vectors.end(); it++) {
                std::vector<double> xLocs;
                std::vector<double> yLocs;
         	    
-               std::vector<cv::Point>::iterator it2;
+               std::vector<cv::Point2f>::iterator it2;
                for (it2 = it->begin() ; it2 != it->end() ; it2++) {
                     xLocs.push_back(it2->x);
                     yLocs.push_back(it2->y);

@@ -65,7 +65,7 @@ int AnnotationParser::CheckForFile(std::string video_file,
      
      dir_ = fs::path(video_file).parent_path();
      basename_ = fs::path(video_file).filename();
-
+         
      if ( !boost::filesystem::exists( xml_filename_ ) ) {
           if (ann_type_ == hand) {
                cout << "Hand ";
@@ -515,7 +515,7 @@ std::vector<std::string> AnnotationParser::track_names()
 
 void AnnotationParser::plot_tracks(std::vector<std::string> &names)
 {
-     std::map<std::string, std::vector<cv::Point> > points;     
+     std::map<std::string, std::vector<cv::Point2f> > points;     
      
      // Loop through all frames, plotting tracks that match the user's input
      std::map<int,Frame>::iterator it_frame = frames.begin();
@@ -538,12 +538,12 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names)
      }
 
      // Plot the tracks;
-     std::vector< std::vector<cv::Point> > vectors;
+     std::vector< std::vector<cv::Point2f> > vectors;
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;
 
-     std::map<std::string, std::vector<cv::Point> >::iterator it_points;
+     std::map<std::string, std::vector<cv::Point2f> >::iterator it_points;
      for (it_points = points.begin(); it_points != points.end(); it_points++) {
           vectors.push_back(it_points->second);
           labels.push_back(it_points->first);

@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2013-01-31 15:00:27 syllogismrxs>
+/// Time-stamp: <2015-10-02 20:27:31 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -48,9 +48,11 @@ namespace syllo {
 	  Eigen::MatrixXf B_; // Control matrix
 	  Eigen::MatrixXf H_; // Measurement matrix
 	  
-	  Eigen::MatrixXf R_; // Measurement variance
-	  Eigen::MatrixXf Q_; // Process variance
-	  
+          Eigen::MatrixXf V_; // Process var (wrt each state variable)
+          Eigen::MatrixXf Q_; // Process variance     ; V*V'
+          Eigen::MatrixXf W_; // Measurement var (wrt each state variable)
+	  Eigen::MatrixXf R_; // Measurement variance ; W*W'
+	  	  
 	  // Matrices / vectors for Kalman step
 	  Eigen::MatrixXf x_; // Estimated state
 	  Eigen::MatrixXf P_; // State variance matrix
@@ -60,12 +62,12 @@ namespace syllo {
      public:
 	  KalmanFilter();
 	  KalmanFilter(const Eigen::MatrixXf &F, const Eigen::MatrixXf &B, 
-		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &R, 
-		       const Eigen::MatrixXf &Q);
+		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &Q, 
+		       const Eigen::MatrixXf &R);
 	  
 	  int setModel(const Eigen::MatrixXf &F, const Eigen::MatrixXf &B, 
-		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &R, 
-		       const Eigen::MatrixXf &Q);
+		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &Q, 
+		       const Eigen::MatrixXf &R);
 
 	  int init(const Eigen::MatrixXf &x0, const Eigen::MatrixXf &P0);
 

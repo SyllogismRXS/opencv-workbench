@@ -159,6 +159,7 @@ int BlobProcess::process_frame(cv::Mat &input)
                     }
                     wb::Point p;
                     p.set_position(cv::Point(j,i));
+                    p.set_value(input.at<uchar>(i,j));
                     blobs_temp[id].add_point(p);
                }
           }

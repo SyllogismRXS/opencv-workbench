@@ -53,15 +53,18 @@ namespace wb {
           ////////////////////////////////////////////////////////
           // Compute Centroid and Bounding Box Rectangle
           ////////////////////////////////////////////////////////
-          int sum_x = 0, sum_y = 0;
+          int sum_x = 0, sum_y = 0, sum_value = 0;          
           int xmin = 999999999, ymin = 999999999, xmax = -999, ymax = -999;
           std::vector<Point>::iterator it = points_.begin();
           for (; it != points_.end(); it++) {               
                int x = it->position().x;
                int y = it->position().y;
+          
+               int value = it->value();
+               sum_value += value;
                
-               sum_x += x;
-               sum_y += y;
+               sum_x += x * value;
+               sum_y += y * value;
 
                if (x < xmin) {
                     xmin = x;
@@ -77,8 +80,10 @@ namespace wb {
                }
           }
           
-          double avg_x = (double)sum_x / points_.size();
-          double avg_y = (double)sum_y / points_.size();
+          //double avg_x = (double)sum_x / points_.size();
+          //double avg_y = (double)sum_y / points_.size();
+          double avg_x = (double)sum_x / (double)sum_value;
+          double avg_y = (double)sum_y / (double)sum_value;
 
           centroid_ = cv::Point(round(avg_x), round(avg_y));
           

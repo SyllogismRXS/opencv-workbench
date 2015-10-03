@@ -34,8 +34,11 @@ int main(int argc, char *argv[])
      AnnotationParser parser;
      int status = parser.CheckForFile(argv[1], AnnotationParser::track);
      if (status != 0) {
-          cout << "Error parsing tracks file." << endl;
-          return -1;
+          status = parser.CheckForFile(argv[1], AnnotationParser::hand);
+          if (status != 0) {
+               cout << "Error parsing tracks file." << endl;
+               return -1;
+          }
      }     
      
      //// Get list of all track IDs
@@ -55,14 +58,14 @@ int main(int argc, char *argv[])
      
      std::vector<std::string> to_plot;
      std::string name_str;
-     bool plot_all = false;
+     //bool plot_all = false;
      do {
           cout << "$ " ;          
           std::cin >> name_str;
           if (name_str != "e") {
                to_plot.push_back(name_str);
           } else if (name_str == "a") {
-               plot_all = true;
+               //plot_all = true;
                break;
           }
      } while (name_str != "e");

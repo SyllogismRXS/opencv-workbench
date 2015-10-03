@@ -28,7 +28,7 @@ namespace syllo
                                                    double tEnd);
 
           void wait();
-          
+                    
           void plot(std::vector< std::vector<state_5d_type> > &vectors, 
                           const std::string &title, 
                           std::vector<std::string> &labels,
@@ -42,7 +42,7 @@ namespace syllo
                    const std::string &title, 
                    std::vector<std::string> &labels);
           
-          void plot(std::vector< std::vector<cv::Point> > &vectors, 
+          void plot(std::vector< std::vector<cv::Point2f> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles);          
