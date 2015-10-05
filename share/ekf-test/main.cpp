@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
      // Setup Cart Model 
      Dynamics::state_5d_type input;
      input[0] = 5;
-     input[1] = 0;//3.14159265359/20;//0
+     input[1] = 3.14159265359/20;//0
           
      Dynamics dyn;
      dyn.set_time(t0, dt, tend);
@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
      ////////////////////////////////////////////////////////
      // Setup Kalman Filter
      // Kalman filter setup...
+
      syllo::KalmanFilter kf;
      Eigen::MatrixXf A;     // system matrix
      Eigen::MatrixXf B;     // input matrix
@@ -78,9 +79,9 @@ int main(int argc, char *argv[])
      covar.resize(4,4);
           
      double T = dt;     
-     A << 1, 0, T, 0,
-          0, 1, 0, T,
-          0, 0, 1, 0,
+     A << 1, T, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, T,
           0, 0, 0, 1;
      
      B << 0, 0,

@@ -37,10 +37,6 @@ namespace syllo {
 	  F_ = F;
 	  B_ = B;
 	  H_ = H;
-          //V_ = V;
-          //W_ = W;
-          //Q_ = V_ * V_.transpose();
-	  //R_ = W_ * W_.transpose();	  
           Q_ = Q;
           R_ = R;
 	  eye_ = Eigen::MatrixXf::Identity(F.rows(), F.cols());
@@ -58,8 +54,7 @@ namespace syllo {
 
      int KalmanFilter::predict(const Eigen::MatrixXf &u)
      {
-          //x_ = F_*x_ + B_*u;
-          x_ = F_*x_;
+          x_ = F_*x_ + B_*u;
           P_ = F_*P_*F_.transpose() + Q_;          
 	  return 0;
      }
@@ -77,7 +72,7 @@ namespace syllo {
 	  return x_;
      }
      
-     Eigen::MatrixXf KalmanFilter::variance()
+     Eigen::MatrixXf KalmanFilter::covariance()
      {
 	  return P_;
      }

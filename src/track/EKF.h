@@ -4,7 +4,7 @@
 /// @file EKF.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2013-06-06 12:45:39 syllogismrxs>
+/// Time-stamp: <2015-10-05 13:26:08 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -62,12 +62,12 @@ namespace syllo {
      public:
 	  EKF();
 	  EKF(const Eigen::MatrixXf &F, const Eigen::MatrixXf &B, 
-	      const Eigen::MatrixXf &H, const Eigen::MatrixXf &R, 
-	      const Eigen::MatrixXf &Q, double dt);
+	      const Eigen::MatrixXf &H, const Eigen::MatrixXf &Q, 
+	      const Eigen::MatrixXf &R, double dt);
 	  
 	  int setModel(const Eigen::MatrixXf &F, const Eigen::MatrixXf &B, 
-		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &R, 
-		       const Eigen::MatrixXf &Q, double dt);
+		       const Eigen::MatrixXf &H, const Eigen::MatrixXf &Q, 
+		       const Eigen::MatrixXf &R, double dt);
 	  
 	  int init(const Eigen::MatrixXf &x0, const Eigen::MatrixXf &P0);
 
@@ -75,7 +75,7 @@ namespace syllo {
 	  int update(const Eigen::MatrixXf &z);
 
 	  Eigen::MatrixXf state();
-	  Eigen::MatrixXf variance();
+	  Eigen::MatrixXf covariance();
      };
 }
 

@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-02 20:27:31 syllogismrxs>
+/// Time-stamp: <2015-10-05 13:28:50 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -48,10 +48,8 @@ namespace syllo {
 	  Eigen::MatrixXf B_; // Control matrix
 	  Eigen::MatrixXf H_; // Measurement matrix
 	  
-          Eigen::MatrixXf V_; // Process var (wrt each state variable)
           Eigen::MatrixXf Q_; // Process variance     ; V*V'
-          Eigen::MatrixXf W_; // Measurement var (wrt each state variable)
-	  Eigen::MatrixXf R_; // Measurement variance ; W*W'
+          Eigen::MatrixXf R_; // Measurement variance ; W*W'
 	  	  
 	  // Matrices / vectors for Kalman step
 	  Eigen::MatrixXf x_; // Estimated state
@@ -75,7 +73,7 @@ namespace syllo {
 	  int update(const Eigen::MatrixXf &z);
 
 	  Eigen::MatrixXf state();
-	  Eigen::MatrixXf variance();
+	  Eigen::MatrixXf covariance();
      };
 }
 

@@ -23,25 +23,25 @@ namespace syllo {
      EKF::EKF(const Eigen::MatrixXf &F, 
 	      const Eigen::MatrixXf &B, 
 	      const Eigen::MatrixXf &H, 
-	      const Eigen::MatrixXf &R, 
-	      const Eigen::MatrixXf &Q,
+	      const Eigen::MatrixXf &Q, 
+	      const Eigen::MatrixXf &R,
 	      double dt)
      {
-	  setModel(F, B, H, R, Q, dt);
+	  setModel(F, B, H, Q, R, dt);
      }
 
      int EKF::setModel(const Eigen::MatrixXf &F, 
 		       const Eigen::MatrixXf &B, 
 		       const Eigen::MatrixXf &H, 
-		       const Eigen::MatrixXf &R, 
-		       const Eigen::MatrixXf &Q,
+		       const Eigen::MatrixXf &Q, 
+		       const Eigen::MatrixXf &R,
 		       double dt)
      {
 	  F_ = F;
 	  B_ = B;
 	  H_ = H;
-	  R_ = R;
-	  Q_ = Q;
+          Q_ = Q;
+	  R_ = R;	  
 	  eye_ = Eigen::MatrixXf::Identity(F.rows(), F.cols());
 	  dt_ = dt;
 
@@ -103,7 +103,7 @@ namespace syllo {
 	  return x_;
      }
      
-     Eigen::MatrixXf EKF::variance()
+     Eigen::MatrixXf EKF::covariance()
      {
 	  return P_;
      }
