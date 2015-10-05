@@ -65,15 +65,8 @@ namespace syllo {
      }
      
      int KalmanFilter::update(const Eigen::MatrixXf &z)
-     {
-          cout << "P = " << P_ << endl;
-          cout << "H = " << H_ << endl;
-          cout << "R = " << R_ << endl;
-          
+     {                    
 	  K_ = P_*H_.transpose()*(H_*P_*H_.transpose() + R_).inverse();
-
-          cout << "K_: " << K_ << endl;
-          
 	  x_ = x_ + K_*(z - H_*x_);
           P_ = (eye_ - K_*H_)*P_;
 	  return 0;

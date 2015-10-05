@@ -11,8 +11,8 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//
-//#include <opencv_workbench/utils/Stream.h>
+#include <opencv2/video/tracking.hpp>
+
 #include <opencv_workbench/syllo/syllo.h>
 //
 #include <opencv_workbench/utils/AnnotationParser.h>
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
      double t0 = 0;
      double dt = 0.1;
-     double tend = 5;
+     double tend = 20;
      
      ///////////////////////////////////////////////////////
      // Setup Cart Model 
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
      Eigen::MatrixXf A;     // system matrix
      Eigen::MatrixXf B;     // input matrix
      Eigen::MatrixXf H;     // measurement matrix
-     Eigen::MatrixXf Q;     // 
-     Eigen::MatrixXf R;     // 
+     Eigen::MatrixXf Q;     // process noise matrix
+     Eigen::MatrixXf R;     // measurement noise matrix
      Eigen::MatrixXf x0;    // initial position
      Eigen::MatrixXf covar; // initial state covariance matrix 
      Eigen::MatrixXf u;     // input vector     
@@ -82,34 +82,49 @@ int main(int argc, char *argv[])
      H << 1, 0, 0, 0,
           0, 1, 0, 0;
      
-     Q << T/7, T/6, T/5, T/4,
-          T/6, T/5, T/4, T/3,
-          T/5, T/4, T/3, T/2,
-          T/4, T/3, T/2, T/1;
+     Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * 1e-4;
      
-     R << T, T,
-          T, T;
+     R << 10, 0,
+          0, 10;
      
      x0 << 0,
            0,
            2,
            0;
      
-     covar << 1000, 0, 0, 0,
-              1000, 0, 0, 0,
-              1000, 0, 0, 0,
-              1000, 0, 0, 0;
+     covar << 0.1, 0, 0, 0,
+              0, 0.1, 0, 0,
+              0, 0, 0.1, 0,
+              0, 0, 0, 0.1;
      
      kf.setModel(A,B,H,Q,R);
      kf.init(x0, covar);
 
+     // Setup OpenCV's kalman filter tracker
+     cv::KalmanFilter opencv_kf = cv::KalmanFilter(4, 2, 0);          
+     cv::Mat_<float> transition_matrix = cv::Mat_<float>(4,4);
+     transition_matrix  << 1,0,T,0,   
+                           0,1,0,T,  
+                           0,0,1,0,  
+                           0,0,0,1;
+     
+     opencv_kf.transitionMatrix = transition_matrix;
+
+     opencv_kf.statePre.at<float>(0) = 0;
+     opencv_kf.statePre.at<float>(1) = 0;
+     opencv_kf.statePre.at<float>(2) = 2;
+     opencv_kf.statePre.at<float>(3) = 0;
+     cv::setIdentity(opencv_kf.measurementMatrix);
+     cv::setIdentity(opencv_kf.processNoiseCov, cv::Scalar::all(1e-4));
+     cv::setIdentity(opencv_kf.measurementNoiseCov, cv::Scalar::all(10));
+     cv::setIdentity(opencv_kf.errorCovPost, cv::Scalar::all(.1));
+
      /////////////////////////////////////////////////////////
      // Process the measured points with the kalman filter
      std::vector<cv::Point2f> kf_points;
+     std::vector<cv::Point2f> opencv_kf_points;
      std::vector<cv::Point2f>::iterator it = measured.begin();
      for(; it != measured.end(); it++) {
-          cout << "---------------------------------" << endl;
-
           Eigen::MatrixXf u, z;
           u.resize(2,1);
           u << 1,0;
@@ -119,9 +134,23 @@ int main(int argc, char *argv[])
           
           kf.predict(u);
           kf.update(z);
+
+          //////////////////////////////////////////
+          // Opencv
+          cv::Mat prediction = opencv_kf.predict();
+          cv::Point predictPt(prediction.at<float>(0),prediction.at<float>(1));
+
+          // correct tracker update using the newly computed centroid.
+          cv::Mat_<float> measurement(2,1);
+          measurement(0) = it->x;
+          measurement(1) = it->y;
+          
+          cv::Mat estimated = opencv_kf.correct(measurement);
+          cv::Point2f est_centroid = cv::Point2f(estimated.at<float>(0),estimated.at<float>(1));
+          opencv_kf_points.push_back(est_centroid);
+          ////////////////////////////////////////////
                     
           Eigen::MatrixXf state = kf.state();          
-          cout << "(" << state(0,0) << ", " << state(1,0) << endl;
           kf_points.push_back(cv::Point2f(state(0,0),state(1,0)));
           
 #if 0
@@ -148,9 +177,16 @@ int main(int argc, char *argv[])
      vectors.push_back(kf_points);
      labels.push_back("KF");
      styles.push_back("linespoints");
+
+     vectors.push_back(opencv_kf_points);
+     labels.push_back("OPENCV KF");
+     styles.push_back("linespoints");
      
      syllo::Plot plot;
      plot.plot(vectors, title, labels, styles);
+     
+     syllo::Plot plot_err;
+     plot_err.plot(vectors, title, labels, styles);
           
      return 0;
 }
