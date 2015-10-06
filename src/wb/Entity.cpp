@@ -13,32 +13,91 @@ namespace wb {
 
      Entity::Entity() : age_(0), occluded_(false)
      {
-          KF_ = cv::KalmanFilter(4, 2, 0);          
-          transition_matrix_ = cv::Mat_<float>(4,4);
-          transition_matrix_  << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1;
-          KF_.transitionMatrix = transition_matrix_;     
+          //KF_ = cv::KalmanFilter(4, 2, 0);          
+          //transition_matrix_ = cv::Mat_<float>(4,4);
+          //transition_matrix_  << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1;
+          //KF_.transitionMatrix = transition_matrix_;     
+          
+          A.resize(4,4);
+          B.resize(4,2);
+          H.resize(2,4);
+          Q.resize(4,4);
+          R.resize(2,2);
+          x0.resize(4,1);
+          covar.resize(4,4);
+          
+          double T = 0.066666667;//; dt     
+          A << 1, 0, T, 0,
+               0, 1, 0, T,
+               0, 0, 1, 0,
+               0, 0, 0, 1;
+     
+          B << 0, 0,
+               1, 0,
+               0, 0,
+               0, 1;
+     
+          H << 1, 0, 0, 0,
+               0, 1, 0, 0;
+     
+          Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * 1e-3;
+     
+          R << 0.01,    0,
+                  0, 0.01;
+     
+          covar << 0.1, 0, 0, 0,
+               0, 0.1, 0, 0,
+               0, 0, 0.1, 0,
+               0, 0, 0, 0.1;
+     
+          z.resize(2,1);
+          u.resize(2,1);
+          
+          kf_.setModel(A,B,H,Q,R);          
      }
 
      void Entity::init()
      {
           compute_metrics();
           
-          KF_.statePre.at<float>(0) = centroid_.x;
-          KF_.statePre.at<float>(1) = centroid_.y;
-          KF_.statePre.at<float>(2) = 0;
-          KF_.statePre.at<float>(3) = 0;
-          cv::setIdentity(KF_.measurementMatrix);
-          cv::setIdentity(KF_.processNoiseCov, cv::Scalar::all(1e-4));
-          cv::setIdentity(KF_.measurementNoiseCov, cv::Scalar::all(10));
-          cv::setIdentity(KF_.errorCovPost, cv::Scalar::all(.1));
+          //KF_.statePre.at<float>(0) = centroid_.x;
+          //KF_.statePre.at<float>(1) = centroid_.y;
+          //KF_.statePre.at<float>(2) = 0;
+          //KF_.statePre.at<float>(3) = 0;
+          //cv::setIdentity(KF_.measurementMatrix);
+          //cv::setIdentity(KF_.processNoiseCov, cv::Scalar::all(1e-3));
+          ////cv::setIdentity(KF_.measurementNoiseCov, cv::Scalar::all(10));
+          //cv::setIdentity(KF_.measurementNoiseCov, cv::Scalar::all(.01));
+          //cv::setIdentity(KF_.errorCovPost, cv::Scalar::all(.1));
+
+          x0 << centroid_.x,
+                centroid_.y,
+                0,
+                0;
+
+          kf_.init(x0, covar);
      }
 
+     cv::Point Entity::estimated_centroid()
+     {          
+          // If the entity is visible, it has a valid track; thus, we can use
+          // the Kalman filter's estimate centroid. Otherwise, use the entity's
+          // current centroid
+          if (this->is_visible()) {
+               return est_centroid_;
+          } else {
+               return centroid_;
+          }          
+     }
      void Entity::predict_tracker()
      {
-          cv::Mat prediction = KF_.predict();
-          cv::Point predictPt(prediction.at<float>(0),prediction.at<float>(1));
-          
-          //ekf_.predict();
+          //cv::Mat prediction = KF_.predict();
+          //est_centroid_ = cv::Point(prediction.at<float>(0),prediction.at<float>(1));
+
+          u << 0,0;
+          kf_.predict(u);
+          state = kf_.state();          
+          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));
      }
 
      void Entity::correct_tracker()
@@ -48,8 +107,13 @@ namespace wb {
           measurement(0) = centroid_.x;
           measurement(1) = centroid_.y;
           
-          cv::Mat estimated = KF_.correct(measurement);
-          est_centroid_ = cv::Point(estimated.at<float>(0),estimated.at<float>(1));
+          //cv::Mat estimated = KF_.correct(measurement);
+
+          z << centroid_.x, centroid_.y;
+          kf_.update(z);
+          state = kf_.state();          
+          //est_centroid_ = cv::Point(estimated.at<float>(0),estimated.at<float>(1));
+          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));          
      }          
 
      void Entity::compute_metrics()
@@ -126,6 +190,15 @@ namespace wb {
      void Entity::inc_age()
      {
           age_++;
+          if (age_ > MAX_AGE) {
+               age_ = MAX_AGE;
+          }
+     }
+
+     void Entity::set_age(int age)
+     {
+          age_ = age;
+          
           if (age_ > MAX_AGE) {
                age_ = MAX_AGE;
           }

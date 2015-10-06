@@ -19,6 +19,7 @@
 #include <opencv_workbench/plot/Plot.h>
 #include <opencv_workbench/track/Dynamics.h>
 #include <opencv_workbench/track/KalmanFilter.h>
+#include <opencv_workbench/track/EKF.h>
 
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -79,9 +80,9 @@ int main(int argc, char *argv[])
      covar.resize(4,4);
           
      double T = dt;     
-     A << 1, T, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, T,
+     A << 1, 0, T, 0,
+          0, 1, 0, T,
+          0, 0, 1, 0,
           0, 0, 0, 1;
      
      B << 0, 0,
@@ -94,10 +95,13 @@ int main(int argc, char *argv[])
      
      Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * 1e-4;
      
-     R << 10, 0,
-          0, 10;
+     //R << 10, 0,
+     //     0, 10;
+     R << .001, 0,
+          0, .001;
      
-     x0 << 0,
+     //x = [x, y, x_dot, y_dot]
+     x0 << 0, 
            0,
            0,
            0;
@@ -126,8 +130,8 @@ int main(int argc, char *argv[])
      opencv_kf.statePre.at<float>(3) = 0;
      cv::setIdentity(opencv_kf.measurementMatrix);
      cv::setIdentity(opencv_kf.processNoiseCov, cv::Scalar::all(1e-4));
-     cv::setIdentity(opencv_kf.measurementNoiseCov, cv::Scalar::all(10));
-     cv::setIdentity(opencv_kf.errorCovPost, cv::Scalar::all(.1));
+     cv::setIdentity(opencv_kf.measurementNoiseCov, cv::Scalar::all(0.001));
+     cv::setIdentity(opencv_kf.errorCovPost, cv::Scalar::all(0.1));
 
      /////////////////////////////////////////////////////////
      // Process the measured points with the kalman filter

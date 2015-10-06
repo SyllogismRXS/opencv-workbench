@@ -252,10 +252,10 @@ int BlobProcess::process_frame(cv::Mat &input)
           std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
           int c = 0;
           for (; it_prev != prev_blobs_.end(); it_prev++) {
-               cv::Point p1 = it->centroid();
+               cv::Point p1 = it->estimated_centroid(); //it->centroid();
                int p1_size = it->size();
                
-               cv::Point p2 = it_prev->centroid();
+               cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
                int p2_size = it_prev->size();
                
                int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
@@ -315,16 +315,19 @@ int BlobProcess::process_frame(cv::Mat &input)
                if (assignment[r*cols + c] == 1) {
                     if (r < blob_count && c < prev_blob_count) {
 
-                         cv::Point p1 = it->centroid();
-                         cv::Point p2 = it_prev->centroid();                                        
+                         cv::Point p1 = it->estimated_centroid();//it->centroid();
+                         cv::Point p2 = it_prev->estimated_centroid(); //it->it_prev->centroid();                                        
                          double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
                                                   
-                         if (dist > 100) {
+                         if (dist > 100) { // needs to be based off of covariance matrix
                               // TOO MUCH OF A JUMP IN POSITION!
                               // Probably a missed track
                               it_prev->dec_age();
                               it_prev->set_occluded(true);
                               blobs_.push_back(*it_prev);
+
+                              // lower threshold in estimated position?
+                              
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
@@ -341,6 +344,9 @@ int BlobProcess::process_frame(cv::Mat &input)
                          it_prev->dec_age();
                          it_prev->set_occluded(true);
                          blobs_.push_back(*it_prev);
+                         
+                         // lower threshold in estimated position?
+
                     } else if (c >= prev_blob_count) {
                          // Possible new track
                          it->set_id(next_available_id());
@@ -409,8 +415,8 @@ int BlobProcess::process_frame(cv::Mat &input)
      //     printf("id: %d \t size:%d\n",it->first,it->second.getSize());
      //}
 
-     //output = reduced;
-
+     //output = reduced;     
+     
      blob_maintenance();
      
      prev_blobs_.clear();
@@ -424,8 +430,9 @@ void BlobProcess::blob_maintenance()
      // cull dead.
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      while(it != blobs_.end()) {
-          //(*it)->set_matched(false);
-          //it->set_match(NULL);          
+          //if (it->id() == 1) {
+          //     cout << "Blob ID 1 Age: " << it->age() << endl;
+          //}
           
           if (it->is_dead()) {
                it = blobs_.erase(it);
