@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <limits.h>
+
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/hungarian.h>
 #include <opencv_workbench/utils/OpenCV_Helpers.h>
@@ -170,14 +172,22 @@ int BlobProcess::process_frame(cv::Mat &input)
      //////////////////////////////////////////////////////////////////////////
      std::map<int,wb::Blob>::iterator it_temp = blobs_temp.begin();
      std::vector<wb::Blob> new_blobs;
+     int id = 0;
      for(; it_temp != blobs_temp.end(); it_temp++) {
           // Only copy over blobs that are of a minimum size
           if (it_temp->second.size() >= min_blob_size_) {
                //it_temp->second.compute_metrics();
+               it_temp->second.set_id(id++);
                it_temp->second.init();
                new_blobs.push_back(it_temp->second);
           }
      }  
+     
+     blobs_ = new_blobs;
+     cv::Mat temp = input.clone();
+     this->overlay_blobs(temp, temp);
+     cv::imshow("new blobs", temp);
+     blobs_.clear();
 
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
@@ -243,13 +253,28 @@ int BlobProcess::process_frame(cv::Mat &input)
           int c = 0;
           for (; it_prev != prev_blobs_.end(); it_prev++) {
                cv::Point p1 = it->centroid();
-               cv::Point p2 = it_prev->centroid();
-               int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+               int p1_size = it->size();
                
-               cost[r*cols + c] = dist;
+               cv::Point p2 = it_prev->centroid();
+               int p2_size = it_prev->size();
+               
+               int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+               int size_diff = pow(p1_size - p2_size,2);
+               
+               //if (dist < 0) { 
+               //     dist = INT_MAX;
+               //}
+               //printf("%d\n",dist);
+               //int curr_cost = 0.6 * dist + 0.4 * size_diff;
+               int curr_cost = dist;
+               if (curr_cost > 1000) {
+                    curr_cost = INT_MAX;
+               }
+               
+               cost[r*cols + c] = curr_cost;
 
-               if (dist > max_cost) {
-                    max_cost = dist;
+               if (curr_cost > max_cost) {
+                    max_cost = curr_cost;
                }
                
                c++;
@@ -271,6 +296,10 @@ int BlobProcess::process_frame(cv::Mat &input)
      hungarian_problem_t p;
      //int matrix_size = hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
      hungarian_init(&p, m, rows, cols, HUNGARIAN_MODE_MINIMIZE_COST);
+     
+     //fprintf(stderr, "cost-matrix:");
+     //hungarian_print_costmatrix(&p);
+     
      hungarian_solve(&p);
 
      // Get assignment matrix;
@@ -285,15 +314,28 @@ int BlobProcess::process_frame(cv::Mat &input)
           for (int c = 0; c < cols; c++) {
                if (assignment[r*cols + c] == 1) {
                     if (r < blob_count && c < prev_blob_count) {
-                         // Found an assignment. Update the new measurement
-                         // with the track ID and age of older track. Add
-                         // to blobs_ vector
-                         it->set_id(it_prev->id());
-                         it->set_age(it_prev->age()+1);
-                         it->set_occluded(false);
-                         it->set_tracker(it_prev->tracker());
-                         it->correct_tracker();
-                         blobs_.push_back(*it);
+
+                         cv::Point p1 = it->centroid();
+                         cv::Point p2 = it_prev->centroid();                                        
+                         double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+                                                  
+                         if (dist > 100) {
+                              // TOO MUCH OF A JUMP IN POSITION!
+                              // Probably a missed track
+                              it_prev->dec_age();
+                              it_prev->set_occluded(true);
+                              blobs_.push_back(*it_prev);
+                         } else {
+                              // Found an assignment. Update the new measurement
+                              // with the track ID and age of older track. Add
+                              // to blobs_ vector
+                              it->set_id(it_prev->id());
+                              it->set_age(it_prev->age()+1);
+                              it->set_occluded(false);
+                              it->set_tracker(it_prev->tracker());
+                              it->correct_tracker();
+                              blobs_.push_back(*it);
+                         }
                     } else if (r >= blob_count) {
                          // Possible missed track (dec age and copy over)
                          it_prev->dec_age();

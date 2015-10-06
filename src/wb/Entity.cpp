@@ -5,6 +5,10 @@
 using std::cout;
 using std::endl;
 
+#define MAX_AGE 10
+#define VISIBLE_AGE 5
+#define MIN_AGE -2
+
 namespace wb {
 
      Entity::Entity() : age_(0), occluded_(false)
@@ -103,7 +107,7 @@ namespace wb {
 
      bool Entity::is_visible()
      {
-          if (age_ > 5) {
+          if (age_ > VISIBLE_AGE) {
                return true;
           } else {
                return false;
@@ -112,7 +116,7 @@ namespace wb {
 
      bool Entity::is_dead()
      {
-          if (age_ < -2) {
+          if (age_ < MIN_AGE) {
                return true;
           } else {
                return false;
@@ -122,8 +126,8 @@ namespace wb {
      void Entity::inc_age()
      {
           age_++;
-          if (age_ > 10) {
-               age_ = 10;
+          if (age_ > MAX_AGE) {
+               age_ = MAX_AGE;
           }
      }
 
