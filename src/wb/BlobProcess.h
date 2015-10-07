@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-28 15:56:25 syllogismrxs>
+/// Time-stamp: <2015-10-07 10:27:07 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -54,14 +54,17 @@ public:
      BlobProcess();
      
      int process_frame(cv::Mat &input);
+     void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
+                            int min_blob_size);
+     
      void overlay_blobs(cv::Mat &src, cv::Mat &dst);
-     void overlay_tracks(cv::Mat &src, cv::Mat &dst);
+     void overlay_tracks(cv::Mat &src, cv::Mat &dst);     
      
 protected:
      
-     uchar valueAt(cv::Mat &img, int row, int col);
-     uchar findMin(uchar NE, uchar N, uchar NW, uchar W);
-     void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
+     static uchar valueAt(cv::Mat &img, int row, int col);
+     static uchar findMin(uchar NE, uchar N, uchar NW, uchar W);
+     static void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
                               uchar label, int i, int j);
      int next_available_id();
 

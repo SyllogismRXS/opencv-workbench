@@ -110,9 +110,11 @@ void delete_matrix(int **array, int rows, int cols)
      free (array);
 }
 
-int BlobProcess::process_frame(cv::Mat &input)
+void BlobProcess::find_blobs(cv::Mat &input, 
+                                    std::vector<wb::Blob> &blobs,
+                                    int min_blob_size)
 {
-     blobs_.clear();
+     blobs.clear();
      
      std::vector<uchar> labelTable;
      labelTable.push_back(0);
@@ -165,29 +167,38 @@ int BlobProcess::process_frame(cv::Mat &input)
                     blobs_temp[id].add_point(p);
                }
           }
-     }     
+     }   
 
      //////////////////////////////////////////////////////////////////////////
      // Remove small blobs / convert map to vector
      //////////////////////////////////////////////////////////////////////////
      std::map<int,wb::Blob>::iterator it_temp = blobs_temp.begin();
-     std::vector<wb::Blob> new_blobs;
      int id = 0;
      for(; it_temp != blobs_temp.end(); it_temp++) {
           // Only copy over blobs that are of a minimum size
-          if (it_temp->second.size() >= min_blob_size_) {
-               //it_temp->second.compute_metrics();
+          if (it_temp->second.size() >= min_blob_size) {
                it_temp->second.set_id(id++);
                it_temp->second.init();
-               new_blobs.push_back(it_temp->second);
+               blobs.push_back(it_temp->second);
           }
      }  
-     
-     blobs_ = new_blobs;
+
+#if 0
+     // Display newly detected blobs
+     blobs_ = blobs;
      cv::Mat temp = input.clone();
      this->overlay_blobs(temp, temp);
      cv::imshow("new blobs", temp);
      blobs_.clear();
+#endif
+}
+
+int BlobProcess::process_frame(cv::Mat &input)
+{
+     blobs_.clear();
+
+     std::vector<wb::Blob> new_blobs;     
+     this->find_blobs(input, new_blobs, min_blob_size_);          
 
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
@@ -253,13 +264,12 @@ int BlobProcess::process_frame(cv::Mat &input)
           int c = 0;
           for (; it_prev != prev_blobs_.end(); it_prev++) {
                cv::Point p1 = it->estimated_centroid(); //it->centroid();
-               int p1_size = it->size();
-               
                cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
-               int p2_size = it_prev->size();
-               
                int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
-               int size_diff = pow(p1_size - p2_size,2);
+               
+               //int p1_size = it->size(); 
+               //int p2_size = it_prev->size();
+               //int size_diff = pow(p1_size - p2_size,2);
                
                //if (dist < 0) { 
                //     dist = INT_MAX;
