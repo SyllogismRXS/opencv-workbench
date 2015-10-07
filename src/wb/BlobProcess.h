@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 10:27:07 syllogismrxs>
+/// Time-stamp: <2015-10-07 13:53:04 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -53,10 +53,12 @@ class BlobProcess {
 public:
      BlobProcess();
      
-     int process_frame(cv::Mat &input);
+     int process_frame(cv::Mat &input, cv::Mat &original, int thresh);
      void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
                             int min_blob_size);
      
+     void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
+                        std::vector<wb::Blob> & blobs);
      void overlay_blobs(cv::Mat &src, cv::Mat &dst);
      void overlay_tracks(cv::Mat &src, cv::Mat &dst);     
      

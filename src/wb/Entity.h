@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-06 15:27:40 syllogismrxs>
+/// Time-stamp: <2015-10-07 14:48:45 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -77,6 +77,7 @@ namespace wb {
           int age() { return age_; }
           void set_age(int age);
           bool is_visible();
+          bool is_tracked();
           bool is_dead();
           
           bool occluded() { return occluded_; }
@@ -103,6 +104,7 @@ namespace wb {
           cv::Rect rectangle_;
           int age_;
           bool occluded_;
+          bool is_tracked_;
 
           //cv::KalmanFilter KF_;
           cv::Mat_<float> transition_matrix_;

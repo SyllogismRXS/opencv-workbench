@@ -102,7 +102,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
       // Blob
       //cv::Mat blob_img;
-      blob_process_.process_frame(dilate);
+      blob_process_.process_frame(dilate, median, thresh_value_);
 
       cv::Mat blob_img;
       blob_process_.overlay_blobs(gray, blob_img);      

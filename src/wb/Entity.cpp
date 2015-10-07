@@ -7,11 +7,12 @@ using std::endl;
 
 #define MAX_AGE 10
 #define VISIBLE_AGE 5
+#define START_TRACK_AGE 5
 #define MIN_AGE -2
 
 namespace wb {
 
-     Entity::Entity() : age_(0), occluded_(false)
+     Entity::Entity() : age_(0), occluded_(false), is_tracked_(false)
      {
           //KF_ = cv::KalmanFilter(4, 2, 0);          
           //transition_matrix_ = cv::Mat_<float>(4,4);
@@ -80,10 +81,9 @@ namespace wb {
 
      cv::Point Entity::estimated_centroid()
      {          
-          // If the entity is visible, it has a valid track; thus, we can use
           // the Kalman filter's estimate centroid. Otherwise, use the entity's
-          // current centroid
-          if (this->is_visible()) {
+          // current centroid if it isn't tracked yet
+          if (this->is_tracked()) {
                return est_centroid_;
           } else {
                return centroid_;
@@ -174,6 +174,19 @@ namespace wb {
           if (age_ > VISIBLE_AGE) {
                return true;
           } else {
+               return false;
+          }
+     }
+
+     bool Entity::is_tracked()
+     {
+          if (is_tracked_) return true;
+
+          if (age_ > START_TRACK_AGE) {
+               is_tracked_ = true;
+               return true;
+          } else {
+               is_tracked_ = false;
                return false;
           }
      }

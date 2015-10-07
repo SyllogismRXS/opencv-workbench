@@ -181,19 +181,17 @@ void BlobProcess::find_blobs(cv::Mat &input,
                it_temp->second.init();
                blobs.push_back(it_temp->second);
           }
-     }  
+     }
 
-#if 0
-     // Display newly detected blobs
-     blobs_ = blobs;
-     cv::Mat temp = input.clone();
-     this->overlay_blobs(temp, temp);
-     cv::imshow("new blobs", temp);
-     blobs_.clear();
+#if 1
+     cv::Mat temp_img = input.clone();
+     this->overlay_blobs(temp_img, temp_img, blobs);
+     cv::imshow("Frame Blobs", temp_img);
 #endif
+
 }
 
-int BlobProcess::process_frame(cv::Mat &input)
+int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 {
      blobs_.clear();
 
@@ -205,7 +203,7 @@ int BlobProcess::process_frame(cv::Mat &input)
      //////////////////////////////////////////////////////////////////////////
      std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
      for(; it != prev_blobs_.end(); it++) {
-          if (it->is_visible()) {
+          if (it->is_tracked()) {
                it->predict_tracker();
           }
      }
@@ -331,13 +329,10 @@ int BlobProcess::process_frame(cv::Mat &input)
                                                   
                          if (dist > 100) { // needs to be based off of covariance matrix
                               // TOO MUCH OF A JUMP IN POSITION!
-                              // Probably a missed track
+                              // Probably a missed track                              
                               it_prev->dec_age();
                               it_prev->set_occluded(true);
-                              blobs_.push_back(*it_prev);
-
-                              // lower threshold in estimated position?
-                              
+                              blobs_.push_back(*it_prev);                              
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
@@ -350,12 +345,62 @@ int BlobProcess::process_frame(cv::Mat &input)
                               blobs_.push_back(*it);
                          }
                     } else if (r >= blob_count) {
-                         // Possible missed track (dec age and copy over)
+#if 0 // Improvement? Decreases threshold and checks for smaller blob
+                         if ((unsigned)c < prev_blobs_.size()) {
+                              // Possible missed track (dec age and copy over)                         
+                              wb::Blob b = prev_blobs_[c];
+                         
+                              cv::Rect rect;
+                              rect.x = b.estimated_centroid().x - 8;
+                              rect.y = b.estimated_centroid().y - 8;
+                              rect.width = 16;
+                              rect.height = 16;
+
+                              if (rect.x < 0) { rect.x = 0; }
+                              if (rect.y < 0) { rect.y = 0; }
+                              if (rect.x + rect.width >= input.cols) { rect.width = input.cols - rect.x; }
+                              if (rect.y + rect.height >= input.rows) { rect.height = input.rows - rect.y; }
+
+                              cv::Mat temp_img = input.clone();
+                              cv::circle(temp_img, b.estimated_centroid(), 10, 255, 1, 8, 0);
+                              cv::imshow("temp_img", temp_img);
+                              
+                              cv::Mat roi(original, rect);
+                              cv::threshold(roi, roi, thresh-10, 255, cv::THRESH_TOZERO);
+                         
+                              std::vector<wb::Blob> roi_blobs;
+                              find_blobs(roi, roi_blobs, min_blob_size_-5);
+                              //cv::waitKey(0);
+                         
+                              if (roi_blobs.size() > 0) {
+                                   //// Found an assignment. Update the new measurement
+                                   //// with the track ID and age of older track. Add
+                                   //// to blobs_ vector
+                                   //it->set_id(b.id());
+                                   //it->set_age(b.age()+1);
+                                   //it->set_occluded(false);
+                                   //it->set_tracker(b.tracker());
+                                   //it->correct_tracker();
+                                   //blobs_.push_back(*it);
+                                   b.inc_age();
+                                   b.set_occluded(false);
+                                   b.correct_tracker();
+                                   blobs_.push_back(b);
+                              } else {
+                                   it_prev->dec_age();
+                                   it_prev->set_occluded(true);
+                                   blobs_.push_back(*it_prev);                              
+                              }                                                      
+                         } else {
+                              it_prev->dec_age();
+                              it_prev->set_occluded(true);
+                              blobs_.push_back(*it_prev);                              
+                         }
+#else
                          it_prev->dec_age();
                          it_prev->set_occluded(true);
-                         blobs_.push_back(*it_prev);
-                         
-                         // lower threshold in estimated position?
+                         blobs_.push_back(*it_prev);                              
+#endif
 
                     } else if (c >= prev_blob_count) {
                          // Possible new track
@@ -452,14 +497,15 @@ void BlobProcess::blob_maintenance()
      }    
 }
 
-void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
+void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst, 
+                                std::vector<wb::Blob> & blobs)
 {
      cv::Mat color;
      cv::cvtColor(src, color, CV_GRAY2BGR);     
      dst = color;
           
-     std::vector<wb::Blob>::iterator it = blobs_.begin();
-     for(; it != blobs_.end(); it++) {
+     std::vector<wb::Blob>::iterator it = blobs.begin();
+     for(; it != blobs.end(); it++) {
 
           cv::Vec3b point_color = cv::Vec3b(20,255,57);
           if (it->occluded()) {
@@ -486,6 +532,11 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
      }
 }
 
+void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
+{
+     this->overlay_blobs(src, dst, blobs_);
+}
+
 void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
 {
      cv::Mat color;
@@ -494,7 +545,7 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      dst = src.clone();
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for (; it != blobs_.end(); it++) {
-          if (it->is_visible()) {
+          if (it->is_tracked()) {
                cv::Point est_centroid = it->estimated_centroid();
                //cv::Rect rect = (*it)->rectangle();
                
