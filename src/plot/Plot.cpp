@@ -31,6 +31,15 @@ namespace syllo
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles)
      {
+          plot(vectors, title, labels, styles, std::string(""));
+     }
+
+     void Plot::plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+                     const std::string &title, 
+                     std::vector<std::string> &labels,
+                     std::vector<std::string> &styles,
+                     std::string options)
+     {
           //gp_ << "plot sin(x)" << endl;                   
           //return;
 
@@ -46,13 +55,18 @@ namespace syllo
           /// gp_ << "plot";
 
           gp_ << "reset\n";
-          //gp_ << "set terminal wxt\n";
-          gp_ << "set title '" << title << "'\n";
+          gp_ << "set title '" << title << "'\n";          
+          gp_ << "set grid xtics ytics\n";   
+
+          if (options != "") {
+               gp_ << options;
+          }
+
           //gp_ << "set size ratio -1\n";
           //gp_ << "set view equal xy\n";
-          gp_ << "set grid xtics ytics\n";
           //gp_ << "set size 1,1\n";
           //gp_ << "set yrange [*:] reverse\n";          
+
           gp_ << "plot";
 
           int count = 0;

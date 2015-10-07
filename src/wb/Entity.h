@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 14:48:45 syllogismrxs>
+/// Time-stamp: <2015-10-07 16:00:53 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -52,10 +52,25 @@ namespace wb {
 
      class Entity {
      public:
+
+          typedef enum EntityType {
+               Unknown = 0,
+               Diver,
+               Ground,
+               Clutter,
+               Rock,
+               Barrel,
+               Mammal          
+          }EntityType_t;
+          
           Entity();
 
           void set_id(int id) { id_ = id; }
           int id() { return id_; }
+          
+          void set_type(EntityType_t type) { type_ = type; }
+          EntityType_t type() { return type_; }
+          std::string name();
           
           void compute_metrics();
 
@@ -97,7 +112,9 @@ namespace wb {
           bool matched() { return matched_; }
           
      protected:
-          int id_;          
+          int id_;    
+          std::string name_;
+          EntityType_t type_;
           std::vector<wb::Point> points_;
           cv::Point centroid_;
           cv::Point est_centroid_;

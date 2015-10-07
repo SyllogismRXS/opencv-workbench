@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-17 21:43:35 syllogismrxs>
+/// Time-stamp: <2015-10-07 16:03:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -51,6 +51,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <opencv_workbench/wb/Entity.h>
+
 class Detector {
 public:
 
@@ -68,7 +70,7 @@ public:
      // accept cv::Mat and return tracks?
      virtual int set_frame(int frame_number, const cv::Mat &original)=0;
 
-     std::vector<syllo::Track> & tracks() { return tracks_; }
+     std::vector<wb::Entity> & tracks() { return tracks_; }
      void hide_windows(bool hide) { hide_windows_ = hide; }
      
      //virtual Status_t set_own_pose(const AVIA::Pose &pose)=0;
@@ -82,7 +84,7 @@ public:
 
 protected:
      //unsigned int own_id_;
-     std::vector<syllo::Track> tracks_;
+     std::vector<wb::Entity> tracks_;
      bool hide_windows_;
 
      std::map<std::string,double> params_;

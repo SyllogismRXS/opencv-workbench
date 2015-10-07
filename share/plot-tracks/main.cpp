@@ -32,18 +32,15 @@ int main(int argc, char *argv[])
      
      // Setup Annotation Parser
      AnnotationParser parser;
-     int status = parser.CheckForFile(argv[1], AnnotationParser::track);
+     int status = parser.ParseFile(argv[1]);
      if (status != 0) {
-          status = parser.CheckForFile(argv[1], AnnotationParser::hand);
-          if (status != 0) {
-               cout << "Error parsing tracks file." << endl;
-               return -1;
-          }
-     }     
+          cout << "Error parsing tracks file." << endl;
+          return -1;
+     }
+     //parser.print();
      
      //// Get list of all track IDs
-     std::vector<std::string> names = parser.track_names();
-     
+     std::vector<std::string> names = parser.track_names();     
      
      // Print out the list of object names
      cout << "----------------------------------" << endl;
@@ -53,28 +50,32 @@ int main(int argc, char *argv[])
           cout << *it_names << endl;
      }
      cout << "-----------------" << endl;
-     cout << "a : all tracks over size" << endl;
+     cout << "a : all tracks" << endl;
      cout << " Type 'e' to end." << endl;     
+     
+     int min_track_length = 0;
      
      std::vector<std::string> to_plot;
      std::string name_str;
-     //bool plot_all = false;
      do {
           cout << "$ " ;          
           std::cin >> name_str;
-          if (name_str != "e") {
-               to_plot.push_back(name_str);
-          } else if (name_str == "a") {
-               //plot_all = true;
+          cout << "You entered: " << name_str << endl;
+          if (name_str == "a") {
+               cout << "Adding all tracks. Using min track length." << endl;
+               min_track_length = 10;
+               
+               std::vector<std::string>::iterator it_names = names.begin();
+               for (; it_names != names.end(); it_names++) {
+                    to_plot.push_back(*it_names);
+               }
                break;
-          }
+          } else if (name_str != "e") {
+               to_plot.push_back(name_str);
+          } 
      } while (name_str != "e");
      
-     //int id = syllo::str2int(name_str);
-     //cout << "You selected ID (name): " << id << endl;          
-     //to_plot.push_back(name_str);
-
-     parser.plot_tracks(to_plot);     
+     parser.plot_tracks(to_plot, min_track_length);     
      
      return 0;
 }

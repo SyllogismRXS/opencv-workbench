@@ -241,6 +241,20 @@ void AnnotationParser::write_header()
                xml_node<> *difficult_node = doc.allocate_node(node_element, "difficult", difficult);
                object_node->append_node(difficult_node);
 
+               // "centroid" node
+               xml_node<> *centroid_node = doc.allocate_node(node_element, "centroid");
+               object_node->append_node(centroid_node);
+
+               // "x" position node
+               char * x = doc.allocate_string(syllo::int2str(object_it->second.centroid().x).c_str());
+               xml_node<> *x_node = doc.allocate_node(node_element, "x", x);
+               centroid_node->append_node(x_node);
+
+               // "y" position node
+               char * y = doc.allocate_string(syllo::int2str(object_it->second.centroid().y).c_str());
+               xml_node<> *y_node = doc.allocate_node(node_element, "y", y);
+               centroid_node->append_node(y_node);
+               
                // "bndbox" node               
                xml_node<> *bndbox_node = doc.allocate_node(node_element, "bndbox");
                object_node->append_node(bndbox_node);
@@ -376,7 +390,7 @@ int AnnotationParser::ParseFile(std::string file)
                std::string object_name = object_node->first_node("name")->value();
                
                Object object;
-               object.set_name(object_name);
+               object.set_name(object_name);               
                
                xml_node<> *box = object_node->first_node("bndbox");
                if (box == 0) {
@@ -391,6 +405,19 @@ int AnnotationParser::ParseFile(std::string file)
                ymax = syllo::str2int(box->first_node("ymax")->value());
 
                object.bbox = BoundingBox(xmin,xmax,ymin,ymax);
+               
+               // Get centroid info
+               xml_node<> *centroid = object_node->first_node("centroid");
+               if (centroid == 0) {
+                    cout << "Missing centroid" << endl;                    
+                    cv::Point p((xmin + xmax)/2, (ymin + ymax) / 2);
+                    object.set_centroid(p);
+               } else {
+                    int x, y;
+                    x = syllo::str2int(centroid->first_node("x")->value());
+                    y = syllo::str2int(centroid->first_node("y")->value());                    
+                    object.set_centroid(cv::Point(x,y));
+               }
                
                frame.objects[object_name] = object;
                
@@ -513,7 +540,8 @@ std::vector<std::string> AnnotationParser::track_names()
      return names;
 }
 
-void AnnotationParser::plot_tracks(std::vector<std::string> &names)
+void AnnotationParser::plot_tracks(std::vector<std::string> &names, 
+                                   int min_track_length)
 {
      std::map<std::string, std::vector<cv::Point2f> > points;     
      
@@ -524,15 +552,13 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names)
           
           // Loop through all objects in each frame
           std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
-          for (; it_obj != frame.objects.end(); it_obj++) {
-               
+          for (; it_obj != frame.objects.end(); it_obj++) {                                                                 
                // Does this object name match any of the IDs we care about?
                if (std::find(names.begin(), names.end(), 
-                             it_obj->first) != names.end()) {
-
+                             it_obj->first) != names.end()) {                    
                     // Push the point onto the appropriate points vector
-                    points[it_obj->first].push_back(it_obj->second.bbox.centroid());
-                    break;
+                    //points[it_obj->first].push_back(it_obj->second.bbox.centroid());
+                    points[it_obj->first].push_back(it_obj->second.centroid());                    
                }     
           }          
      }
@@ -544,21 +570,26 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names)
      std::vector<std::string> styles;
 
      std::map<std::string, std::vector<cv::Point2f> >::iterator it_points;
-     for (it_points = points.begin(); it_points != points.end(); it_points++) {
+     for (it_points = points.begin(); it_points != points.end(); it_points++) {          
+          // Only plot tracks that have more points than the min track length
+          if (it_points->second.size() < min_track_length) { 
+               continue;
+          }
+          
           vectors.push_back(it_points->second);
           labels.push_back(it_points->first);
-          //styles.push_back("points");
-          //styles.push_back("lines");
           styles.push_back("linespoints");
-     }
-     
-     //vectors.push_back(points);
-     //labels.push_back("temp num");
-     //styles.push_back("points");     
+     }          
      
      syllo::Plot plot;
-     //plot.gnuplot_test();
-     plot.plot(vectors, title, labels, styles);
+     std::string options;
+     options = "set size ratio -1\n";
+     options += "set view equal xy\n"; 
+     options += "set size 1,1\n";
+     //options += "set yrange [" << 0 << ":" << 200  << "] reverse\n";
+     options += "set yrange [*:] reverse\n";
+     options += "set key outside\n";
+     plot.plot(vectors, title, labels, styles, options);
 }
 
 void AnnotationParser::write_gnuplot_data()

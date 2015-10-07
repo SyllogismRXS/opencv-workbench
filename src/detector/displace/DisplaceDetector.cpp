@@ -86,9 +86,9 @@ int DisplaceDetector::set_frame(int frame_number, const cv::Mat &original)
      int ID = syllo::getFarthestTravel(new_clusters, farthest);
      std::map<int,syllo::Cluster>::iterator it = all_clusters_.begin();
      for (; it != all_clusters_.end(); it++) {
-          syllo::Track track;
+          wb::Entity track;
           cv::Point point2d = it->second.getCentroid();          
-          track.set_position(cv::Point3d(point2d.x, point2d.y, 0));
+          track.set_centroid(cv::Point(point2d.x, point2d.y));
           track.set_id(it->first);
           track.set_age(it->second.getAge());
                     
@@ -97,13 +97,13 @@ int DisplaceDetector::set_frame(int frame_number, const cv::Mat &original)
                // track is at least a certain age before classifying it as a
                // diver
                if (track.age() > 5) {
-                    track.set_type(syllo::Diver);
+                    track.set_type(wb::Entity::Diver);
                } else {
-                    track.set_type(syllo::Unknown);
+                    track.set_type(wb::Entity::Unknown);
                }               
           } else {
                // Not the predicted diver
-               track.set_type(syllo::Unknown);
+               track.set_type(wb::Entity::Unknown);
           }
           tracks_.push_back(track);
      }

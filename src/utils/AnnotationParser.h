@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-17 21:47:16 syllogismrxs>
+/// Time-stamp: <2015-10-07 17:43:31 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -77,7 +77,7 @@ public:
      std::map<int,Frame> frames;
      
      std::vector<std::string> track_names();
-     void plot_tracks(std::vector<std::string> &names);
+     void plot_tracks(std::vector<std::string> &names, int min_track_length);
 
      void write_gnuplot_data();
 

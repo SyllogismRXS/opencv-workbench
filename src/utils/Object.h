@@ -4,7 +4,7 @@
 /// @file Object.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-03 19:32:57 syllogismrxs>
+/// Time-stamp: <2015-10-07 16:26:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -46,15 +46,19 @@ public:
      Object() {}
      void set_name(std::string name) { name_ = name; }
      std::string name() { return name_; }
-     BoundingBox bbox;
+     BoundingBox bbox;     
      void set_age(int age) { age_ = age; }
      int age() { return age_; }
      void set_id(int id) { id_ = id; }
      int id() { return id_; }
+
+     void set_centroid(cv::Point centroid) { centroid_ = centroid; }
+     cv::Point centroid() { return centroid_; }
 protected:
      std::string name_;     
      int age_;
      int id_;
+     cv::Point centroid_;
 private:
 };
 

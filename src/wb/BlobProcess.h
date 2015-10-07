@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 13:53:04 syllogismrxs>
+/// Time-stamp: <2015-10-07 15:48:47 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -60,7 +60,9 @@ public:
      void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> & blobs);
      void overlay_blobs(cv::Mat &src, cv::Mat &dst);
-     void overlay_tracks(cv::Mat &src, cv::Mat &dst);     
+     void overlay_tracks(cv::Mat &src, cv::Mat &dst);  
+     
+     std::vector<wb::Blob> & blobs() { return blobs_; }
      
 protected:
      

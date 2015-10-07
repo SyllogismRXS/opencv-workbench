@@ -30,9 +30,9 @@ namespace syllo
           void wait();
                     
           void plot(std::vector< std::vector<state_5d_type> > &vectors, 
-                          const std::string &title, 
-                          std::vector<std::string> &labels,
-                          std::vector<std::string> &styles);
+                    const std::string &title, 
+                    std::vector<std::string> &labels,
+                    std::vector<std::string> &styles);
 
           int plot(std::vector<int> &time , std::vector<cv::Point> &data, 
                    const std::string &title);
@@ -45,7 +45,13 @@ namespace syllo
           void plot(std::vector< std::vector<cv::Point2f> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
-                    std::vector<std::string> &styles);          
+                    std::vector<std::string> &styles);  
+          
+          void plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+                    const std::string &title, 
+                    std::vector<std::string> &labels,
+                    std::vector<std::string> &styles,
+                    std::string options);
 
           void plot_heading_position(
                std::vector< std::vector<state_5d_type> > &vectors, 
@@ -57,7 +63,7 @@ namespace syllo
 
           
 
-private:
+     private:
           Gnuplot gp_;
      };
 }

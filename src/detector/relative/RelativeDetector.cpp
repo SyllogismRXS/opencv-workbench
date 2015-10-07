@@ -108,7 +108,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       blob_process_.overlay_blobs(gray, blob_img);      
 
       blob_process_.overlay_tracks(blob_img, blob_img);
-      cv::imshow("Blobs", blob_img);
+      cv::imshow("Blobs", blob_img);      
       
       //cv::normalize(blob_img, blob_img, 0, 255, cv::NORM_MINMAX, CV_8UC1);
       //cv::applyColorMap(blob_img, blob_img, cv::COLORMAP_JET);
@@ -149,8 +149,15 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
       //////////////////////////////////////////////////////////////
       /// Tracking     
+      ////////////////////////////////////////////////////
       tracks_.clear(); // clear out the tracks from previous loop
       
+      std::vector<wb::Blob> blobs = blob_process_.blobs();
+      std::vector<wb::Blob>::iterator it = blobs.begin();
+      for (; it != blobs.end(); it++) {
+           tracks_.push_back((wb::Entity)*it);
+      }
+            
       ///////////////////////////////////////////////////
       // Display images
       ///////////////////////////////////////////////////

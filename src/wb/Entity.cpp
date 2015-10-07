@@ -12,7 +12,8 @@ using std::endl;
 
 namespace wb {
 
-     Entity::Entity() : age_(0), occluded_(false), is_tracked_(false)
+     Entity::Entity() : id_(-1), name_("unknown:-1"), type_(Unknown), age_(0),
+                        occluded_(false), is_tracked_(false)
      {
           //KF_ = cv::KalmanFilter(4, 2, 0);          
           //transition_matrix_ = cv::Mat_<float>(4,4);
@@ -233,5 +234,26 @@ namespace wb {
           }
      }               
 
+     std::string Entity::name()
+     {
+          std::ostringstream convert;
+          convert << id_;
+          
+          switch (type_) {
+          case Unknown:
+               name_ = "unknown:" + convert.str();
+               break;
+          case Diver:
+               name_ = "diver:" + convert.str();
+               break;
+          case Clutter:
+               name_ = "clutter:" + convert.str();
+               break;
+          default:
+               name_ = "unknown:" + convert.str();
+          }                             
+
+          return name_; 
+     }
      
 }
