@@ -183,7 +183,7 @@ Sonar::Status_t Sonar::init()
           return Sonar::Failure;
      }
 
-     // Load the bone colormap
+     // Load the colormap
      ret = BVTColorMapper_Load(mapper_, color_map_.c_str());
      if(ret != 0) {
           if (color_map_ == "") {
@@ -191,9 +191,14 @@ Sonar::Status_t Sonar::init()
           }
           printf("BVTColorMapper_Load: ret=%d\n", ret);          
           return Sonar::Failure;
-     }         
+     }     
 
      initialized_ = true;
+
+     // Need to read a single frame to get the image height and width
+     cv::Mat temp;
+     this->getNextSonarImage(temp);
+     cur_ping_ = 0; // reset back to first frame
 
      return Sonar::Success;
 #else
@@ -356,7 +361,7 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
         
           image = cv::cvarrToMat(sonarImg);    
           cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
-     
+          
           cvReleaseImageHeader(&sonarImg);
 
      } else {

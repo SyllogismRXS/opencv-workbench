@@ -318,6 +318,22 @@ int AnnotationParser::ParseFile(std::string file)
           return -1;
      }
 
+     // Find size
+     xml_node<> * size_node = doc.first_node()->first_node("size");
+     if (size_node != 0) {
+          xml_node<> * width_node = size_node->first_node("width");
+          xml_node<> * height_node = size_node->first_node("height");
+          xml_node<> * depth_node = size_node->first_node("depth");
+          
+          width_ = syllo::str2int(width_node->value());
+          height_ = syllo::str2int(height_node->value());
+          depth_ = syllo::str2int(depth_node->value());
+          
+     } else {
+          cout << "Error: Can't find size node" << endl;
+          return -1;
+     }
+     
      // Find <metrics>
      xml_node<> * metrics_node = doc.first_node()->first_node("metrics");
      if (metrics_node != 0) {
@@ -572,7 +588,7 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      std::map<std::string, std::vector<cv::Point2f> >::iterator it_points;
      for (it_points = points.begin(); it_points != points.end(); it_points++) {          
           // Only plot tracks that have more points than the min track length
-          if (it_points->second.size() < min_track_length) { 
+          if (it_points->second.size() < (unsigned int)min_track_length) { 
                continue;
           }
           
@@ -587,7 +603,11 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      options += "set view equal xy\n"; 
      options += "set size 1,1\n";
      //options += "set yrange [" << 0 << ":" << 200  << "] reverse\n";
-     options += "set yrange [*:] reverse\n";
+     //options += "set yrange [*:] reverse\n";
+     //options += "set yrange [" << 0 << ":" << 200 << "] reverse\n";
+     //options += "set yrange [200:0]\n";
+     options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
+     options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
      options += "set key outside\n";
      plot.plot(vectors, title, labels, styles, options);
 }

@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
      parser_tracks.CheckForFile(video_filename, AnnotationParser::track);
      parser_tracks.clear();
      parser_tracks.set_width(stream.width());
-     parser_tracks.set_height(stream.height());
+     parser_tracks.set_height(stream.height());     
      parser_tracks.set_depth(3);
      parser_tracks.set_type("video");
      parser_tracks.set_number_of_frames(stream.get_frame_count());
