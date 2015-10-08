@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 16:03:14 syllogismrxs>
+/// Time-stamp: <2015-10-07 22:46:17 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -42,7 +42,6 @@
 #include <vector>
 #include <map>
 #include <opencv_workbench/plugin_manager/PluginManager.h>
-#include <opencv_workbench/track/Track.h>
 
 // OpenCV headers
 #include <cv.h>
