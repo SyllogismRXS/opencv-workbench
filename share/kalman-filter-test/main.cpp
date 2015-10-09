@@ -32,13 +32,7 @@ int main(int argc, char *argv[])
 
      double t0 = 0;
      double dt = 0.1;
-     double tend = 10;
- 
-     // Setup boost RNG
-     boost::mt19937 rng;
-     boost::normal_distribution<> nd(0,1.0);
-     boost::variate_generator<boost::mt19937&, 
-                              boost::normal_distribution<> > var_nor(rng,nd);
+     double tend = 10;     
      
      ///////////////////////////////////////////////////////
      // Setup Cart Model 

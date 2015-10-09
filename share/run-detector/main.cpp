@@ -168,21 +168,11 @@ int main(int argc, char *argv[])
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
                cv::Point point = it->centroid();
-
-               Object object;                                             
-               object.set_id(it->id());
-               object.set_name(it->name());
-                              
-               object.set_centroid(it->centroid());
-               object.bbox = BoundingBox(it->rectangle());
                
-               object.set_age(it->age());
-               
-               // Save object to current frame
-               frame.objects[object.name()] = object;                          
+               frame.objects[it->name()] = *it;
 
                if (it->type() == wb::Entity::Diver) {
-                    // If this is a diver type, mark it on the original image                    
+                    // If this is a diver type, mark it on the original image
                     int radius = 3;
                     cv::circle(original, cv::Point(point.x,point.y), 
                                radius, cv::Scalar(0,0,0), 2, 8, 0);

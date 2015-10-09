@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-07-13 15:31:04 syllogismrxs>
+/// Time-stamp: <2015-10-09 14:52:46 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -39,7 +39,8 @@
 /// 
 /// ---------------------------------------------------------------------------
 
-#include <opencv_workbench/utils/Object.h>
+//#include <opencv_workbench/utils/Object.h>
+#include <opencv_workbench/wb/Entity.h>
 
 class Frame {
 public:
@@ -47,9 +48,9 @@ public:
 
      void set_frame_number(int frame_number) {frame_number_ = frame_number;}
      int frame_number() { return frame_number_; }
-     std::map<std::string, Object> objects;
+     std::map<std::string, wb::Entity> objects;
      
-     bool contains_object(const std::string &name, Object &object) 
+     bool contains_object(const std::string &name, wb::Entity &object) 
      {
           if (objects.count(name) > 0) {
                object = objects[name];

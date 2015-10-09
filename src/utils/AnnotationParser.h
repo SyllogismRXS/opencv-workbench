@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 17:43:31 syllogismrxs>
+/// Time-stamp: <2015-10-09 17:06:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -88,6 +88,8 @@ public:
      void set_plugin_name(std::string name) { plugin_name_ = name; }
 
      std::map<std::string,int> get_metrics();     
+
+     std::vector<wb::Entity> get_tracks(std::string name);
 
 protected:
      std::string xml_filename_;     

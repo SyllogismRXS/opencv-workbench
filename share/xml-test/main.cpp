@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <opencv_workbench/utils/AnnotationParser.h>
-#include <opencv_workbench/utils/Object.h>
+//#include <opencv_workbench/utils/Object.h>
 
 using std::cout;
 using std::endl;

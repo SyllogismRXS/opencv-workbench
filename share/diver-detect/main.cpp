@@ -131,14 +131,15 @@ int main(int argc, char *argv[])
           //std::map<int,bool>::iterator it = track_ids.begin();
           std::map<int,syllo::Cluster>::iterator it = new_clusters.begin();
           for (; it != new_clusters.end(); it++) {
-               Object object;
+               //Object object;
+               wb::Entity object;
                object.set_name(syllo::int2str(it->first));               
 
                syllo::Cluster c = it->second;               
-               object.bbox = BoundingBox(c.getCentroid().x, 
-                                         c.getCentroid().x,
-                                         c.getCentroid().y, 
-                                         c.getCentroid().y);
+               object.set_bbox(BoundingBox(c.getCentroid().x, 
+                                           c.getCentroid().x,
+                                           c.getCentroid().y, 
+                                           c.getCentroid().y));
                object.set_age(c.getAge());
                
                // Save object to current frame

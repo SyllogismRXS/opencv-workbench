@@ -157,7 +157,10 @@ namespace wb {
           centroid_ = cv::Point(round(avg_x), round(avg_y));
           
           // +1's to account for slight error in rectangle drawing?
-          rectangle_ = cv::Rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);
+          //bbox_ = cv::Rect rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);
+          bbox_.set_box(xmin, xmax+1, ymin, ymax+1);
+          
+          //rectangle_ = cv::Rect();
      }
 
      cv::Point Entity::centroid()
@@ -167,7 +170,8 @@ namespace wb {
 
      cv::Rect Entity::rectangle()
      {
-          return rectangle_;
+          //return rectangle_;
+          return bbox_.rectangle();
      }
 
      bool Entity::is_visible()

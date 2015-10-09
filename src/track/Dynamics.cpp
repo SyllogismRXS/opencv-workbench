@@ -15,6 +15,7 @@ Dynamics::Dynamics() : PI(3.14159265359), nd_(0, 1.0), var_nor(rng_, nd_),
 {
      for (int i = 0; i < 5; i++) {
           u_[i] = 0;
+          x0_[i] = 0;
      }
 }
 
@@ -30,13 +31,20 @@ void Dynamics::set_time(double t0, double dt, double tend)
      }
 }
 
+void Dynamics::set_x0(state_5d_type x0)
+{
+     for(int i = 0; i < 5; i++) {
+          x0_[i] = x0[i];          
+     }
+}
+
 void Dynamics::compute_trajectory()
 {
      headings_.clear();
      truth_points_.clear();
 
      if (model_ == cart) { 
-          state_3d_type x = {0,0,0};     
+          state_3d_type x = {x0_[0], x0_[1], x0_[2]};     
           runge_kutta4< state_3d_type > stepper;     
           
           std::vector<double>::iterator it = tt_.begin();

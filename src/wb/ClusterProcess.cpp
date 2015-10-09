@@ -63,7 +63,7 @@ void ClusterProcess::overlay_clusters(cv::Mat &src, cv::Mat &dst)
           }        
 
           cv::Point centroid_point = (*it)->centroid();
-          cv::Rect rect = (*it)->rectangle();
+          cv::Rect rect = (*it)->bbox().rectangle();
                
           std::ostringstream convert;
           convert << (*it)->id();               
@@ -99,7 +99,7 @@ void ClusterProcess::overlay_clusters_colors(cv::Mat &src, cv::Mat &dst)
      it = clusters_.begin();
      for (; it != clusters_.end(); it++) {
           cv::Point centroid_point = (*it)->centroid();
-          cv::Rect rect = (*it)->rectangle();
+          cv::Rect rect = (*it)->bbox().rectangle();
                
           std::ostringstream convert;
           convert << (*it)->id();               

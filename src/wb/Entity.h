@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 16:00:53 syllogismrxs>
+/// Time-stamp: <2015-10-09 14:53:58 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -43,6 +43,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv_workbench/utils/BoundingBox.h>
 //#include <opencv2/video/tracking.hpp>
 
 #include <opencv_workbench/wb/Point.h>
@@ -71,14 +72,17 @@ namespace wb {
           void set_type(EntityType_t type) { type_ = type; }
           EntityType_t type() { return type_; }
           std::string name();
+          void set_name(std::string name) { name_ = name; }
           
           void compute_metrics();
 
           cv::Point centroid();
           cv::Rect rectangle();
+          BoundingBox & bbox() { return bbox_; }
+          void set_bbox(BoundingBox bbox) { bbox_ = bbox; }
 
           void set_centroid(cv::Point p) { centroid_ = p; }
-          void set_rectangle(cv::Rect rect) { rectangle_ = rect; }
+          //void set_rectangle(cv::Rect rect) { rectangle_ = rect; }
 
           // Point related
           std::vector<wb::Point> & points() { return points_; }
@@ -118,10 +122,11 @@ namespace wb {
           std::vector<wb::Point> points_;
           cv::Point centroid_;
           cv::Point est_centroid_;
-          cv::Rect rectangle_;
+          //cv::Rect rectangle_;
           int age_;
           bool occluded_;
           bool is_tracked_;
+          BoundingBox bbox_;
 
           //cv::KalmanFilter KF_;
           cv::Mat_<float> transition_matrix_;

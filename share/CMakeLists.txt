@@ -11,4 +11,5 @@ add_subdirectory(run-detector)
 add_subdirectory(aggregate)
 add_subdirectory(kalman-filter-test)
 add_subdirectory(ekf-test)
+add_subdirectory(trajectory-similarity)
 

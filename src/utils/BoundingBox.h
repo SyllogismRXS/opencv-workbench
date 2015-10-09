@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 16:23:09 syllogismrxs>
+/// Time-stamp: <2015-10-09 14:43:35 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -63,7 +63,15 @@ BoundingBox(int xmin, int xmax, int ymin, int ymax) :
 BoundingBox(cv::Rect rect) :
      xmin_(rect.x), xmax_(rect.x+rect.width), ymin_(rect.y), ymax_(rect.y+rect.height) 
      {
-     }     
+     }  
+
+     void set_box(int xmin, int xmax, int ymin, int ymax)
+     {
+          xmin_ = xmin;
+          xmax_ = xmax;
+          ymin_ = ymin;
+          ymax_ = ymax;
+     }
           
      int xmin() { return xmin_; }
      int xmax() { return xmax_; }

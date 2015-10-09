@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-02 17:30:07 syllogismrxs>
+/// Time-stamp: <2015-10-09 15:30:47 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -78,7 +78,8 @@ public:
      void cart_model(const state_3d_type &x , state_3d_type &dxdt , double t);
      void set_input(state_5d_type input);     
      void set_process_noise(double noise) { process_noise_ = noise; }
-     void set_measurement_noise(double noise) { measurement_noise_ = noise; }     
+     void set_measurement_noise(double noise) { measurement_noise_ = noise; } 
+     void set_x0(state_5d_type x0);
      
      std::vector<cv::Point2f> & truth_points() { return truth_points_; }
      std::vector<cv::Point2f> & measured_points() { return measured_points_; }
@@ -96,6 +97,7 @@ private:
 
      Model_t model_;
      state_5d_type u_;
+     state_5d_type x0_;
      
      boost::mt19937 rng_;
      boost::normal_distribution<> nd_;

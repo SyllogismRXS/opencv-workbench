@@ -203,7 +203,7 @@ void AnnotationParser::write_header()
           frame_node->append_node(frame_number_node);         
           
           // Loop through each object          
-          std::map<std::string, Object>::iterator object_it;
+          std::map<std::string, wb::Entity>::iterator object_it;
           object_it = frame_it->second.objects.begin();
           for (; object_it != frame_it->second.objects.end(); object_it++) {
 
@@ -260,22 +260,22 @@ void AnnotationParser::write_header()
                object_node->append_node(bndbox_node);
                
                // "xmin" node               
-               char * xmin = doc.allocate_string(syllo::int2str(object_it->second.bbox.xmin()).c_str());
+               char * xmin = doc.allocate_string(syllo::int2str(object_it->second.bbox().xmin()).c_str());
                xml_node<> *xmin_node = doc.allocate_node(node_element, "xmin", xmin);
                bndbox_node->append_node(xmin_node);
 
                // "ymin" node               
-               char * ymin = doc.allocate_string(syllo::int2str(object_it->second.bbox.ymin()).c_str());
+               char * ymin = doc.allocate_string(syllo::int2str(object_it->second.bbox().ymin()).c_str());
                xml_node<> *ymin_node = doc.allocate_node(node_element, "ymin", ymin);
                bndbox_node->append_node(ymin_node);
 
                // "xmax" node               
-               char * xmax = doc.allocate_string(syllo::int2str(object_it->second.bbox.xmax()).c_str());
+               char * xmax = doc.allocate_string(syllo::int2str(object_it->second.bbox().xmax()).c_str());
                xml_node<> *xmax_node = doc.allocate_node(node_element, "xmax", xmax);
                bndbox_node->append_node(xmax_node);
 
                // "ymax" node               
-               char * ymax = doc.allocate_string(syllo::int2str(object_it->second.bbox.ymax()).c_str());
+               char * ymax = doc.allocate_string(syllo::int2str(object_it->second.bbox().ymax()).c_str());
                xml_node<> *ymax_node = doc.allocate_node(node_element, "ymax", ymax);
                bndbox_node->append_node(ymax_node);                              
           }
@@ -405,8 +405,10 @@ int AnnotationParser::ParseFile(std::string file)
                
                std::string object_name = object_node->first_node("name")->value();
                
-               Object object;
-               object.set_name(object_name);               
+               //Object object;
+               //object.set_name(object_name);               
+               wb::Entity object;
+               object.set_name(object_name);
                
                xml_node<> *box = object_node->first_node("bndbox");
                if (box == 0) {
@@ -420,7 +422,7 @@ int AnnotationParser::ParseFile(std::string file)
                xmax = syllo::str2int(box->first_node("xmax")->value());
                ymax = syllo::str2int(box->first_node("ymax")->value());
 
-               object.bbox = BoundingBox(xmin,xmax,ymin,ymax);
+               object.set_bbox(BoundingBox(xmin,xmax,ymin,ymax));
                
                // Get centroid info
                xml_node<> *centroid = object_node->first_node("centroid");
@@ -455,14 +457,14 @@ void AnnotationParser::print()
           cout << "---------" << endl;
           cout << "Objects: " << endl;
           
-          std::map<std::string, Object>::iterator object_it;
+          std::map<std::string, wb::Entity>::iterator object_it;
           object_it = frame_it->second.objects.begin();
           for (; object_it != frame_it->second.objects.end(); object_it++) {
                cout << "\t Name: " << object_it->second.name() << endl;
-               cout << "\t Bbox: (" << object_it->second.bbox.xmin() << ","
-                    << object_it->second.bbox.ymin() << ","
-                    << object_it->second.bbox.xmax() << ","
-                    << object_it->second.bbox.ymax() << ")" << endl << endl;
+               cout << "\t Bbox: (" << object_it->second.bbox().xmin() << ","
+                    << object_it->second.bbox().ymin() << ","
+                    << object_it->second.bbox().xmax() << ","
+                    << object_it->second.bbox().ymax() << ")" << endl << endl;
           }
      }
 }
@@ -482,11 +484,11 @@ bool AnnotationParser::export_roi()
      // Assumes only single ROI per frame
      std::map<int,Frame>::iterator frame_it = frames.begin();
      for(; frame_it != frames.end(); frame_it++) {
-          std::map<std::string, Object>::iterator object_it;
+          std::map<std::string, wb::Entity>::iterator object_it;
           object_it = frame_it->second.objects.begin();
           for (; object_it != frame_it->second.objects.end(); object_it++) {
-               width_sum += object_it->second.bbox.width();
-               height_sum += object_it->second.bbox.height();
+               width_sum += object_it->second.bbox().width();
+               height_sum += object_it->second.bbox().height();
                count++;
           }
      }
@@ -518,13 +520,13 @@ bool AnnotationParser::export_roi()
      // Find the centroid of each annotated frame, export the average
      // ROI size
      for(frame_it = frames.begin(); frame_it != frames.end(); frame_it++) {
-          std::map<std::string, Object>::iterator object_it;
+          std::map<std::string, wb::Entity>::iterator object_it;
           object_it = frame_it->second.objects.begin();
           for (; object_it != frame_it->second.objects.end(); object_it++) {
                cv::Mat img;
                in.set(CV_CAP_PROP_POS_FRAMES, frame_it->second.frame_number());
                in.read(img);
-               cv::Rect rect = object_it->second.bbox.ForceBox(width_avg, height_avg);
+               cv::Rect rect = object_it->second.bbox().ForceBox(width_avg, height_avg);
                cv::Mat roi(img, rect);
                out.write(roi);
           }
@@ -542,7 +544,7 @@ std::vector<std::string> AnnotationParser::track_names()
           Frame frame = it_frame->second;
           
           // Loop through all objects in each frame
-          std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
+          std::map<std::string, wb::Entity>::iterator it_obj = frame.objects.begin();
           for (; it_obj != frame.objects.end(); it_obj++) {
                // Add the track name to the names vector only if it doesn't
                // already exist in the names vector
@@ -567,13 +569,13 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
           Frame frame = it_frame->second;
           
           // Loop through all objects in each frame
-          std::map<std::string, Object>::iterator it_obj = frame.objects.begin();
+          std::map<std::string, wb::Entity>::iterator it_obj = frame.objects.begin();
           for (; it_obj != frame.objects.end(); it_obj++) {                                                                 
                // Does this object name match any of the IDs we care about?
                if (std::find(names.begin(), names.end(), 
                              it_obj->first) != names.end()) {                    
                     // Push the point onto the appropriate points vector
-                    //points[it_obj->first].push_back(it_obj->second.bbox.centroid());
+                    //points[it_obj->first].push_back(it_obj->second.bbox().centroid());
                     points[it_obj->first].push_back(it_obj->second.centroid());                    
                }     
           }          
@@ -610,6 +612,29 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
      options += "set key outside\n";
      plot.plot(vectors, title, labels, styles, options);
+}
+
+std::vector<wb::Entity> AnnotationParser::get_tracks(std::string name)
+{
+     std::vector<wb::Entity> tracks;
+     
+     // Loop through all frames
+     std::map<int,Frame>::iterator it_frame = frames.begin();
+     for (; it_frame != frames.end(); it_frame++) {
+          Frame frame = it_frame->second;
+          
+          // Loop through all objects in each frame
+          std::map<std::string, wb::Entity>::iterator it_obj = frame.objects.begin();
+          for (; it_obj != frame.objects.end(); it_obj++) {                                                                 
+               // Does this object name match the ID we care about?
+               if (name == it_obj->first) {                    
+                    // Push the point onto the appropriate points vector
+                    tracks.push_back(it_obj->second);                    
+               }     
+          }          
+     }
+
+     return tracks;
 }
 
 void AnnotationParser::write_gnuplot_data()
@@ -676,7 +701,8 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                std::vector<std::string>::iterator it_name = names.begin();
                for (; it_name != names.end(); it_name++) {
                     // Does this object exist in the detector frame?
-                    Object detected_obj;
+                    //Object detected_obj;
+                    wb::Entity detected_obj;
                     bool detect_obj_exists = false;
                     detect_obj_exists = detect_frame.contains_object(it_name->c_str(), 
                                                                      detected_obj);
@@ -698,7 +724,8 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                std::vector<std::string>::iterator it_name = names.begin();
                for (; it_name != names.end(); it_name++) {
                     // Does this object exist in the truth frame?
-                    Object tru_obj;
+                    //Object tru_obj;
+                    wb::Entity tru_obj;
                     bool tru_obj_exists = false;
                     tru_obj_exists = tru_frame.contains_object(it_name->c_str(), 
                                                                      tru_obj);
@@ -721,13 +748,15 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                std::vector<std::string>::iterator it_name = names.begin();
                for (; it_name != names.end(); it_name++) {
                     // Search for this named object in ground truth frame
-                    Object tru_obj;
+                    //Object tru_obj;
+                    wb::Entity tru_obj;
                     bool tru_obj_exists;
                     tru_obj_exists = tru_frame.contains_object(it_name->c_str(), 
                                                                tru_obj);
                    
                     // Does this object exist in the detector frame?
-                    Object detected_obj;
+                    //Object detected_obj;
+                    wb::Entity detected_obj;
                     bool obj_exists;
                     obj_exists = detect_frame.contains_object(it_name->c_str(), 
                                                        detected_obj);
@@ -752,7 +781,7 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
                          // detector's placement of the object's centroid is
                          // within the bounding box of the truth frame.
                          bool contains;
-                         contains = tru_obj.bbox.contains(detected_obj.bbox.centroid());
+                         contains = tru_obj.bbox().contains(detected_obj.bbox().centroid());
                          if (contains) {
                               // The detected object's centroid is within the
                               // bounding box of the truth frame's object.

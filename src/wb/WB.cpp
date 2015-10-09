@@ -166,7 +166,7 @@ namespace wb {
                convert << (*it)->id();
                const std::string& text = convert.str();
                cv::circle(cluster_display, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-               cv::rectangle(cluster_display, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
+               cv::rectangle(cluster_display, (*it)->bbox().rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
                cv::putText(cluster_display, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);                                                            
           }
 
@@ -246,7 +246,7 @@ namespace wb {
                convert << (*it)->id();
                const std::string& text = convert.str();
                cv::circle(dst, circle_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-               cv::rectangle(dst, (*it)->rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
+               cv::rectangle(dst, (*it)->bbox().rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
                cv::putText(dst, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);
           }
      }

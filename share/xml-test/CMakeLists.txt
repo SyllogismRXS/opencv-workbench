@@ -7,4 +7,5 @@ add_executable(${APP_NAME}
 target_link_libraries(${APP_NAME} 
   workbench-utils
   ${Boost_LIBRARIES}
+  wb
   )

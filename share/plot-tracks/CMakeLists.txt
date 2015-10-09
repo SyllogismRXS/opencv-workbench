@@ -12,4 +12,5 @@ target_link_libraries(${APP_NAME}
   ${Boost_LIBRARIES}  
   workbench-utils
   plot
+  wb
   )

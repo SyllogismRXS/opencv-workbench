@@ -46,7 +46,8 @@
 
 #include <opencv_workbench/utils/SylloQt.h>
 #include <opencv_workbench/utils/Frame.h>
-#include <opencv_workbench/utils/Object.h>
+//#include <opencv_workbench/utils/Object.h>
+#include <opencv_workbench/wb/Entity.h>
 #include <opencv_workbench/utils/BoundingBox.h>
 //#include <opencv_workbench/utils/Rectangle.h>
 
@@ -183,7 +184,7 @@ void Annotate::before_next_frame()
      
      if (parser_.frames.count(next_frame_number) > 0) {
           box_present_ = true;
-          cv::Rect rect = parser_.frames[next_frame_number].objects["diver"].bbox.rectangle();
+          cv::Rect rect = parser_.frames[next_frame_number].objects["diver"].bbox().rectangle();
           //pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
           //pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
           pt1_ = QPoint(rect.tl().x, rect.tl().y);
@@ -209,12 +210,13 @@ void Annotate::save_annotation_data()
 
      Frame frame;
      frame.set_frame_number(frame_number);
-     Object object;
+     //Object object;
+     wb::Entity object;
      object.set_name("diver");
-     object.bbox = BoundingBox(std::min(pt1_.x(),pt2_.x()), 
-                               std::max(pt1_.x(),pt2_.x()),
-                               std::min(pt1_.y(),pt2_.y()), 
-                               std::max(pt1_.y(),pt2_.y()));
+     object.set_bbox(BoundingBox(std::min(pt1_.x(),pt2_.x()), 
+                                 std::max(pt1_.x(),pt2_.x()),
+                                 std::min(pt1_.y(),pt2_.y()), 
+                                 std::max(pt1_.y(),pt2_.y())));
 
      // Save object to current frame
      frame.objects[object.name()] = object;

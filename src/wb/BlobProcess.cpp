@@ -520,7 +520,7 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst,
           }
 
           cv::Point centroid_point = it->centroid();
-          cv::Rect rect = it->rectangle();
+          cv::Rect rect = it->bbox().rectangle();
                
           std::ostringstream convert;
           convert << it->id();               

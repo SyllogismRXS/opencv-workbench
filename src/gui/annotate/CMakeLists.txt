@@ -81,6 +81,7 @@ target_link_libraries(${APP_NAME}lib
   sonar-sdk
   video_windowlib
   workbench-utils
+  wb
   )
 
 add_executable(${APP_NAME} 
@@ -104,6 +105,7 @@ target_link_libraries(${APP_NAME}
   sonar-sdk
   video_windowlib
   workbench-utils
+  wb
   )
 
 if (DEFINED BLUEVIEW_SDK_LIBS)
