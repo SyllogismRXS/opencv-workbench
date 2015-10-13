@@ -225,6 +225,42 @@ namespace syllo
                     break;
                }
           }
+
+          double pixel_range(int row, int col)
+          {         
+               double range = -1;
+               
+               switch (type_) {
+	       case MovieType:
+                    break;
+	       case CameraType:
+                    break;
+               case SonarType:
+                    range = sonar.pixel_range(row, col);
+                    break;
+	       default:
+                    break;
+               }
+               return range;
+          }
+          
+          double pixel_bearing(int row, int col)
+          {         
+               double bearing = -1;
+               
+               switch (type_) {
+	       case MovieType:
+                    break;
+	       case CameraType:
+                    break;
+               case SonarType:
+                    bearing = sonar.pixel_bearing(row, col);
+                    break;
+	       default:
+                    break;
+               }
+               return bearing;
+          }
        
           bool isLive()
           {

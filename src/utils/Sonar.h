@@ -52,6 +52,9 @@ public:
      void set_min_range(double min_range);
      void set_color_map(const std::string &color_map);
      void set_save_directory(const std::string &save_directory);
+     
+     double pixel_range(int row, int col);
+     double pixel_bearing(int row, int col);
 
      Status_t SonarLogEnable(bool enable);
      const std::string& current_sonar_file();

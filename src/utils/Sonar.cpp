@@ -461,6 +461,17 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
 #endif
 }
 
+double Sonar::pixel_range(int row, int col)
+{
+     return BVTColorImage_GetPixelRange(cimg_, row, col);
+}
+
+double Sonar::pixel_bearing(int row, int col)
+{
+     return BVTColorImage_GetPixelRelativeBearing(cimg_, row, col);
+}
+
+
 int Sonar::width() 
 { 
      return width_;
