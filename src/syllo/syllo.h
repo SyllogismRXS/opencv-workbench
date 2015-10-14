@@ -24,6 +24,8 @@ namespace fs = ::boost::filesystem;
 namespace syllo
 {
      int str2int(std::string str);
+     double str2double(std::string str);
+          
      std::string int2str(int x);
      std::string double2str(double x);
 

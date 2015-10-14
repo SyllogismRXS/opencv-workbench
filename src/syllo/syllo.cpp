@@ -123,6 +123,13 @@ namespace syllo {
           return num;
      }
 
+     double str2double(std::string str)
+     {
+          double num;
+          if ( ! (std::istringstream(str) >> num) ) num = 0;
+          return num;
+     }
+
      std::string int2str(int x)
      {
           std::ostringstream convert;   // stream used for the conversion

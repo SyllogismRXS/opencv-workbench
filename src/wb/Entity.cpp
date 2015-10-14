@@ -79,7 +79,7 @@ namespace wb {
 
           kf_.init(x0, covar);
      }
-
+          
      cv::Point Entity::estimated_centroid()
      {          
           // the Kalman filter's estimate centroid. Otherwise, use the entity's

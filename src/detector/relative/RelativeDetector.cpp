@@ -46,6 +46,11 @@ void RelativeDetector::print()
      cout << "I am the Relative Detector" << endl;
 }
 
+void RelativeDetector::set_stream(syllo::Stream *stream)
+{
+     stream_ = stream;
+}
+
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {         
       cv::Mat original_w_tracks, original_copy;          
@@ -155,6 +160,17 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       std::vector<wb::Blob> blobs = blob_process_.blobs();
       std::vector<wb::Blob>::iterator it = blobs.begin();
       for (; it != blobs.end(); it++) {
+           // Have to transform tracks from distorted cartesian
+           // to polar, then to undistorted cartesian
+           cv::Point p = it->estimated_centroid();
+           double range = stream_->pixel_range(p.y, p.x); //row, col
+           double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180
+           double y = -range*cos(bearing);
+           double x = range*sin(bearing);
+           
+           //it->set_undistorted_centroid(cv::Point2f(p.x,p.y));
+           it->set_undistorted_centroid(cv::Point2f(x,y));
+           
            tracks_.push_back((wb::Entity)*it);
       }
             

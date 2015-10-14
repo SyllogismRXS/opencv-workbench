@@ -466,6 +466,7 @@ double Sonar::pixel_range(int row, int col)
      return BVTColorImage_GetPixelRange(cimg_, row, col);
 }
 
+// returns bearing in degrees
 double Sonar::pixel_bearing(int row, int col)
 {
      return BVTColorImage_GetPixelRelativeBearing(cimg_, row, col);

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-09 14:53:58 syllogismrxs>
+/// Time-stamp: <2015-10-14 15:19:15 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -82,6 +82,8 @@ namespace wb {
           void set_bbox(BoundingBox bbox) { bbox_ = bbox; }
 
           void set_centroid(cv::Point p) { centroid_ = p; }
+          void set_undistorted_centroid(cv::Point2f p) { undistorted_centroid_ = p; }
+          cv::Point2f undistorted_centroid() { return undistorted_centroid_; }
           //void set_rectangle(cv::Rect rect) { rectangle_ = rect; }
 
           // Point related
@@ -122,6 +124,7 @@ namespace wb {
           std::vector<wb::Point> points_;
           cv::Point centroid_;
           cv::Point est_centroid_;
+          cv::Point2f undistorted_centroid_;
           //cv::Rect rectangle_;
           int age_;
           bool occluded_;

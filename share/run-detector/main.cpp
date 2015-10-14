@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
      
      Detector * detector_;     
      detector_ = plugin_manager_.object();
+     detector_->set_stream(&stream);
      detector_->print();       
      
      if (hide_window_flag) {

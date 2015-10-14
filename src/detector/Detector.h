@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-07 22:46:17 syllogismrxs>
+/// Time-stamp: <2015-10-14 15:03:04 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -51,6 +51,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/utils/Stream.h>
 
 class Detector {
 public:
@@ -68,6 +69,7 @@ public:
 
      // accept cv::Mat and return tracks?
      virtual int set_frame(int frame_number, const cv::Mat &original)=0;
+     virtual void set_stream(syllo::Stream *stream) { stream_ = stream; }
 
      std::vector<wb::Entity> & tracks() { return tracks_; }
      void hide_windows(bool hide) { hide_windows_ = hide; }
@@ -87,6 +89,8 @@ protected:
      bool hide_windows_;
 
      std::map<std::string,double> params_;
+
+     syllo::Stream *stream_;
      
 private:
 };

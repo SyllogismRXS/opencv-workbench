@@ -246,12 +246,12 @@ void AnnotationParser::write_header()
                object_node->append_node(centroid_node);
 
                // "x" position node
-               char * x = doc.allocate_string(syllo::int2str(object_it->second.centroid().x).c_str());
+               char * x = doc.allocate_string(syllo::double2str(object_it->second.undistorted_centroid().x).c_str());
                xml_node<> *x_node = doc.allocate_node(node_element, "x", x);
                centroid_node->append_node(x_node);
 
                // "y" position node
-               char * y = doc.allocate_string(syllo::int2str(object_it->second.centroid().y).c_str());
+               char * y = doc.allocate_string(syllo::double2str(object_it->second.undistorted_centroid().y).c_str());
                xml_node<> *y_node = doc.allocate_node(node_element, "y", y);
                centroid_node->append_node(y_node);
                
@@ -431,10 +431,10 @@ int AnnotationParser::ParseFile(std::string file)
                     cv::Point p((xmin + xmax)/2, (ymin + ymax) / 2);
                     object.set_centroid(p);
                } else {
-                    int x, y;
-                    x = syllo::str2int(centroid->first_node("x")->value());
-                    y = syllo::str2int(centroid->first_node("y")->value());                    
-                    object.set_centroid(cv::Point(x,y));
+                    double x, y;
+                    x = syllo::str2double(centroid->first_node("x")->value());
+                    y = syllo::str2double(centroid->first_node("y")->value());                    
+                    object.set_undistorted_centroid(cv::Point2f(x,y));
                }
                
                frame.objects[object_name] = object;
@@ -576,7 +576,8 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
                              it_obj->first) != names.end()) {                    
                     // Push the point onto the appropriate points vector
                     //points[it_obj->first].push_back(it_obj->second.bbox().centroid());
-                    points[it_obj->first].push_back(it_obj->second.centroid());                    
+                    //points[it_obj->first].push_back(it_obj->second.centroid());
+                    points[it_obj->first].push_back(it_obj->second.undistorted_centroid());
                }     
           }          
      }
@@ -604,12 +605,9 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      options = "set size ratio -1\n";
      options += "set view equal xy\n"; 
      options += "set size 1,1\n";
-     //options += "set yrange [" << 0 << ":" << 200  << "] reverse\n";
-     //options += "set yrange [*:] reverse\n";
-     //options += "set yrange [" << 0 << ":" << 200 << "] reverse\n";
-     //options += "set yrange [200:0]\n";
-     options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
-     options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
+     options += "set yrange [*:] reverse\n";
+     //options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
+     //options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
      options += "set key outside\n";
      plot.plot(vectors, title, labels, styles, options);
 }

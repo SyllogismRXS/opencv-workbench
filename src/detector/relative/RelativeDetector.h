@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-10 19:26:38 syllogismrxs>
+/// Time-stamp: <2015-10-14 15:03:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -43,6 +43,7 @@
 #include <opencv_workbench/wb/ClusterProcess.h>
 #include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/wb/NDT.h>
+#include <opencv_workbench/utils/Stream.h>
 
 class RelativeDetector : public Detector{
 public:
@@ -50,7 +51,8 @@ public:
      ~RelativeDetector();
      void print();
 
-     int set_frame(int frame_number, const cv::Mat &original);     
+     int set_frame(int frame_number, const cv::Mat &original);  
+     void set_stream(syllo::Stream *stream);
      
 protected:     
      int thresh_value_;
@@ -61,7 +63,6 @@ protected:
 
      cv::Mat erosionConfig_;
      cv::Mat dilationConfig_;
-
 private:
 };
 

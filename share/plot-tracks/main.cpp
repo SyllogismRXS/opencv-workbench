@@ -56,24 +56,26 @@ int main(int argc, char *argv[])
      int min_track_length = 0;
      
      std::vector<std::string> to_plot;
-     std::string name_str;
-     do {
-          cout << "$ " ;          
-          std::cin >> name_str;
-          cout << "You entered: " << name_str << endl;
-          if (name_str == "a") {
-               cout << "Adding all tracks. Using min track length." << endl;
-               min_track_length = 10;
-               
-               std::vector<std::string>::iterator it_names = names.begin();
-               for (; it_names != names.end(); it_names++) {
-                    to_plot.push_back(*it_names);
-               }
-               break;
-          } else if (name_str != "e") {
-               to_plot.push_back(name_str);
-          } 
-     } while (name_str != "e");
+     //std::string name_str;
+     //do {
+     //     cout << "$ " ;          
+     //     std::cin >> name_str;
+     //     cout << "You entered: " << name_str << endl;
+     //     if (name_str == "a") {
+     //          cout << "Adding all tracks. Using min track length." << endl;
+     //          min_track_length = 10;
+     //          
+     //          std::vector<std::string>::iterator it_names = names.begin();
+     //          for (; it_names != names.end(); it_names++) {
+     //               to_plot.push_back(*it_names);
+     //          }
+     //          break;
+     //     } else if (name_str != "e") {
+     //          to_plot.push_back(name_str);
+     //     } 
+     //} while (name_str != "e");
+     to_plot.push_back("unknown:1");
+     to_plot.push_back("unknown:4");
      
      parser.plot_tracks(to_plot, min_track_length);     
      
