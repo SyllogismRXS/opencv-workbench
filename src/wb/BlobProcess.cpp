@@ -197,7 +197,7 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
      std::vector<wb::Blob> new_blobs;     
      this->find_blobs(input, new_blobs, min_blob_size_);          
-
+     
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
      //////////////////////////////////////////////////////////////////////////
@@ -210,9 +210,6 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
 #if 1
 
-     // Before using the Hungarian method, remove blobs and measurements
-     // that align almost perfectly. TODO
-     
      //////////////////////////////////////////////////////////////////////////
      // Use the Hungarian Method to match new blob measurements with previous
      // blob tracks

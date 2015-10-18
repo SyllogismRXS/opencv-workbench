@@ -121,7 +121,7 @@ void Jet2Gray_matlab(const cv::Mat &I, cv::Mat &gray)
           for ( j = 0; j < nCols; ++j) {
                cv::Vec3b pix = I.at<cv::Vec3b>(i,j);
                if (pix[0] == 0 && pix[1] == 0 && pix[2] == 0) {
-                    p[j] = 0;
+               p[j] = 0;
                } else {               
                     Color_t c;
                     c.b = pix[0];

@@ -20,6 +20,37 @@ namespace wb{
           cv::line(img, cv::Point(center.x + d, center.y - d), cv::Point(center.x - d, center.y + d), color, 2, CV_AA, 0 );
      }
 
+     void show_nonzero(cv::Mat &img)
+     {
+          // accept only char type matrices
+          CV_Assert(img.depth() != sizeof(uchar));
+
+          cv::Mat img_show = cv::Mat::zeros(img.size(), CV_8UC3);
+
+          //int channels = img.channels();
+
+          int nRows = img.rows;
+          int nCols = img.cols;// * channels;
+
+          //if (img.isContinuous()) {
+          //     nCols *= nRows;
+          //     nRows = 1;
+          //}
+
+          int i,j;
+          for( i = 0; i < nRows; ++i) {
+               for ( j = 0; j < nCols; ++j) {
+                    cv::Vec3b pix = img.at<cv::Vec3b>(i,j);
+                    if (pix[0] == 0 && pix[1] == 0 && pix[2] == 0) {
+                         img_show.at<cv::Vec3b>(i,j) = cv::Vec3b(255,0,0);
+                    } else {
+                         img_show.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,255);
+                    }
+               }
+          }    
+          cv::imshow("nonzeros", img_show);
+     }
+
      ////struct Cluster_t;
      //class Cluster;
      //typedef Cluster Cluster_t;

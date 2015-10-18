@@ -4,7 +4,7 @@
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-28 15:33:30 syllogismrxs>
+/// Time-stamp: <2015-10-18 16:23:49 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -53,6 +53,8 @@ namespace wb
      void show(const cv::Mat &img);
      void print_size(const cv::Mat &img);
      void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d);
+
+     void show_nonzero(cv::Mat &img);
 }
 
 #endif
