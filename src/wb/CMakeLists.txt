@@ -17,6 +17,8 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
 target_link_libraries(${LIBRARY_NAME_1} 
   ${Boost_LIBRARIES}  
   ${OpenCV_LIBS}   
+  track
+  workbench-utils
   )
 
 # Push up the OPENCV_WORKBENCH_LIBS variable
