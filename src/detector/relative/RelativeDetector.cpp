@@ -94,7 +94,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       /// cv::imshow("grad thresh", thresh_grad);
 
       cv::Mat thresh_amp;
-#if 0      
+#if 0     
       wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
       
 #else
@@ -130,13 +130,21 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       std::vector<wb::Blob> blobs = blob_process_.blobs();
       std::vector<wb::Blob>::iterator it = blobs.begin();
       for (; it != blobs.end(); it++) {
+
            // Have to transform tracks from distorted cartesian
            // to polar, then to undistorted cartesian
            cv::Point p = it->estimated_centroid();
-           double range = stream_->pixel_range(p.y, p.x); //row, col
-           double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180
-           double y = -range*cos(bearing);
-           double x = range*sin(bearing);
+
+           double x, y;
+           if (stream_->type() == syllo::SonarType) {           
+                double range = stream_->pixel_range(p.y, p.x); //row, col
+                double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180
+                y = -range*cos(bearing);
+                x = range*sin(bearing);
+           } else {
+                x = p.x;
+                y = p.y;
+           }
            
            //it->set_undistorted_centroid(cv::Point2f(p.x,p.y));
            it->set_undistorted_centroid(cv::Point2f(x,y));
