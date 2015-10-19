@@ -24,39 +24,68 @@ int BlobProcess::next_available_id()
 
 uchar BlobProcess::valueAt(cv::Mat &img, int row, int col)
 {
-     if (col >= 0 && col < img.cols) {
-	  if (row >= 0 && row < img.rows) {
-	       return img.at<uchar>(row,col);
-	  }
-     } 
+     if (col >= 0 && col < img.cols && row >= 0 && row < img.rows) {
+	       return img.at<uchar>(row,col);              
+     }
+     // Return 0 if outside of the image bounds
      return 0;
 }
      
 uchar BlobProcess::findMin(uchar NE, uchar N, uchar NW, uchar W)
 {
-     int minChamp = 9999;
+     uchar minChamp = UCHAR_MAX;
 
+     // If there are no neighbors, return 0.
      if (NE == 0 && N == 0 && NW == 0 && W == 0) {
 	  return 0;
      }
 
-     if(NE != 0 && NE < minChamp) {
+     if (NE != 0 && NE < minChamp) {
 	  minChamp = NE;
      }
 
-     if(N != 0 && N < minChamp) {
+     if (N != 0 && N < minChamp) {
 	  minChamp = N;
      }
 
-     if(NW != 0 && NW < minChamp) {
+     if (NW != 0 && NW < minChamp) {
 	  minChamp = NW;
      }
 
-     if(W != 0 && W < minChamp) {
+     if (W != 0 && W < minChamp) {
 	  minChamp = W;
      }
 
+     if (minChamp == UCHAR_MAX) {
+          cout << "Warning: Couldn't find minimum neighbor value" << endl;
+     }
+     
      return minChamp;
+}
+
+
+void draw_on_label(cv::Mat &img, int r, int c)
+{
+     cv::Mat temp = img.clone();                    
+     cv::normalize(temp, temp, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+     cv::applyColorMap(temp,temp,cv::COLORMAP_JET);
+     //cv::circle(temp, cv::Point(c,r), 3, cv::Scalar(0,255,0), 1, 8, 0);
+     temp.at<cv::Vec3b>(r,c) = cv::Vec3b(100,100,100);
+     cv::resize(temp, temp, cv::Size(0,0),5,5,cv::INTER_NEAREST);
+     cv::imshow("label", temp);     
+     cv::waitKey(0);
+}
+
+void new_label(cv::Mat &img, int r, int c)
+{
+     cv::Mat temp = img.clone();                    
+     cv::normalize(temp, temp, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+     cv::applyColorMap(temp,temp,cv::COLORMAP_JET);
+     cv::circle(temp, cv::Point(c,r), 7, cv::Scalar(0,255,0), 1, 8, 0);
+     temp.at<cv::Vec3b>(r,c) = cv::Vec3b(0,255,0);
+     cv::resize(temp, temp, cv::Size(0,0),5,5,cv::INTER_NEAREST);
+     cv::imshow("new label!", temp);     
+     cv::waitKey(0);
 }
 
 void BlobProcess::labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, 
@@ -64,50 +93,32 @@ void BlobProcess::labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable,
 {
      uchar value;
 
+     // For each valid neighbor, update it's previous labelTable label with the
+     // current label
+
+     // North East
      value = valueAt(img,i-1,j+1);
-     if (value != 0) {
-	  labelTable[value] = label;
-	  img.at<uchar>(i-1,j+1) = label;
+     if (value != 0 && label < labelTable[value]) {
+	  labelTable[value] = label;                    
      }
 
+     // North
      value = valueAt(img,i-1,j);
-     if (value != 0) {
-	  labelTable[value] = label;
-	  img.at<uchar>(i-1,j) = label;
+     if (value != 0 && label < labelTable[value]) {                    
+	  labelTable[value] = label;          
      }
 
+     // North West
      value = valueAt(img,i-1,j-1);
-     if (value != 0) {
-	  labelTable[value] = label;
-	  img.at<uchar>(i-1,j-1) = label;
+     if (value != 0 && label < labelTable[value]) {          
+	  labelTable[value] = label;          
      }
 
+     // West
      value = valueAt(img,i,j-1);
-     if (value != 0) {
-	  labelTable[value] = label;
-	  img.at<uchar>(i,j-1) = label;
+     if (value != 0 && label < labelTable[value]) {                   
+	  labelTable[value] = label;          
      }		    
-}
-
-int** array_to_matrix(int* m, int rows, int cols) {
-     int i,j;
-     int** r;
-     r = (int**)calloc(rows,sizeof(int*));
-     for(i=0;i<rows;i++)
-     {
-          r[i] = (int*)calloc(cols,sizeof(int));
-          for(j=0;j<cols;j++)
-               r[i][j] = m[i*cols+j];
-     }
-     return r;
-}
-
-void delete_matrix(int **array, int rows, int cols)
-{
-     for (int r = 0; r < rows; r++) {
-          free (array[r]);
-     }
-     free (array);
 }
 
 void BlobProcess::find_blobs(cv::Mat &input, 
@@ -120,27 +131,36 @@ void BlobProcess::find_blobs(cv::Mat &input,
      labelTable.push_back(0);
 
      cv::Mat img;
-     input.copyTo(img);
+     input.copyTo(img);     
      
      uchar label = 1;
 
      uchar NE, N, NW, W;
 
-     for( int i = 0; i < img.rows; ++i) {
-          for( int j = 0; j < img.cols; ++j ) {
+     for(int i = 0; i < img.rows; i++) {
+          for(int j = 0; j < img.cols; j++) {               
                if (img.at<uchar>(i,j) != 0) {
+                    // The current pixel is not background
+
+                    // Find the values of its neighbors
                     NE = valueAt(img,i-1,j+1);
                     N  = valueAt(img,i-1,j);
                     NW = valueAt(img,i-1,j-1);
                     W  = valueAt(img,i,j-1);
                     
+                    // Find the minimum value of its neighbors
                     uchar value = findMin(NE,N,NW,W);
 
                     if (value == 0) {
+                         // There are no neighbors, uniquely label the current
+                         // element
                          img.at<uchar>(i,j) = label;
                          labelTable.push_back(label);
                          label++;
                     } else {
+                         // The pixel has neighbors with assigned
+                         // values. Assign this pixel with the smallest label
+                         // of its neighbors and label the neighbors
                          img.at<uchar>(i,j) = value;
                          labelNeighbors(img, labelTable, value, i, j);
                     }
@@ -150,12 +170,14 @@ void BlobProcess::find_blobs(cv::Mat &input,
           
      // Second pass to fix connected components that have different labels
      std::map<int,wb::Blob> blobs_temp;
-     for( int i = 0; i < img.rows; ++i) {
-          for( int j = 0; j < img.cols; ++j ) {
+     for (int i = 0; i < img.rows; i++) {
+          for (int j = 0; j < img.cols; j++) {
                if (img.at<uchar>(i,j) != 0) {
-                    int id = labelTable[img.at<uchar>(i,j)];
-                    //img.at<uchar>(i,j) = id;
-
+                    // Find the smallest equivalent label to the label of the
+                    // current pixel                           
+                    int id = labelTable[img.at<uchar>(i,j)];                    
+                    img.at<uchar>(i,j) = id;
+                    
                     // If the ID is new, add it to the blob map
                     if (blobs_temp.count(id) == 0) {
                          wb::Blob blob(id);
@@ -164,10 +186,17 @@ void BlobProcess::find_blobs(cv::Mat &input,
                     wb::Point p;
                     p.set_position(cv::Point(j,i));
                     p.set_value(input.at<uchar>(i,j));
-                    blobs_temp[id].add_point(p);
+                    blobs_temp[id].add_point(p);                    
                }
           }
-     }   
+     }     
+
+     //cv::Mat temp;
+     //img.copyTo(temp);
+     //cv::normalize(temp, temp, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+     //cv::applyColorMap(temp,temp,cv::COLORMAP_JET);
+     //cv::resize(temp, temp, cv::Size(0,0),5,5,cv::INTER_NEAREST);
+     //cv::imshow("color-blobs", temp);
 
      //////////////////////////////////////////////////////////////////////////
      // Remove small blobs / convert map to vector
@@ -189,6 +218,27 @@ void BlobProcess::find_blobs(cv::Mat &input,
      cv::imshow("Frame Blobs", temp_img);
 #endif
 
+}
+
+int** array_to_matrix(int* m, int rows, int cols) {
+     int i,j;
+     int** r;
+     r = (int**)calloc(rows,sizeof(int*));
+     for(i=0;i<rows;i++)
+     {
+          r[i] = (int*)calloc(cols,sizeof(int));
+          for(j=0;j<cols;j++)
+               r[i][j] = m[i*cols+j];
+     }
+     return r;
+}
+
+void delete_matrix(int **array, int rows, int cols)
+{
+     for (int r = 0; r < rows; r++) {
+          free (array[r]);
+     }
+     free (array);
 }
 
 int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
