@@ -23,6 +23,25 @@ get_filename_component(OPENCV_WORKBENCH_SCRIPTS_DIR ./scripts ABSOLUTE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+########################################################
+# Find dlib
+########################################################
+find_package(DLIB REQUIRED)
+
+message("======================")
+IF (DLIB_FOUND)  
+  message("FOUND DLIB")
+  message("Includes: ${DLIB_INCLUDE_DIR}")
+  message("Libraries: ${DLIB_LIBRARIES}")
+  include_directories(${DLIB_INCLUDE_DIR})
+ELSE()
+  error("Can't find DLIB.")
+ENDIF()
+message("======================")
+
+########################################################
+# Find Eigen
+########################################################
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
@@ -127,6 +146,71 @@ else()
 endif()
 
 include_directories(${OPENCV_WORKBENCH_SRC_DIR}/gui/annotate)
+
+##############################################
+# Compiler Optimizations
+##############################################
+#set default build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: Debug Release
+      RelWithDebInfo MinSizeRel." FORCE)
+endif()
+
+# Setup some options to allow a user to enable SSE and AVX instruction use.  
+if (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" 
+                                OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+                                OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
+    option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)
+    option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  OFF)
+    if(USE_AVX_INSTRUCTIONS)
+        add_definitions(-mavx)
+        message(STATUS "Enabling AVX instructions")
+    elseif (USE_SSE4_INSTRUCTIONS)
+        add_definitions(-msse4)
+        message(STATUS "Enabling SSE4 instructions")
+    elseif(USE_SSE2_INSTRUCTIONS)
+        add_definitions(-msse2)
+        message(STATUS "Enabling SSE2 instructions")
+    endif()
+elseif (MSVC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") # else if using Visual Studio 
+    # Use SSE2 by default when using Visual Studio.
+    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
+    # Visual Studio 2005 didn't support SSE4 
+    if (NOT MSVC80)
+        option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)
+    endif()
+    # Visual Studio 2005 and 2008 didn't support AVX
+    if (NOT MSVC80 AND NOT MSVC90)
+        option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  OFF)
+    endif() 
+    include(CheckTypeSize)
+    check_type_size( "void*" SIZE_OF_VOID_PTR)
+    if(USE_AVX_INSTRUCTIONS)
+        add_definitions(/arch:AVX)
+        message(STATUS "Enabling AVX instructions")
+    elseif (USE_SSE4_INSTRUCTIONS)
+        # Visual studio doesn't have an /arch:SSE2 flag when building in 64 bit modes.
+        # So only give it when we are doing a 32 bit build.
+        if (SIZE_OF_VOID_PTR EQUAL 4)
+            add_definitions(/arch:SSE2)  
+        endif()
+        message(STATUS "Enabling SSE4 instructions")
+        add_definitions(-DDLIB_HAVE_SSE2)
+        add_definitions(-DDLIB_HAVE_SSE3)
+        add_definitions(-DDLIB_HAVE_SSE41)
+    elseif(USE_SSE2_INSTRUCTIONS)
+        # Visual studio doesn't have an /arch:SSE2 flag when building in 64 bit modes.
+        # So only give it when we are doing a 32 bit build.
+        if (SIZE_OF_VOID_PTR EQUAL 4)
+            add_definitions(/arch:SSE2)
+        endif()
+        message(STATUS "Enabling SSE2 instructions")
+        add_definitions(-DDLIB_HAVE_SSE2)
+    endif()
+endif()
+
 
 add_subdirectory(src)
 add_subdirectory(share)
