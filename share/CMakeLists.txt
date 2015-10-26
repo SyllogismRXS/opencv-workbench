@@ -14,4 +14,4 @@ add_subdirectory(ekf-test)
 add_subdirectory(trajectory-similarity)
 add_subdirectory(blob-test)
 add_subdirectory(hog-train-test)
-
+add_subdirectory(detect-with-hog)
