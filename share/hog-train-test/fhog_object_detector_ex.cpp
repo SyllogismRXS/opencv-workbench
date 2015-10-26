@@ -122,7 +122,10 @@ int main(int argc, char** argv)
           typedef scan_fhog_pyramid<pyramid_down<6> > image_scanner_type; 
           image_scanner_type scanner;
           // The sliding window detector will be 80 pixels wide and 80 pixels tall.
-          scanner.set_detection_window_size(80, 80); 
+          //scanner.set_detection_window_size(80, 80); 
+          //scanner.set_detection_window_size(50, 90);
+          //scanner.set_detection_window_size(40, 40); 
+          scanner.set_detection_window_size(70,70); 
           structural_object_detection_trainer<image_scanner_type> trainer(scanner);
           // Set this to the number of processing cores on your machine.
           trainer.set_num_threads(4);  
@@ -133,6 +136,7 @@ int main(int argc, char** argv)
           // images you haven't trained on.  Don't just leave the value set at 1.  Try a few
           // different C values and see what works best for your data.
           trainer.set_c(1);
+          //trainer.set_c(0.1);
           // We can tell the trainer to print it's progress to the console if we want.  
           trainer.be_verbose();
           // The trainer will run until the "risk gap" is less than 0.01.  Smaller values
