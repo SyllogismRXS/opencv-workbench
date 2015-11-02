@@ -200,7 +200,7 @@ void BlobProcess::find_blobs(cv::Mat &input,
                }
           }
      }     
-
+     
      //// Print out labelTable
      //cout << "--------" << endl;
      //int loop = 0;
