@@ -95,30 +95,34 @@ void BlobProcess::labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable,
 
      // For each valid neighbor, update it's previous labelTable label with the
      // current label
-
+     
      // North East
      value = valueAt(img,i-1,j+1);
-     if (value != 0 && label < labelTable[value]) {
-	  labelTable[value] = label;                    
+     if (value != 0 && labelTable[label] < labelTable[value]) {
+	  labelTable[value] = labelTable[label];
+          img.at<uchar>(i-1,j+1) = labelTable[label];
      }
 
      // North
      value = valueAt(img,i-1,j);
-     if (value != 0 && label < labelTable[value]) {                    
-	  labelTable[value] = label;          
+     if (value != 0 && labelTable[label] < labelTable[value]) {                    
+	  labelTable[value] = labelTable[label];
+          img.at<uchar>(i-1,j) = labelTable[label];
      }
 
      // North West
      value = valueAt(img,i-1,j-1);
-     if (value != 0 && label < labelTable[value]) {          
-	  labelTable[value] = label;          
+     if (value != 0 && labelTable[label] < labelTable[value]) {          
+	  labelTable[value] = labelTable[label];
+          img.at<uchar>(i-1,j-1) = labelTable[label];
      }
 
      // West
      value = valueAt(img,i,j-1);
-     if (value != 0 && label < labelTable[value]) {                   
-	  labelTable[value] = label;          
-     }		    
+     if (value != 0 && labelTable[label] < labelTable[value]) {                   
+	  labelTable[value] = labelTable[label];
+          img.at<uchar>(i,j-1) = labelTable[label];
+     }
 }
 
 void BlobProcess::find_blobs(cv::Mat &input, 
@@ -154,6 +158,8 @@ void BlobProcess::find_blobs(cv::Mat &input,
                     if (value == 0) {
                          // There are no neighbors, uniquely label the current
                          // element
+                         //cout << "New Label: " << (int)label << endl;
+                         //new_label(input,i,j);
                          img.at<uchar>(i,j) = label;
                          labelTable.push_back(label);
                          label++;
@@ -167,7 +173,7 @@ void BlobProcess::find_blobs(cv::Mat &input,
                }
           }
      }
-          
+
      // Second pass to fix connected components that have different labels
      std::map<int,wb::Blob> blobs_temp;
      for (int i = 0; i < img.rows; i++) {
@@ -175,7 +181,11 @@ void BlobProcess::find_blobs(cv::Mat &input,
                if (img.at<uchar>(i,j) != 0) {
                     // Find the smallest equivalent label to the label of the
                     // current pixel                           
-                    int id = labelTable[img.at<uchar>(i,j)];                    
+                    int id = labelTable[img.at<uchar>(i,j)];
+                    //while (labelTable[id] != id) {
+                    //     id = labelTable[id];                         
+                    //}                    
+                    
                     img.at<uchar>(i,j) = id;
                     
                     // If the ID is new, add it to the blob map
@@ -191,7 +201,15 @@ void BlobProcess::find_blobs(cv::Mat &input,
           }
      }     
 
-     //cv::Mat temp;
+     //// Print out labelTable
+     //cout << "--------" << endl;
+     //int loop = 0;
+     //for (std::vector<uchar>::iterator it = labelTable.begin();
+     //     it != labelTable.end(); it++) {
+     //     cout << loop++ << ": " << (int)*it << endl;
+     //}
+
+     //cv::Mat temp;//(img, cv::Rect(0, img.rows/4, img.cols, img.rows - img.rows/4));
      //img.copyTo(temp);
      //cv::normalize(temp, temp, 0, 255, cv::NORM_MINMAX, CV_8UC1);
      //cv::applyColorMap(temp,temp,cv::COLORMAP_JET);
