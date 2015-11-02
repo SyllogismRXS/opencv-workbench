@@ -24,7 +24,7 @@ RelativeDetector::RelativeDetector()
      cluster_process_.set_min_cluster_size(30);     
 
      int erosionElem = cv::MORPH_ELLIPSE;
-     int erosionSize = 2;
+     int erosionSize = 1;
      int dilationElem = cv::MORPH_ELLIPSE; // MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE
      int dilationSize = 1;          
 
@@ -261,16 +261,16 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
       /// cv::Mat thresh_and_grad = thresh_amp + thresh_grad;
       /// cv::imshow("thresh and grad", thresh_and_grad);     
-      /// cv::Mat erode;
-      /// cv::erode(thresh_amp, erode, erosionConfig_);
-      /// cv::imshow("erode", erode);
-      /// 
-      //cv::Mat dilate;
-      /// cv::dilate(erode, dilate, dilationConfig_);
-      /// cv::imshow("dilate", dilate);
+      cv::Mat erode;
+      cv::erode(thresh_amp, erode, erosionConfig_);
+      //cv::imshow("erode", erode);
+      
+      cv::Mat dilate;
+      cv::dilate(erode, dilate, dilationConfig_);
+      cv::imshow("Erode/Dilate", dilate);
       //dilate = thresh_amp;      
       
-      blob_process_.process_frame(thresh_amp, median, thresh_value_);
+      blob_process_.process_frame(dilate, median, thresh_value_);
       
       cv::Mat blob_img;
       blob_process_.overlay_blobs(gray, blob_img);      
