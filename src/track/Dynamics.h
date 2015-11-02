@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-09 15:30:47 syllogismrxs>
+/// Time-stamp: <2015-10-30 13:31:07 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -81,15 +81,15 @@ public:
      void set_measurement_noise(double noise) { measurement_noise_ = noise; } 
      void set_x0(state_5d_type x0);
      
-     std::vector<cv::Point2f> & truth_points() { return truth_points_; }
-     std::vector<cv::Point2f> & measured_points() { return measured_points_; }
+     std::vector<cv::Point2d> & truth_points() { return truth_points_; }
+     std::vector<cv::Point2d> & measured_points() { return measured_points_; }
 
 protected:
 private:
      std::vector<double> tt_;
      std::vector<double> headings_;
-     std::vector<cv::Point2f> truth_points_;
-     std::vector<cv::Point2f> measured_points_;
+     std::vector<cv::Point2d> truth_points_;
+     std::vector<cv::Point2d> measured_points_;
      
      double t0_;
      double dt_;

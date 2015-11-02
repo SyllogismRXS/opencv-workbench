@@ -49,9 +49,9 @@ void Dynamics::compute_trajectory()
           
           std::vector<double>::iterator it = tt_.begin();
           for (; it != tt_.end(); it++) {
-               cv::Point2f truth, measured;
+               cv::Point2d truth, measured;
                
-               truth = cv::Point2f(x[0], x[1]);
+               truth = cv::Point2d(x[0], x[1]);
                
                measured.x = truth.x + var_nor() * measurement_noise_;
                measured.y = truth.y + var_nor() * measurement_noise_;

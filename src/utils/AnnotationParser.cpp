@@ -434,7 +434,7 @@ int AnnotationParser::ParseFile(std::string file)
                     double x, y;
                     x = syllo::str2double(centroid->first_node("x")->value());
                     y = syllo::str2double(centroid->first_node("y")->value());                    
-                    object.set_undistorted_centroid(cv::Point2f(x,y));
+                    object.set_undistorted_centroid(cv::Point2d(x,y));
                }
                
                frame.objects[object_name] = object;
@@ -561,7 +561,7 @@ std::vector<std::string> AnnotationParser::track_names()
 void AnnotationParser::plot_tracks(std::vector<std::string> &names, 
                                    int min_track_length)
 {
-     std::map<std::string, std::vector<cv::Point2f> > points;     
+     std::map<std::string, std::vector<cv::Point2d> > points;     
      
      // Loop through all frames, plotting tracks that match the user's input
      std::map<int,Frame>::iterator it_frame = frames.begin();
@@ -583,12 +583,12 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      }
 
      // Plot the tracks;
-     std::vector< std::vector<cv::Point2f> > vectors;
+     std::vector< std::vector<cv::Point2d> > vectors;
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;
 
-     std::map<std::string, std::vector<cv::Point2f> >::iterator it_points;
+     std::map<std::string, std::vector<cv::Point2d> >::iterator it_points;
      for (it_points = points.begin(); it_points != points.end(); it_points++) {          
           // Only plot tracks that have more points than the min track length
           if (it_points->second.size() < (unsigned int)min_track_length) { 
@@ -627,7 +627,7 @@ std::vector<wb::Entity> AnnotationParser::get_tracks(std::string name)
                // Does this object name match the ID we care about?
                if (name == it_obj->first) {                    
                     // Push the point onto the appropriate points vector
-                    tracks.push_back(it_obj->second);                    
+                    tracks.push_back(it_obj->second);
                }     
           }          
      }

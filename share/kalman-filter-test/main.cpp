@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
      dyn.set_measurement_noise(0.1);
      
      dyn.compute_trajectory();     
-     std::vector<cv::Point2f> truth = dyn.truth_points();
-     std::vector<cv::Point2f> measured = dyn.measured_points();
+     std::vector<cv::Point2d> truth = dyn.truth_points();
+     std::vector<cv::Point2d> measured = dyn.measured_points();
 
      ////////////////////////////////////////////////////////
      // Setup Kalman Filter
@@ -124,13 +124,13 @@ int main(int argc, char *argv[])
 
      /////////////////////////////////////////////////////////
      // Process the measured points with the kalman filter
-     std::vector<cv::Point2f> kf_points;
-     std::vector<cv::Point2f> opencv_kf_points;
-     std::vector<cv::Point2f> kf_var_x;
-     std::vector<cv::Point2f> kf_var_y;
-     std::vector<cv::Point2f> error;
-     std::vector<cv::Point2f>::iterator it = measured.begin();
-     std::vector<cv::Point2f>::iterator it_truth = truth.begin();
+     std::vector<cv::Point2d> kf_points;
+     std::vector<cv::Point2d> opencv_kf_points;
+     std::vector<cv::Point2d> kf_var_x;
+     std::vector<cv::Point2d> kf_var_y;
+     std::vector<cv::Point2d> error;
+     std::vector<cv::Point2d>::iterator it = measured.begin();
+     std::vector<cv::Point2d>::iterator it_truth = truth.begin();
      double t = t0;
      for(; it != measured.end(); it++) {
           Eigen::MatrixXf u, z;
@@ -155,19 +155,19 @@ int main(int argc, char *argv[])
           measurement(1) = it->y;
           
           cv::Mat estimated = opencv_kf.correct(measurement);
-          cv::Point2f est_centroid = cv::Point2f(estimated.at<float>(0),estimated.at<float>(1));
+          cv::Point2d est_centroid = cv::Point2d(estimated.at<float>(0),estimated.at<float>(1));
           opencv_kf_points.push_back(est_centroid);
           ////////////////////////////////////////////
                     
           Eigen::MatrixXf state = kf.state();          
-          kf_points.push_back(cv::Point2f(state(0,0),state(1,0)));
+          kf_points.push_back(cv::Point2d(state(0,0),state(1,0)));
 
           Eigen::MatrixXf covar = kf.covariance();
-          kf_var_x.push_back(cv::Point2f(t,covar(0,0)));
-          kf_var_y.push_back(cv::Point2f(t,covar(1,1)));
+          kf_var_x.push_back(cv::Point2d(t,covar(0,0)));
+          kf_var_y.push_back(cv::Point2d(t,covar(1,1)));
 
           double err = sqrt( pow(state(0,0) - it_truth->x, 2) + pow(state(1,0) - it_truth->y, 2) );
-          error.push_back(cv::Point2f(t,err));
+          error.push_back(cv::Point2d(t,err));
           
           it_truth++;          
           t += dt;
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     
      /////////////////////////////////////////////////////////     
      // Plot the tracks
-     std::vector< std::vector<cv::Point2f> > vectors;     
+     std::vector< std::vector<cv::Point2d> > vectors;     
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;

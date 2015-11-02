@@ -42,12 +42,12 @@ namespace syllo
                    const std::string &title, 
                    std::vector<std::string> &labels);
           
-          void plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles);  
           
-          void plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles,

@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-14 15:03:16 syllogismrxs>
+/// Time-stamp: <2015-11-01 18:33:25 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -38,12 +38,16 @@
 /// The BlankDetector class ...
 ///
 /// ---------------------------------------------------------------------------
+#include <map>
+#include <list>
+
 #include <opencv_workbench/detector/Detector.h>
 #include <opencv_workbench/syllo/syllo.h>
 #include <opencv_workbench/wb/ClusterProcess.h>
 #include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/wb/NDT.h>
 #include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/wb/Entity.h>
 
 class RelativeDetector : public Detector{
 public:
@@ -63,6 +67,15 @@ protected:
 
      cv::Mat erosionConfig_;
      cv::Mat dilationConfig_;
+
+     std::map<int, std::list<wb::Entity> > tracks_history_;
+
+     void trajectory_similarity(int frame_number, cv::Mat &img);
+     void trajectory_polar_diff(std::list<wb::Entity> &traj,
+                                std::list<cv::Point2d> &diffs);
+     double trajectory_diff(std::list<cv::Point2d> &t1,
+                            std::list<cv::Point2d> &t2);
+     
 private:
 };
 

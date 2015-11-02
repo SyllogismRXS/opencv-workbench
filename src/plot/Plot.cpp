@@ -26,7 +26,7 @@ namespace syllo
           
      }
 
-     void Plot::plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles)
@@ -34,7 +34,7 @@ namespace syllo
           plot(vectors, title, labels, styles, std::string(""));
      }
 
-     void Plot::plot(std::vector< std::vector<cv::Point2f> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
@@ -70,12 +70,12 @@ namespace syllo
           gp_ << "plot";
 
           int count = 0;
-          std::vector< std::vector<cv::Point2f> >::iterator it;
+          std::vector< std::vector<cv::Point2d> >::iterator it;
           for (it = vectors.begin(); it != vectors.end(); it++) {
                std::vector<double> xLocs;
                std::vector<double> yLocs;
         	    
-               std::vector<cv::Point2f>::iterator it2;
+               std::vector<cv::Point2d>::iterator it2;
                for (it2 = it->begin() ; it2 != it->end() ; it2++) {
                     xLocs.push_back(it2->x);
                     yLocs.push_back(it2->y);

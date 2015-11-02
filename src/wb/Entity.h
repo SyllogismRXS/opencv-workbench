@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-14 15:19:15 syllogismrxs>
+/// Time-stamp: <2015-10-30 16:59:30 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -116,6 +116,9 @@ namespace wb {
           
           void set_matched(bool matched) { matched_ = matched; }
           bool matched() { return matched_; }
+
+          void set_frame(int frame) { frame_ = frame; }
+          int frame() { return frame_; }
           
      protected:
           int id_;    
@@ -130,6 +133,8 @@ namespace wb {
           bool occluded_;
           bool is_tracked_;
           BoundingBox bbox_;
+
+          int frame_;
 
           //cv::KalmanFilter KF_;
           cv::Mat_<float> transition_matrix_;
