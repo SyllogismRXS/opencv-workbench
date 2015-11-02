@@ -276,7 +276,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       blob_process_.overlay_blobs(gray, blob_img);      
       
       blob_process_.overlay_tracks(blob_img, blob_img);
-      cv::imshow("Blobs", blob_img);      
+      cv::imshow("Blobs", blob_img);  
+
+      cv::Mat blob_consolidate;
+      blob_process_.consolidate_tracks(blob_consolidate);
+      cv::imshow("Consolidate", blob_consolidate);
       
       //////////////////////////////////////////////////////////////
       /// Tracking     

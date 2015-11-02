@@ -535,7 +535,7 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      //     printf("id: %d \t size:%d\n",it->first,it->second.getSize());
      //}
 
-     //output = reduced;     
+     //output = reduced;         
      
      blob_maintenance();
      
@@ -560,6 +560,17 @@ void BlobProcess::blob_maintenance()
                it++;
           }
      }    
+}
+
+void BlobProcess::consolidate_tracks(cv::Mat &img)
+{
+     // Consolidate blob tracks that have overlapping rectangles
+     // The track ID from the oldest track is used.     
+     std::vector<wb::Blob>::iterator it1 = blobs_.begin();
+     for(; it1 != blobs_.end(); it1++) {
+          std::vector<wb::Blob>::iterator it2 = blobs_.begin();
+          
+     }
 }
 
 void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst, 

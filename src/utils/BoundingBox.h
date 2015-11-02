@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-09 14:43:35 syllogismrxs>
+/// Time-stamp: <2015-11-02 17:04:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -122,7 +122,22 @@ BoundingBox(cv::Rect rect) :
                return false;
           }
      }
+
+     static bool overlap(const BoundingBox &b1, const BoundingBox &b2)
+     {
+          // If one rectangle is on the left side of the other
+          if (b1.xmax_ < b2.xmin_ || b2.xmax_ < b1.xmin_) {
+               return false;
+          }
+
+          // If one rectangle is above the other
+          if (b1.ymax_ < b2.ymin_ || b2.ymax_ < b1.ymin_) {
+               return false;
+          }               
           
+          return true;
+     }
+         
 protected:
      int xmin_;
      int xmax_;
