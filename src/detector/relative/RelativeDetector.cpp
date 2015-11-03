@@ -268,7 +268,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       //dilate = thresh_amp;      
       
       cv::Mat blob_consolidate;
-      bool found_overlap = blob_process_.consolidate_tracks(gray, blob_consolidate);
+      blob_process_.consolidate_tracks(gray, blob_consolidate);
       cv::imshow("Consolidate", blob_consolidate);
       //if (found_overlap) {
       //     cv::waitKey(0);
