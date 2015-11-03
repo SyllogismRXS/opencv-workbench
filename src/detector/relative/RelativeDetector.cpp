@@ -126,7 +126,7 @@ struct TrajRMSE {
 
 void RelativeDetector::trajectory_similarity(int frame_number, cv::Mat &img)
 {
-     cout << "==========================================" << endl;
+     //cout << "==========================================" << endl;
      std::map<int, std::list<cv::Point2d> > trajectories;
      for (std::map<int, std::list<wb::Entity> >::iterator 
                it = tracks_history_.begin(); it != tracks_history_.end(); ) {
@@ -135,7 +135,7 @@ void RelativeDetector::trajectory_similarity(int frame_number, cv::Mat &img)
                tracks_history_.erase(it++);
           } else {
                if (it->second.back().is_tracked()) {
-                    cout << "Tracked: " << it->first << endl;
+                    //cout << "Tracked: " << it->first << endl;
                     // Compute derivative of each current track's trajectory
                     trajectory_polar_diff(it->second, trajectories[it->first]);                    
                }
@@ -182,10 +182,10 @@ void RelativeDetector::trajectory_similarity(int frame_number, cv::Mat &img)
      }
 
      // Print out the RMSEs for this frame:
-     cout << "-----------------" << endl;
+     //cout << "-----------------" << endl;
      for(std::map<std::string, struct TrajRMSE>::iterator it = RMSEs.begin();
          it != RMSEs.end(); it++) {
-          cout << it->first << ": " << it->second.RMSE << endl;
+          //cout << it->first << ": " << it->second.RMSE << endl;
      
           // If the RMSE between two trajectories is less than a threshold,
           // circle the trajectories
@@ -193,9 +193,6 @@ void RelativeDetector::trajectory_similarity(int frame_number, cv::Mat &img)
                // Get the two IDs in the track history and circle them
                cv::Point p1 = tracks_history_[it->second.ID1].back().centroid();
                cv::Point p2 = tracks_history_[it->second.ID2].back().centroid();
-               
-               cout << "Point: " << p1.x << "," << p1.y << endl;
-               cout << "Point: " << p2.x << "," << p2.y << endl;
                
                //cv::circle(img, p1, 10, cv::Scalar(0,255,255), 1, 8, 0);
                //cv::circle(img, p2, 10, cv::Scalar(0,255,255), 1, 8, 0);
@@ -270,17 +267,20 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       cv::imshow("Erode/Dilate", dilate);
       //dilate = thresh_amp;      
       
+      cv::Mat blob_consolidate;
+      bool found_overlap = blob_process_.consolidate_tracks(gray, blob_consolidate);
+      cv::imshow("Consolidate", blob_consolidate);
+      //if (found_overlap) {
+      //     cv::waitKey(0);
+      //}
+      
       blob_process_.process_frame(dilate, median, thresh_value_);
       
       cv::Mat blob_img;
       blob_process_.overlay_blobs(gray, blob_img);      
       
       blob_process_.overlay_tracks(blob_img, blob_img);
-      cv::imshow("Blobs", blob_img);  
-
-      cv::Mat blob_consolidate;
-      blob_process_.consolidate_tracks(blob_consolidate);
-      cv::imshow("Consolidate", blob_consolidate);
+      cv::imshow("Blobs", blob_img);        
       
       //////////////////////////////////////////////////////////////
       /// Tracking     

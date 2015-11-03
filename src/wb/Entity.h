@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-30 16:59:30 syllogismrxs>
+/// Time-stamp: <2015-11-03 15:07:11 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -90,16 +90,30 @@ namespace wb {
           std::vector<wb::Point> & points() { return points_; }
           int size() { return points_.size(); }
           void add_point(wb::Point &p) { points_.push_back(p); }
+          void add_points( std::vector<wb::Point> &points);
           void remove_point(wb::Point &p);
                
           // Age related functions
           void inc_age();
           void dec_age();
+          
+          void inc_occluded_age() { occluded_age_++; }
+          void dec_occluded_age() { occluded_age_--; }
+          void set_occluded_age(int age) { occluded_age_ = age; } 
+          int occluded_age() { return occluded_age_;} 
+          
           int age() { return age_; }
           void set_age(int age);
           bool is_visible();
           bool is_tracked();
           bool is_dead();
+
+          void new_track(int id);
+          void missed_track();
+          void detected_track();
+
+          void matched_track(Entity &match);
+          void copy_track_info(Entity &other);
           
           bool occluded() { return occluded_; }
           void set_occluded(bool occluded) { occluded_ = occluded; }
@@ -116,6 +130,8 @@ namespace wb {
           
           void set_matched(bool matched) { matched_ = matched; }
           bool matched() { return matched_; }
+          int matched_id() { return matched_id_; }
+          void set_matched_id(int matched_id) { matched_id_ = matched_id; }
 
           void set_frame(int frame) { frame_ = frame; }
           int frame() { return frame_; }
@@ -130,11 +146,14 @@ namespace wb {
           cv::Point2f undistorted_centroid_;
           //cv::Rect rectangle_;
           int age_;
+          int occluded_age_;
           bool occluded_;
           bool is_tracked_;
           BoundingBox bbox_;
 
           int frame_;
+
+          int matched_id_;
 
           //cv::KalmanFilter KF_;
           cv::Mat_<float> transition_matrix_;

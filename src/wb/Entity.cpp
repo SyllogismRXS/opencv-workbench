@@ -9,11 +9,12 @@ using std::endl;
 #define VISIBLE_AGE 5
 #define START_TRACK_AGE 5
 #define MIN_AGE -2
+#define DEAD_OCCLUDED_AGE 10
 
 namespace wb {
 
      Entity::Entity() : id_(-1), name_("unknown:-1"), type_(Unknown), age_(0),
-                        occluded_(false), is_tracked_(false)
+                        occluded_age_(0), occluded_(false), is_tracked_(false)
      {
           //KF_ = cv::KalmanFilter(4, 2, 0);          
           //transition_matrix_ = cv::Mat_<float>(4,4);
@@ -198,33 +199,76 @@ namespace wb {
 
      bool Entity::is_dead()
      {
-          if (age_ < MIN_AGE) {
-               return true;
+          if (occluded_age_ > DEAD_OCCLUDED_AGE) { 
+               return true; 
           } else {
-               return false;
+               return false; 
           }
+          
+          //if (age_ < MIN_AGE) {
+          //     return true;
+          //} else {
+          //     return false;
+          //}
      }
 
      void Entity::inc_age()
      {
           age_++;
-          if (age_ > MAX_AGE) {
-               age_ = MAX_AGE;
-          }
+          //if (age_ > MAX_AGE) {
+          //     age_ = MAX_AGE;
+          //}
      }
 
      void Entity::set_age(int age)
      {
-          age_ = age;
-          
-          if (age_ > MAX_AGE) {
-               age_ = MAX_AGE;
-          }
+          age_ = age;          
+          //if (age_ > MAX_AGE) {
+          //     age_ = MAX_AGE;
+          //}
      }
 
      void Entity::dec_age()
      {
           age_--;
+     }
+
+     void Entity::missed_track()
+     {
+          this->set_occluded(true);
+          this->inc_occluded_age();
+     }
+     
+     void Entity::detected_track()
+     {
+          this->inc_age();
+          this->set_occluded(false);
+
+          // Update the Kalman Filter Tracker
+          this->correct_tracker();
+     }
+
+     void Entity::new_track(int id)
+     {
+          this->set_id(id);
+          this->set_age(1);
+          this->set_occluded(false);
+     }
+
+     void Entity::copy_track_info(Entity &other)
+     {
+          this->set_id(other.id());
+          this->set_age(other.age());
+          this->set_tracker(other.tracker());
+     }
+
+     void Entity::matched_track(Entity &match)
+     {
+          // Update the current entity with the track info from "match"
+          this->copy_track_info(match);
+          
+          // Update track variables
+          this->detected_track();
      }
 
      void Entity::remove_point(wb::Point &p)
@@ -236,7 +280,15 @@ namespace wb {
                     break;
                }
           }
-     }               
+     }             
+
+     void Entity::add_points(std::vector<wb::Point> &points)
+     {
+          std::vector<wb::Point>::iterator it = points.begin();
+          for (; it != points.end(); it++) {
+               points_.push_back(*it);
+          }
+     }
 
      std::string Entity::name()
      {

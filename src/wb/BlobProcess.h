@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-02 16:41:43 syllogismrxs>
+/// Time-stamp: <2015-11-02 23:33:27 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -64,7 +64,7 @@ public:
      
      std::vector<wb::Blob> & blobs() { return blobs_; }
 
-     void consolidate_tracks(cv::Mat &img);
+     bool consolidate_tracks(cv::Mat &in, cv::Mat &out);
      
 protected:
      

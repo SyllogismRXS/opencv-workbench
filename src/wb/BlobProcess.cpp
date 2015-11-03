@@ -266,6 +266,8 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      std::vector<wb::Blob> new_blobs;     
      this->find_blobs(input, new_blobs, min_blob_size_);          
      
+     // First match blobs based on overlapping bounding boxes
+
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
      //////////////////////////////////////////////////////////////////////////
@@ -393,20 +395,15 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
                          double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
                                                   
                          if (dist > 100) { // needs to be based off of covariance matrix
-                              // TOO MUCH OF A JUMP IN POSITION!
-                              // Probably a missed track                              
-                              it_prev->dec_age();
-                              it_prev->set_occluded(true);
-                              blobs_.push_back(*it_prev);                              
+                              // TOO MUCH OF A JUMP IN POSITION
+                              // Probably a missed track
+                              it_prev->missed_track();
+                              blobs_.push_back(*it_prev);
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
-                              // to blobs_ vector
-                              it->set_id(it_prev->id());
-                              it->set_age(it_prev->age()+1);
-                              it->set_occluded(false);
-                              it->set_tracker(it_prev->tracker());
-                              it->correct_tracker();
+                              // to blobs_ vector                              
+                              it->matched_track(*it_prev);
                               blobs_.push_back(*it);
                          }
                     } else if (r >= blob_count) {
@@ -440,38 +437,34 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
                               if (roi_blobs.size() > 0) {
                                    //// Found an assignment. Update the new measurement
                                    //// with the track ID and age of older track. Add
-                                   //// to blobs_ vector
-                                   //it->set_id(b.id());
-                                   //it->set_age(b.age()+1);
-                                   //it->set_occluded(false);
-                                   //it->set_tracker(b.tracker());
-                                   //it->correct_tracker();
-                                   //blobs_.push_back(*it);
-                                   b.inc_age();
-                                   b.set_occluded(false);
-                                   b.correct_tracker();
+                                   //// to blobs_ vector                                   
+                                   //b.inc_age();
+                                   //b.set_occluded(false);
                                    blobs_.push_back(b);
                               } else {
-                                   it_prev->dec_age();
-                                   it_prev->set_occluded(true);
+                                   //it_prev->dec_age();
+                                   //it_prev->set_occluded(true);
+                                   it_prev->missed_track();
                                    blobs_.push_back(*it_prev);                              
                               }                                                      
                          } else {
-                              it_prev->dec_age();
-                              it_prev->set_occluded(true);
+                              //it_prev->dec_age();
+                              //it_prev->set_occluded(true);
+                              it_prev->missed_track();
                               blobs_.push_back(*it_prev);                              
                          }
 #else
-                         it_prev->dec_age();
-                         it_prev->set_occluded(true);
+                         //it_prev->dec_age();
+                         //it_prev->set_occluded(true);
+                         it_prev->missed_track();
                          blobs_.push_back(*it_prev);                              
 #endif
 
                     } else if (c >= prev_blob_count) {
                          // Possible new track
-                         it->set_id(next_available_id());
-                         it->set_age(1);
-                         it->set_occluded(false);
+                         it->new_track(next_available_id());
+                         //it->set_age(1);
+                         //it->set_occluded(false);
                          blobs_.push_back(*it);
                     }
                     break; // There is only one assignment per row
@@ -509,24 +502,25 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
           }
 
           if (min_dist < gate) {
-               // Match               
-               it->set_id(it_match->id());
-               it->set_age(it_match->age()+1);
-               it->set_occluded(false);
-               it->set_tracker(it_match->tracker());
-               it->correct_tracker();
+               // Match       
+               it->matched_track(it_match);               
+               //it->set_id(it_match->id());
+               //it->set_age(it_match->age());               
+               //it->set_tracker(it_match->tracker());
+               //it->correct_tracker();
+               //it->detected_track();               
                blobs_.push_back(*it);
                
                //prev_blobs_.erase(it_match); // remove old blob track from previous
           } else {
                // New target?
-               it->set_id(next_available_id());
-               it->set_age(1);
-               it->set_occluded(false);
+               it->new_track(next_available_id());
+               //it->set_id(next_available_id());
+               //it->set_age(1);
+               //it->set_occluded(false);
                blobs_.push_back(*it);
           }
      }
-
 #endif
      
      //std::map<int,syllo::Blob>::iterator it;
@@ -553,6 +547,7 @@ void BlobProcess::blob_maintenance()
           //if (it->id() == 1) {
           //     cout << "Blob ID 1 Age: " << it->age() << endl;
           //}
+          it->set_matched(false);
           
           if (it->is_dead()) {
                it = blobs_.erase(it);
@@ -562,15 +557,129 @@ void BlobProcess::blob_maintenance()
      }    
 }
 
-void BlobProcess::consolidate_tracks(cv::Mat &img)
+bool BlobProcess::consolidate_tracks(cv::Mat &in, cv::Mat &out)
 {
+     out = in.clone();
+     
      // Consolidate blob tracks that have overlapping rectangles
      // The track ID from the oldest track is used.     
+     
+     bool found_overlap = false;
+
+     std::map<int, std::list<wb::Blob*> > matches;
+     int next_id = 1;
+
      std::vector<wb::Blob>::iterator it1 = blobs_.begin();
      for(; it1 != blobs_.end(); it1++) {
           std::vector<wb::Blob>::iterator it2 = blobs_.begin();
-          
+          for (; it2 != blobs_.end(); it2++) {
+
+               if (it1->id() == it2->id()) {
+                    // If it's the same ID, move on to next track
+                    continue;
+               }
+               
+               if (BoundingBox::overlap(it1->bbox(), it2->bbox())) {
+                    found_overlap = true;
+                    //cout << "Overlap" << endl;
+                    if (it1->matched() && it2->matched()) {
+                         if (it1->matched_id() < it2->matched()) {
+                              // Move items from it2's list to it1's list
+                              for(std::list<wb::Blob*>::iterator it = matches[it2->matched_id()].begin();
+                                  it != matches[it2->matched_id()].end(); it++) {
+                                   cout << "Moving " << (*it)->id() << " to " << it1->id() << "'s list. "<< endl;
+                                   matches[it1->matched_id()].push_back(*it);
+                              }
+                              matches[it2->matched_id()].clear();
+                              
+                         } else if (it2->matched_id() < it1->matched()) {
+                              // Move items from it1's list to it2's list
+                              for(std::list<wb::Blob*>::iterator it = matches[it1->matched_id()].begin();
+                                  it != matches[it1->matched_id()].end(); it++) {
+                                   matches[it2->matched_id()].push_back(*it);
+                                   cout << "Moving " << (*it)->id() << " to " << it2->id() << "'s list. "<< endl;
+                              }
+                              matches[it1->matched_id()].clear();
+                         }
+                    } else if (it1->matched()) {
+                         it2->set_matched(true);
+                         it2->set_matched_id(it1->matched_id());
+                         matches[it1->matched_id()].push_back(&(*it2));
+                    } else if(it2->matched()) {
+                         it1->set_matched(true);
+                         it1->set_matched_id(it2->matched_id());
+                         matches[it2->matched_id()].push_back(&(*it1));
+                         //} else if (it1->id() < it2->id()) {
+                    } else if (it1->age() > it2->age()) {
+                         it1->set_matched(true);
+                         it1->set_matched_id(next_id);
+                         it2->set_matched(true);
+                         it2->set_matched_id(next_id);
+
+                         matches[next_id].push_back(&(*it1));
+                         matches[next_id].push_back(&(*it2));
+                         next_id++;
+                         
+                    } else {
+                         it1->set_matched(true);
+                         it1->set_matched_id(next_id);
+                         it2->set_matched(true);
+                         it2->set_matched_id(next_id);
+
+                         matches[next_id].push_back(&(*it1));
+                         matches[next_id].push_back(&(*it2));
+                         next_id++;
+                    }
+               }                
+          }
      }
+
+     std::vector<wb::Blob> temp_blobs;
+     for (std::map<int, std::list<wb::Blob*> >::iterator it = matches.begin();
+          it != matches.end(); it++) {
+          int max_age = INT_MIN;
+          wb::Blob *champ_blob = NULL;
+          wb::Blob blob;
+          for(std::list<wb::Blob*>::iterator it_blob = it->second.begin();
+              it_blob != it->second.end(); it_blob++) {
+               
+               if ((*it_blob)->age() > max_age) {
+                    max_age = (*it_blob)->age();
+                    champ_blob = *it_blob;
+               }
+
+               blob.add_points((*it_blob)->points());               
+          }
+          
+          if (champ_blob != NULL) {
+               blob.copy_track_info(*champ_blob);                              
+               blob.compute_metrics();               
+               blob.detected_track();               
+               
+               temp_blobs.push_back(blob);
+          } else {
+               cout << "Error: Couldn't find champ blob" << endl;
+          }
+     }
+     
+     // Add the blobs that had no overlap
+     for(std::vector<wb::Blob>::iterator it = blobs_.begin(); 
+         it != blobs_.end(); it++) {
+          if (!it->matched()) {
+               temp_blobs.push_back(*it);
+          }
+     }
+
+     blobs_.clear();
+     blobs_ = temp_blobs;     
+
+     prev_blobs_.clear();
+     prev_blobs_ = temp_blobs;
+
+     this->overlay_blobs(out, out);
+     this->overlay_tracks(out, out);
+     
+     return found_overlap;
 }
 
 void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst, 
