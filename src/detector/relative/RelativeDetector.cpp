@@ -264,15 +264,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
       cv::Mat dilate;
       cv::dilate(erode, dilate, dilationConfig_);
-      cv::imshow("Erode/Dilate", dilate);
-      //dilate = thresh_amp;      
-      
-      cv::Mat blob_consolidate;
-      blob_process_.consolidate_tracks(gray, blob_consolidate);
-      cv::imshow("Consolidate", blob_consolidate);
-      //if (found_overlap) {
-      //     cv::waitKey(0);
-      //}
+      cv::imshow("Erode/Dilate", dilate);      
       
       blob_process_.process_frame(dilate, median, thresh_value_);
       
@@ -281,6 +273,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
       blob_process_.overlay_tracks(blob_img, blob_img);
       cv::imshow("Blobs", blob_img);        
+      
+      cv::Mat blob_consolidate;
+      blob_process_.consolidate_tracks(gray, blob_consolidate);
+      cv::imshow("Consolidate", blob_consolidate);      
       
       //////////////////////////////////////////////////////////////
       /// Tracking     
