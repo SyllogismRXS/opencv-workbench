@@ -246,6 +246,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       cv::Mat thresh_amp;      
 #if 1    
       wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
+      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.002, 0.004, 10, 5);
       
 #else
       // TODO: For some reason, using this static threshold kills regular sonar
