@@ -16,4 +16,5 @@ add_subdirectory(blob-test)
 add_subdirectory(hog-train-test)
 add_subdirectory(detect-with-hog)
 add_subdirectory(overlap-rect-test)
+add_subdirectory(ground-plane)
 
