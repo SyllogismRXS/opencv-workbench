@@ -55,14 +55,43 @@ Workbench::Workbench(QMainWindow *parent)
      readSettings();
      
      connect(ui.actionOpen, SIGNAL(triggered()), this, SLOT(open()));
+     connect(ui.actionOpen_Camera, SIGNAL(triggered()), this, SLOT(open_camera()));
      connect(ui.actionQuit, SIGNAL(triggered()), this, SLOT(close()));
      connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(about()));
      
      // Keyboard shortcuts
      // Note: Get deleted automatically when program closes.
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this, SLOT(open()));
-     //new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_C), this, SLOT(open_camera()));
+     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_C), this, SLOT(open_camera()));
      new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this, SLOT(close()));
+}
+
+void Workbench::clean_up_windows()
+{
+     // Free up memory from any windows that have been closed already:
+     std::vector<VideoWindow *>::iterator it = video_windows_.begin();
+     for(; it != video_windows_.end(); ) {
+          if (!((*it)->isVisible())) {
+               delete *it;
+               video_windows_.erase(it);
+          } else {
+               it++;
+          }
+     }
+}
+
+void Workbench::open_camera()
+{
+     // Send to VideoWindow Widget
+     video_windows_.push_back(new VideoWindow());
+     
+     video_windows_.back()->open_camera(0);
+     //connect(video_window_, SIGNAL(start_labeling()), this, SLOT(start_video_windowing()));          
+                    
+     video_windows_.back()->raise();
+     video_windows_.back()->activateWindow();
+     video_windows_.back()->setFocus(Qt::ActiveWindowFocusReason);
+     video_windows_.back()->showNormal();          
 }
 
 void Workbench::open()
@@ -78,16 +107,7 @@ void Workbench::open()
      if (!fileName.isEmpty()) {
           prev_open_path_ = QFileInfo(fileName).path();
 
-          // Free up memory from any windows that have been closed already:
-          std::vector<VideoWindow *>::iterator it = video_windows_.begin();
-          for(; it != video_windows_.end(); ) {
-               if (!((*it)->isVisible())) {
-                    delete *it;
-                    video_windows_.erase(it);
-               } else {
-                    it++;
-               }
-          }
+          this->clean_up_windows();
           
           // Send to VideoWindow Widget
           video_windows_.push_back(new VideoWindow());

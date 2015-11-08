@@ -126,8 +126,8 @@ namespace syllo
                vcap_->open(num);
 	       //vcap_->set(cv::CAP_PROP_FRAME_WIDTH, 480);
 	       //vcap_->set(cv::CAP_PROP_FRAME_HEIGHT, 640);
-               vcap_->set(CV_CAP_PROP_FRAME_WIDTH, 480);
-	       vcap_->set(CV_CAP_PROP_FRAME_HEIGHT, 640);
+               //vcap_->set(CV_CAP_PROP_FRAME_WIDTH, 480);
+	       //vcap_->set(CV_CAP_PROP_FRAME_HEIGHT, 640);
 	       type_ = CameraType;
                live_ = Live;
 
@@ -277,7 +277,7 @@ namespace syllo
                
 	       if (type_ == SonarType) {
 		    status = true;
-	       } else if (type_ == MovieType){
+	       } else if (type_ == MovieType || type_ == CameraType){
                     if (vcap_ == NULL) {
                          status = false;
                     } else {
@@ -304,13 +304,16 @@ namespace syllo
                } else if (type_ == MovieType){
                     status = vcap_->read(frame_);
                     frame = frame_;		    
+	       } else if (type_ == CameraType){
+                    status = vcap_->read(frame_);
+                    frame = frame_;		    
 	       }
                
                curr_frame_number_ = next_frame_number_;               
 
                // Check for end of video
                //cout << curr_frame_number_ << " / " << get_frame_count() << endl;
-               if (curr_frame_number_ >= get_frame_count()-1) {
+               if (type_ != CameraType && curr_frame_number_ >= get_frame_count()-1) {
                     return false;
                }
 

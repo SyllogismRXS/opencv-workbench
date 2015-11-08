@@ -71,6 +71,7 @@ class Workbench : public QMainWindow
 
      private slots:          
           void open();
+          void open_camera();
           void about();
      
 private:
@@ -85,6 +86,8 @@ private:
 protected:
      
      std::vector<VideoWindow*> video_windows_;
+     
+     void clean_up_windows();
      
      void closeEvent(QCloseEvent *event);     
 };

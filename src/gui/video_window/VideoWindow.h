@@ -93,13 +93,13 @@ class VideoWindow : public QWidget
      QSize GoodSize();
      
      void open(QString fileName);     
-
+     void open_camera(int id);
+     
      private slots:
      void tooltip_enabled();
      void mouseMoved(QPoint p);
      void about();
-     void open();
-     void open_camera(int id);
+     void open();     
      void timer_video_loop();
      void timer_refresh_loop();
      

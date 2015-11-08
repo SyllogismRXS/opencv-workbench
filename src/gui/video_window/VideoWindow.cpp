@@ -333,16 +333,31 @@ void VideoWindow::open_camera(int id)
      }          
 
      syllo::Status status = stream_.open(id);
-     if (status == syllo::Success && stream_.isOpened()) {
-               
-          stream_.set_frame_number(0);
-          stream_.read(curr_image_);          
-          this->display_image(curr_image_);               
-
+     if (status == syllo::Success) {
+          
+          // set slider range
+          ui.frame_slider->setRange(0,1);
+          ui.frame_num_spinbox->setRange(0,1);
           ui.filename_label->setText("Camera");
+          
+          fps_ = stream_.get_fps();
+          if (fps_ <= 0) {
+               fps_ = 23;
+          }
 
-          this->set_fps(29);
+          this->set_fps(fps_);
+          
+          stream_.set_frame_number(0);
+          this->on_open();
+          this->get_video_frame();                    
+          this->pause();
+          
+          this->updateGeometry();
+          this->adjustSize();               
+
           this->play();
+     } else {
+          cout << "Failed to open camera" << endl;
      }
 }
 
