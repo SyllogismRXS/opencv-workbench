@@ -244,17 +244,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       /// cv::imshow("grad thresh", thresh_grad);
 
       cv::Mat thresh_amp;      
-#if 1    
-      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
+
+      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
       //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.002, 0.004, 10, 5);
       
-#else
-      // TODO: For some reason, using this static threshold kills regular sonar
-      // images, (vs. simulated sonar images), it might have to do with the
-      // number of detected blobs Used for thresholding simulated sonar data
-      // from Gazebo
-      cv::threshold(median, thresh_amp, 100, 255, cv::THRESH_TOZERO);
-#endif
       cv::imshow("thresh amp", thresh_amp);
       
       /// cv::Mat thresh_and_grad = thresh_amp + thresh_grad;

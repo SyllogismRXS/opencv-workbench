@@ -260,10 +260,7 @@ namespace wb {
           bool ratio_achieved = false;     
           int iter_count = 0;
           //cout << "--------" << endl;
-          do {     
-               //cout << "Thresh: " << thresh << endl;
-               cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);
-          
+          do {                              
                int channels = dst.channels();
                int nRows = dst.rows;
                int nCols = dst.cols * channels;
@@ -296,7 +293,19 @@ namespace wb {
                     thresh -= thresh_step;
                } else if (ratio > ratio_high) {
                     thresh += thresh_step;
+               }               
+
+               if (thresh < 0) {
+                    thresh = 0;
+                    ratio_achieved = true;
+               } else if (thresh > 255) {
+                    ratio_achieved = true;
+                    thresh = 255;
                }
+
+               //cout << "Thresh: " << thresh << endl;
+               cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);
+               
                iter_count++;
           
           }while(!ratio_achieved && iter_count < max_iter);
