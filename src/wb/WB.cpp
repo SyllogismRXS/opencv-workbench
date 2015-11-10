@@ -303,7 +303,7 @@ namespace wb {
                     thresh = 255;
                }
 
-               //cout << "Thresh: " << thresh << endl;
+               //cout << "Trying: Thresh: " << thresh << endl;
                cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);
                
                iter_count++;

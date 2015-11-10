@@ -16,7 +16,7 @@ using std::endl;
 RelativeDetector::RelativeDetector()
 {
      cout << "RelativeDetector Constructor" << endl;
-     thresh_value_ = 255;
+     thresh_value_ = 150;
      grad_thresh_value_ = 255;
 
      cluster_process_.set_threshold(0);
@@ -35,6 +35,8 @@ RelativeDetector::RelativeDetector()
      dilationConfig_ = cv::getStructuringElement( dilationElem,
                                                   cv::Size(2*dilationSize+1, 2*dilationSize+1),
                                                   cv::Point(dilationSize, dilationSize) );
+
+     stream_ = NULL;
 }
 
 RelativeDetector::~RelativeDetector()
@@ -244,10 +246,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       /// cv::imshow("grad thresh", thresh_grad);
 
       cv::Mat thresh_amp;      
-
-      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
-      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.002, 0.004, 10, 5);
       
+      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
+      //cout << "thresh_value: " << thresh_value_ << endl;
       cv::imshow("thresh amp", thresh_amp);
       
       /// cv::Mat thresh_and_grad = thresh_amp + thresh_grad;
@@ -280,13 +281,13 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       std::vector<wb::Blob> blobs = blob_process_.blobs();
       std::vector<wb::Blob>::iterator it = blobs.begin();
       for (; it != blobs.end(); it++) {
-
+      
            // Have to transform tracks from distorted cartesian
            // to polar, then to undistorted cartesian
            cv::Point p = it->estimated_centroid();
-
+           
            double x, y;
-           if (stream_->type() == syllo::SonarType) {           
+           if (stream_ != NULL && stream_->type() == syllo::SonarType) {           
                 double range = stream_->pixel_range(p.y, p.x); //row, col
                 double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180
                 y = -range*cos(bearing);
@@ -295,8 +296,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
                 x = p.x;
                 y = p.y;
            }
-           
-           //it->set_undistorted_centroid(cv::Point2f(p.x,p.y));
+                      
            it->set_undistorted_centroid(cv::Point2f(x,y));
            it->set_frame(frame_number);
            
@@ -304,7 +304,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
            
            tracks_.push_back((wb::Entity)*it);
       }
-
+      
       // Calculate Similarity between current tracks
       this->trajectory_similarity(frame_number, blob_img);
       
