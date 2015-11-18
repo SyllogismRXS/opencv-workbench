@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-03 17:05:47 syllogismrxs>
+/// Time-stamp: <2015-11-18 00:58:46 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -62,6 +62,10 @@ namespace wb {
      void gradient_sobel(cv::Mat &src, cv::Mat &dst);
      void gradient_simple(cv::Mat &src, cv::Mat &dst);
 
+     void showHistogram(const cv::Mat& img, cv::Mat &mask);
+     void opencv_histogram(cv::Mat &src);
+
+     void get_sonar_mask(const cv::Mat &jet, cv::Mat &mask);
 }
 
 #endif

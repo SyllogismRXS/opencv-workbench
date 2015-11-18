@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/contrib/contrib.hpp>
@@ -54,7 +55,7 @@ namespace wb {
                     if (it1->position() == it2->position()) {
                          continue;
                     }
-                    
+                  
                     // Calculate distance between all outer-loop points and
                     // inner-loop points
                     float dist = it1->distance(*it2);
@@ -68,7 +69,7 @@ namespace wb {
                               if (!(it1->assigned())) {
                                    Cluster *c = new Cluster;
                                    c->set_id(cluster_id++);
-                                   
+                                 
                                    it1->set_assigned(true);
                                    it1->set_distance(dist);
                                    it1->set_parent(c);
@@ -84,11 +85,11 @@ namespace wb {
                                              cout << "Point: " << it2->position() << endl;
                                         }
                                    }
-                                   
+                                 
                                    it2->set_assigned(true);
                                    it2->set_distance(dist);
                                    it2->set_parent(c);
-                                   
+                                 
                                    c->add_point(*it1);
                                    c->add_point(*it2);
                                    clusters.push_back(c);
@@ -98,7 +99,7 @@ namespace wb {
                                    if (dist <= it1->distance()) {
                                         it1->set_distance(dist);
                                    }
-                                   
+                                 
                                    if (it2->assigned()) {
                                         Cluster *c = it2->parent();
                                         if (c != NULL) {
@@ -108,18 +109,18 @@ namespace wb {
                                              cout << "Point: " << it2->position() << endl;
                                         }
                                    }                                    
-                                   
+                                 
                                    it2->set_assigned(true);
                                    it2->set_distance(dist);
                                    it2->set_parent(it1->parent());
-                                   
+                                 
                                    it1->parent()->add_point(*it2);
                               }
                          } 
                     }
                }
           }          
-          
+        
           // Loop through all clusters. remove small clusters, draw points in 
           // remaining clusters on image
           cv::Mat cluster_img = cv::Mat::zeros(src.size(), src.type());
@@ -136,7 +137,7 @@ namespace wb {
                else {
                     std::vector<Point> points = (*it)->points();
                     std::vector<Point>::iterator it_p = points.begin();                                                            
-                    
+                  
                     for (; it_p != points.end(); it_p++) {
                          cluster_img.at<uchar>(it_p->position().y, it_p->position().x) = cluster_color_count;
                     }                                                 
@@ -146,12 +147,12 @@ namespace wb {
           }    
 
           //cout << "Cluster count: " << clusters.size() << endl;
-          
+        
           cv::imshow("clusters", cluster_img);          
           cv::Mat cluster_display;
           cv::normalize(cluster_img, cluster_display, 0, 255, cv::NORM_MINMAX, CV_8UC1);
           cv::applyColorMap(cluster_display, cluster_display, cv::COLORMAP_JET);          
-           
+         
           // Draw cluster labels
           for (it = clusters.begin(); it != clusters.end(); it++) {
                //Point *pref = (*it)->points().front();                                   
@@ -249,9 +250,164 @@ namespace wb {
                cv::rectangle(dst, (*it)->bbox().rectangle(), cv::Scalar(100,100,100), 1, 8, 0);
                cv::putText(dst, text, circle_point, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,255,255), 1, 8, false);
           }
+     }   
+
+     void showHistogram(const cv::Mat& img, cv::Mat &mask)
+     {
+          int bins = 256;             // number of bins
+          int nc = img.channels();    // number of channels
+
+          std::vector<cv::Mat> hist(nc);       // histogram arrays
+
+          // Initalize histogram arrays
+          for (unsigned int i = 0; i < hist.size(); i++) {
+               hist[i] = cv::Mat::zeros(1, bins, CV_32SC1);
+          }          
+          
+          // Calculate the histogram of the image
+          for (int i = 0; i < img.rows; i++) {
+               for (int j = 0; j < img.cols; j++) {
+                    for (int k = 0; k < nc; k++) {
+                         if (mask.at<uchar>(i,j) != 0) {
+                              uchar val = nc == 1 ? img.at<uchar>(i,j) : img.at<cv::Vec3b>(i,j)[k];
+                              hist[k].at<int>(val) += 1;
+                         }
+                    }
+               }
+          }
+
+          // For each histogram arrays, obtain the maximum (peak) value
+          // Needed to normalize the display later
+          int hmax[3] = {0,0,0};
+          for (int i = 0; i < nc; i++) {
+               for (int j = 0; j < bins-1; j++) {
+                    hmax[i] = hist[i].at<int>(j) > hmax[i] ? hist[i].at<int>(j) : hmax[i];
+               }
+          }
+
+          const char* wname[3] = { "blue", "green", "red" };
+          cv::Scalar colors[3] = { cv::Scalar(255,0,0), cv::Scalar(0,255,0), cv::Scalar(0,0,255) };
+
+          std::vector<cv::Mat> canvas(nc);
+
+          // Display each histogram in a canvas
+          for (int i = 0; i < nc; i++) {
+               canvas[i] = cv::Mat::ones(125, bins, CV_8UC3);
+
+               for (int j = 0, rows = canvas[i].rows; j < bins-1; j++) {
+                    cv::line(
+                         canvas[i], 
+                         cv::Point(j, rows), 
+                         cv::Point(j, rows - (hist[i].at<int>(j) * rows/hmax[i])), 
+                         nc == 1 ? cv::Scalar(200,200,200) : colors[i], 
+                         1, 8, 0
+                         );                    
+               }
+               cv::imshow(nc == 1 ? "value" : wname[i], canvas[i]);
+          }
+          // cv::Mat max = cv::Mat::zeros(img.size(), CV_8UC1);
+          // cv::Mat maxes = img.clone();
+          // cv::cvtColor(maxes,maxes,CV_GRAY2BGR);
+          // // Calculate the histogram of the image
+          // for (int i = 0; i < img.rows; i++) {
+          //      for (int j = 0; j < img.cols; j++) {
+          //           for (int k = 0; k < nc; k++) {
+          //                if (mask.at<uchar>(i,j) != 0) {
+          //                     uchar val = nc == 1 ? img.at<uchar>(i,j) : img.at<cv::Vec3b>(i,j)[k];
+          //                     if (hist[k].at<int>(val) == hmax[0]) {
+          //                          max.at<uchar>(i,j) = 255;
+          //                          maxes.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,255);
+          //                     }
+          //                }
+          //           }
+          //      }
+          // }
+          // cv::imshow("maxes", max);
+          // cv::imshow("maxes-c", maxes);          
      }
 
-     
+     void opencv_histogram(cv::Mat &src)
+     {
+          /// Separate the image in 3 places ( B, G and R )
+          std::vector<cv::Mat> bgr_planes;
+          cv::split( src, bgr_planes );
+
+          /// Establish the number of bins
+          int histSize = 256;
+
+          /// Set the ranges ( for B,G,R) )
+          float range[] = { 0, 256 } ;
+          const float* histRange = { range };
+
+          bool uniform = true; bool accumulate = false;
+
+          cv::Mat b_hist, g_hist, r_hist;
+
+          /// Compute the histograms:
+          cv::calcHist( &bgr_planes[0], 1, 0, cv::Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
+          cv::calcHist( &bgr_planes[1], 1, 0, cv::Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
+          cv::calcHist( &bgr_planes[2], 1, 0, cv::Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
+
+          // Draw the histograms for B, G and R
+          int hist_w = 512; int hist_h = 400;
+          int bin_w = cvRound( (double) hist_w/histSize );
+
+          cv::Mat histImage( hist_h, hist_w, CV_8UC3, cv::Scalar( 0,0,0) );
+
+          /// Normalize the result to [ 0, histImage.rows ]
+          cv::normalize(b_hist, b_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+          cv::normalize(g_hist, g_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+          cv::normalize(r_hist, r_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+
+          /// Draw for each channel
+          for( int i = 1; i < histSize; i++ )
+          {
+               cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
+                         cv::Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
+                         cv::Scalar( 255, 0, 0), 2, 8, 0  );
+               cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(g_hist.at<float>(i-1)) ) ,
+                         cv::Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
+                         cv::Scalar( 0, 255, 0), 2, 8, 0  );
+               cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(r_hist.at<float>(i-1)) ) ,
+                         cv::Point( bin_w*(i), hist_h - cvRound(r_hist.at<float>(i)) ),
+                         cv::Scalar( 0, 0, 255), 2, 8, 0  );
+          }
+
+          /// Display
+          cv::namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
+          cv::imshow("calcHist Demo", histImage );
+     }
+
+     void get_sonar_mask(const cv::Mat &jet, cv::Mat &mask)
+     {
+          mask = cv::Mat(jet.size(), CV_8UC1);
+
+          // accept only char type matrices
+          CV_Assert(mask.depth() != sizeof(uchar));
+
+          int channels = mask.channels();
+          int nRows = mask.rows;
+          int nCols = mask.cols * channels;
+
+          if (mask.isContinuous()) {
+               nCols *= nRows;
+               nRows = 1;
+          }
+
+          int i,j;
+          uchar* p;     
+          for (i = 0; i < nRows; ++i) {
+               p = mask.ptr<uchar>(i);
+               for (j = 0; j < nCols; ++j) {
+                    cv::Vec3b pix = jet.at<cv::Vec3b>(i,j);
+                    if (pix[0] == 0 && pix[1] == 0 && pix[2] == 0) {
+                         p[j] = 0;
+                    } else {
+                         p[j] = 1;
+                    }
+               }
+          }
+     }
      
      void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, double ratio_low, double ratio_high, int thresh_step, int max_iter)
      {
@@ -260,6 +416,7 @@ namespace wb {
           bool ratio_achieved = false;     
           int iter_count = 0;
           //cout << "--------" << endl;
+          double ratio = 0;
           do {                              
                int channels = dst.channels();
                int nRows = dst.rows;
@@ -285,7 +442,11 @@ namespace wb {
                }
 
                // Use control systems for adaptive threshold?
-               double ratio = (double)count / ((double)(nRows*nCols));
+               ratio = 0;
+               if (count != 0) {
+                    ratio = (double)count / ((double)(nRows*nCols));
+               }
+               
                //cout << "Ratio: " << ratio << endl;
                if (ratio > ratio_low && ratio < ratio_high) {
                     ratio_achieved = true;
@@ -305,10 +466,18 @@ namespace wb {
 
                //cout << "Trying: Thresh: " << thresh << endl;
                cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);
+              
                
-               iter_count++;
-          
+               iter_count++;          
+
           }while(!ratio_achieved && iter_count < max_iter);
+
+          #if 1
+               std::fstream file;
+               file.open("/home/syllogismrxs/temp/adap-thresh.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+               file << ratio_low << " " << ratio_high << " " << ratio << " " << thresh << endl;
+               file.close();
+#endif
      }
 
      void gradient_sobel(cv::Mat &src, cv::Mat &dst)
