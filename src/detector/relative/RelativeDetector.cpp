@@ -228,13 +228,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      }
      cv::imshow("Gray", gray);
 
-
      cv::Mat mask;
      wb::get_sonar_mask(original, mask);
-     
-     wb::showHistogram(gray, mask);
-     //wb::showHistogram(original, mask);
-      
+     //cv::imshow("Sonar Mask", mask*255);     
+     //wb::showHistogram(gray, mask);
+           
      //cv::Mat ndt_img;
      //ndt_.set_frame(gray, ndt_img);
      //cv::imshow("ndt", ndt_img);
@@ -279,7 +277,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat blob_consolidate;
      blob_process_.consolidate_tracks(gray, blob_consolidate);
      cv::imshow("Consolidate", blob_consolidate);      
-      
+     
+     cv::Mat original_rects = original.clone();
+     blob_process_.overlay(original_rects, original_rects, false, true, false, true);
+     cv::imshow("Tracks", original_rects);
+     
      //////////////////////////////////////////////////////////////
      /// Tracking     
      ////////////////////////////////////////////////////
@@ -313,7 +315,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      }
       
      // Calculate Similarity between current tracks
-     this->trajectory_similarity(frame_number, blob_img);
+     this->trajectory_similarity(frame_number, blob_consolidate);
       
      ///////////////////////////////////////////////////
      // Display images

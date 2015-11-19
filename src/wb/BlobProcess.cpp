@@ -722,6 +722,57 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
      this->overlay_blobs(src, dst, blobs_);
 }
 
+void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, bool show_blobs, bool rects, 
+                          bool tracks, bool ids)
+{
+     cv::Mat color;
+     if (src.channels() == 1) {
+          cv::cvtColor(src, color, CV_GRAY2BGR);     
+     } else {
+          color = src;
+     }
+     dst = color;
+          
+     std::vector<wb::Blob>::iterator it = blobs_.begin();
+     for(; it != blobs_.end(); it++) {
+
+          if (show_blobs) {
+               cv::Vec3b point_color = cv::Vec3b(20,255,57);
+               if (it->occluded()) {
+                    point_color = cv::Vec3b(0,0,0);
+               }
+          
+               // Draw all blob points in the image
+               std::vector<wb::Point> points = it->points();
+               std::vector<wb::Point>::iterator it_points = points.begin();
+               for(; it_points != points.end(); it_points++) {                    
+                    dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = point_color;
+               }
+          }
+          
+          //cv::Point centroid_point = it->centroid();
+          //cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
+          
+          cv::Rect rect = it->bbox().rectangle();
+          
+          if (rects) {          
+               cv::rectangle(dst, rect, cv::Scalar(0,0,0), 1, 8, 0);
+          }
+          
+          if (ids) {
+               std::ostringstream convert;
+               convert << it->id();               
+               const std::string& text = convert.str();
+               cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 2, 8, false);
+          }
+          
+          if (tracks) {
+               cv::Point est_centroid = it->estimated_centroid();
+               wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
+          }
+     }
+}
+
 void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
 {
      cv::Mat color;

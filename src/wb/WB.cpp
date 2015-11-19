@@ -304,26 +304,25 @@ namespace wb {
                          );                    
                }
                cv::imshow(nc == 1 ? "value" : wname[i], canvas[i]);
+          }      
+#if 0    
+          cv::Mat maxes = img.clone();
+          cv::cvtColor(maxes,maxes,CV_GRAY2BGR);
+          // Highlight the pixels that part of the largest histogram bin
+          for (int i = 0; i < img.rows; i++) {
+               for (int j = 0; j < img.cols; j++) {
+                    for (int k = 0; k < nc; k++) {
+                         if (mask.at<uchar>(i,j) != 0) {
+                              uchar val = nc == 1 ? img.at<uchar>(i,j) : img.at<cv::Vec3b>(i,j)[k];
+                              if (hist[k].at<int>(val) == hmax[0]) {
+                                   maxes.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,255);
+                              }
+                         }
+                    }
+               }
           }
-          // cv::Mat max = cv::Mat::zeros(img.size(), CV_8UC1);
-          // cv::Mat maxes = img.clone();
-          // cv::cvtColor(maxes,maxes,CV_GRAY2BGR);
-          // // Calculate the histogram of the image
-          // for (int i = 0; i < img.rows; i++) {
-          //      for (int j = 0; j < img.cols; j++) {
-          //           for (int k = 0; k < nc; k++) {
-          //                if (mask.at<uchar>(i,j) != 0) {
-          //                     uchar val = nc == 1 ? img.at<uchar>(i,j) : img.at<cv::Vec3b>(i,j)[k];
-          //                     if (hist[k].at<int>(val) == hmax[0]) {
-          //                          max.at<uchar>(i,j) = 255;
-          //                          maxes.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,255);
-          //                     }
-          //                }
-          //           }
-          //      }
-          // }
-          // cv::imshow("maxes", max);
-          // cv::imshow("maxes-c", maxes);          
+          cv::imshow("maxes-c", maxes);       
+#endif          
      }
 
      void opencv_histogram(cv::Mat &src)
@@ -360,8 +359,7 @@ namespace wb {
           cv::normalize(r_hist, r_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
 
           /// Draw for each channel
-          for( int i = 1; i < histSize; i++ )
-          {
+          for (int i = 1; i < histSize; i++) {
                cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
                          cv::Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
                          cv::Scalar( 255, 0, 0), 2, 8, 0  );

@@ -3,6 +3,9 @@
 
 #include "ColorMaps.h"
 
+using std::cout;
+using std::endl;
+
 Color_t GetColor_matlab(double v, double vmin, double vmax)
 {
      Color_t c = {255.0,255.0,255.0}; // white
@@ -114,6 +117,11 @@ void Jet2Gray_matlab(const cv::Mat &I, cv::Mat &gray)
           nRows = 1;
      }
 
+#define SHOW_MASK 0
+#if SHOW_MASK
+     cv::Mat mask = cv::Mat::zeros(I.size(), CV_8UC3);
+#endif     
+
      int i,j;
      uchar* p;     
      for( i = 0; i < nRows; ++i) {
@@ -121,16 +129,32 @@ void Jet2Gray_matlab(const cv::Mat &I, cv::Mat &gray)
           for ( j = 0; j < nCols; ++j) {
                cv::Vec3b pix = I.at<cv::Vec3b>(i,j);
                if (pix[0] == 0 && pix[1] == 0 && pix[2] == 0) {
-               p[j] = 0;
+                    p[j] = 0;
+#if SHOW_MASK
+                    mask.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,255);
+#endif
                } else {               
+#if SHOW_MASK
+                    mask.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
+#endif
                     Color_t c;
                     c.b = pix[0];
                     c.g = pix[1];
                     c.r = pix[2];                   
                     p[j] = round(GetGray_matlab(c, 0, 255));
+
+#if SHOW_MASK
+                    if (p[j] == 0) {
+                         mask.at<cv::Vec3b>(i,j) = cv::Vec3b(0,255,0);
+                    }
+#endif
                }
           }
      }    
+
+#if SHOW_MASK
+     cv::imshow("conversion-zeros", mask);
+#endif
 }
 
 Color_t GetColor(double v, double vmin, double vmax)

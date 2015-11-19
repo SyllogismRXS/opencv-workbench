@@ -40,11 +40,22 @@ int main(int argc, char *argv[])
           cout << "Failed to open: " << argv[2] << endl;
           return -1;
      }
-
-     int frame = 0;
+     
+     bool single_step = false;
+     
+     cv::VideoWriter out;     
+     
      cv::Mat original;     
-     stream.set_frame_number(5380);
+     //stream.set_frame_number(5380); // for: 2014_05_02_16_01_53.avi
      while (stream.read(original)) {
+     
+          if (!out.isOpened()) {
+               out.open("/home/syllogismrxs/output.avi",CV_FOURCC('M','J','P','G'),stream.get_fps(),original.size(),true);
+               if (!out.isOpened()) {
+                    cout << "Unable to open output video" << endl;
+                    return -1;
+               }
+          }
           
           cv::pyrUp( original, original, cv::Size( original.cols*2, original.rows*2 ));
           
@@ -57,11 +68,24 @@ int main(int argc, char *argv[])
           for (; it != dets.end(); it++) {
                cv::rectangle(original, cv::Point(it->left(),it->top()), 
                              cv::Point(it->right(), it->bottom()), 
-                             cv::Scalar(0,0,255), 1, 8, 0);
+                             cv::Scalar(0,0,0), 4, 8, 0);
           }
 
+          cv::pyrDown(original, original, cv::Size(original.cols/2,original.rows/2));
           cv::imshow("Original", original);
-          cv::waitKey(1);         
+          out << original;
+          
+          int wait = 1;
+          if (single_step) {
+               wait = 0;
+          }
+
+          int key = cv::waitKey(wait);
+          if (key == 'q') {
+               break;
+          } else if(key == 'p') {
+               single_step = !single_step;
+          }
      }
      
      cout << "Clean exit." << endl;
