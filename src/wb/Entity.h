@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-03 15:07:11 syllogismrxs>
+/// Time-stamp: <2015-11-20 16:24:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -117,6 +117,7 @@ namespace wb {
           
           bool occluded() { return occluded_; }
           void set_occluded(bool occluded) { occluded_ = occluded; }
+          // TODO: reset occluded age at this point?
 
           //void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}          
           //cv::KalmanFilter tracker() { return KF_; }
