@@ -5,6 +5,7 @@
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/hungarian.h>
 #include <opencv_workbench/utils/OpenCV_Helpers.h>
+#include <opencv_workbench/utils/Ellipse.h>
 
 #include "BlobProcess.h"
 
@@ -722,8 +723,7 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
      this->overlay_blobs(src, dst, blobs_);
 }
 
-void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, bool show_blobs, bool rects, 
-                          bool tracks, bool ids)
+void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
 {
      cv::Mat color;
      if (src.channels() == 1) {
@@ -736,7 +736,7 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, bool show_blobs, bool rect
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for(; it != blobs_.end(); it++) {
 
-          if (show_blobs) {
+          if (flags & BLOBS) {
                cv::Vec3b point_color = cv::Vec3b(20,255,57);
                if (it->occluded()) {
                     point_color = cv::Vec3b(0,0,0);
@@ -755,20 +755,27 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, bool show_blobs, bool rect
           
           cv::Rect rect = it->bbox().rectangle();
           
-          if (rects) {          
+          if (flags & RECTS) {          
                cv::rectangle(dst, rect, cv::Scalar(0,0,0), 1, 8, 0);
           }
           
-          if (ids) {
+          if (flags & IDS) {
                std::ostringstream convert;
                convert << it->id();               
                const std::string& text = convert.str();
                cv::putText(dst, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 2, 8, false);
           }
           
-          if (tracks) {
+          if (flags & TRACKS) {
                cv::Point est_centroid = it->estimated_centroid();
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
+          }
+
+          if (flags & ERR_ELLIPSE) {
+               Ellipse ell = it->error_ellipse(0,2,0.95);
+               cv::Point center = ell.center();
+               cv::Size axes(ell.axes()(0), ell.axes()(1));
+               cv::ellipse(dst, center, axes, ell.angle(), 0, 360, cv::Scalar(0,80,80), 1, 8, 0);
           }
      }
 }

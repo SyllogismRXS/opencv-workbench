@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
      double t0 = 0;
      double dt = 1;
-     double tend = 10;
+     double tend = 20;
  
      // Setup boost RNG
      boost::mt19937 rng;
@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
      // Setup Cart Model 
      Dynamics::state_5d_type input;
      input[0] = 5;
-     //input[1] = 3.14159265359/20;//0
-     input[1] = 0;
+     input[1] = -3.14159265359/20;//0
+     //input[1] = 0;
           
      Dynamics dyn;
      dyn.set_time(t0, dt, tend);
@@ -109,8 +109,8 @@ int main(int argc, char *argv[])
      //R << .001, 0,
      //     0, .001;
 
-     R << 1, 0,
-          0, 3;
+     R << 5, 0,
+          0, 8;
      
      //x = [x, y, x_dot, y_dot]
      x0 << 0, 
@@ -118,10 +118,12 @@ int main(int argc, char *argv[])
            0,
            0;
      
-     covar << 0.1, 0, 0, 0,
-              0, 0.1, 0, 0,
-              0, 0, 0.1, 0,
-              0, 0, 0, 0.1;
+     //double v = 0.1;
+     double v = 1;
+     covar << v, 0, 0, 0,
+              0, v, 0, 0,
+              0, 0, v, 0,
+              0, 0, 0, v;
      
      kf.setModel(A,B,H,Q,R);
      kf.init(x0, covar);
@@ -183,7 +185,7 @@ int main(int argc, char *argv[])
           /// cv::Point2d est_centroid = cv::Point2d(estimated.at<float>(0),estimated.at<float>(1));
           /// opencv_kf_points.push_back(est_centroid);
           /// ////////////////////////////////////////////
-                    
+          
           Eigen::MatrixXf state = kf.state();          
           kf_points.push_back(cv::Point2d(state(0,0),state(1,0)));
 
@@ -192,34 +194,16 @@ int main(int argc, char *argv[])
           kf_var_y.push_back(cv::Point2d(t,covar(1,1)));
 
           double err = sqrt( pow(state(0,0) - it_truth->x, 2) + pow(state(1,0) - it_truth->y, 2) );
-          error.push_back(cv::Point2d(t,err));
+          error.push_back(cv::Point2d(t,err));          
 
-          // Compute the 75% confidence ellipse
-          Eigen::EigenSolver<Eigen::MatrixXf> es(covar);
-          cv::Point2d c = cv::Point2d(state(0,0),state(1,0));
-
-          // Get the first eigenvector
-          //cout << "------------------" << endl;
-          //cout << "evs: " << es.eigenvectors() << endl;
-          //cout << "---" << endl;
-          //cout << es.eigenvectors().col(0) << endl;
-          Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evecs = es.eigenvectors();
-          Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evalues = es.eigenvalues();
+          Ellipse ell = kf.error_ellipse(0,2,0.95);
           
-          double q0x = evecs(0,0).real();
-          double q0y = evecs(2,0).real();
-          double angle = 180.0/3.14159265359 * atan2(q0y,q0x);          
-
-          double lambda0 = evalues(0).real();
-          double lambda1 = evalues(2).real();
-          
-          double p = 0.95;
-          double r0 = sqrt(-2*log(1-p/1.00)*lambda0);
-          double r1 = sqrt(-2*log(1-p/1.00)*lambda1);
-
           std::string ell_str = "set object " + syllo::int2str(obj_count++) + " ellipse center ";
-          ell_str += syllo::double2str(c.x) + "," + syllo::double2str(c.y) + " size " + syllo::double2str(r0) + "," + syllo::double2str(r1)  + " angle " + syllo::double2str(angle) + " front fillstyle empty border -1";
+          ell_str += syllo::double2str(ell.center().x) + "," + syllo::double2str(ell.center().y) + " size " + syllo::double2str(ell.axes()(0)) + "," + syllo::double2str(ell.axes()(1))  + " angle " + syllo::double2str(ell.angle()) + " front fillstyle empty border -1";
           objects.push_back(ell_str);
+          //std::string ell_str = "set object " + syllo::int2str(obj_count++) + " ellipse center ";
+          //ell_str += syllo::double2str(c.x) + "," + syllo::double2str(c.y) + " size " + syllo::double2str(r0) + "," + syllo::double2str(r1)  + " angle " + syllo::double2str(angle) + " front fillstyle empty border -1";
+          //objects.push_back(ell_str);
           
           it_truth++;          
           t += dt;

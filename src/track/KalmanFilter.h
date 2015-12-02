@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-05 13:28:50 syllogismrxs>
+/// Time-stamp: <2015-12-02 14:47:49 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -41,6 +41,8 @@
 
 #include <Eigen/Dense>
 
+#include <opencv_workbench/utils/Ellipse.h>
+
 namespace syllo {
      class KalmanFilter {
      protected:
@@ -56,7 +58,7 @@ namespace syllo {
 	  Eigen::MatrixXf P_; // State variance matrix
 	  Eigen::MatrixXf K_; // Kalman gain
 	  Eigen::MatrixXf eye_;// = Eigen::Matrix<float, 2, 2>::Identity();
-
+          
      public:
 	  KalmanFilter();
 	  KalmanFilter(const Eigen::MatrixXf &F, const Eigen::MatrixXf &B, 
@@ -74,6 +76,8 @@ namespace syllo {
 
 	  Eigen::MatrixXf state();
 	  Eigen::MatrixXf covariance();
+          Ellipse error_ellipse(int dim1, int dim2, double confidence);
+          
      };
 }
 

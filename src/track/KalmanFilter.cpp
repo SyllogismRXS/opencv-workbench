@@ -76,5 +76,34 @@ namespace syllo {
      {
 	  return P_;
      }
+
+     Ellipse KalmanFilter::error_ellipse(int dim0, int dim1, double confidence)
+     {
+          if (confidence < 0) {
+               confidence = 0;
+          } else if (confidence > 1) {
+               confidence = 1;
+          }
+
+          Eigen::EigenSolver<Eigen::MatrixXf> es(P_);
+          cv::Point2d center = cv::Point2d(x_(0,0),x_(1,0));
+
+          // Compute the eigenvectors and eigenvalues
+          Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evecs = es.eigenvectors();
+          Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evalues = es.eigenvalues();
+          
+          double q0x = evecs(dim0,0).real();
+          double q0y = evecs(dim1,0).real();
+          double angle = 180.0/3.14159265359 * atan2(q0y,q0x);          
+
+          double lambda0 = evalues(dim0).real();
+          double lambda1 = evalues(dim1).real();
+          
+          double p = confidence;
+          double r0 = sqrt(-2*log(1-p/1.00)*lambda0);
+          double r1 = sqrt(-2*log(1-p/1.00)*lambda1);
+
+          return Ellipse(center, cv::Vec2d(r0,r1), angle);
+     }
 }
 

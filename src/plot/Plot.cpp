@@ -91,8 +91,7 @@ namespace syllo
           // Draw objects
           for(std::vector<std::string>::iterator it = objects.begin(); 
               it != objects.end(); it++) {
-               gp_ << *it << endl;
-               cout << *it << endl;
+               gp_ << *it << endl;               
           }
           
           gp_ << "plot";

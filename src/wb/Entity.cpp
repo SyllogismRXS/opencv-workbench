@@ -47,11 +47,15 @@ namespace wb {
      
           R << 0.01,    0,
                   0, 0.01;
+          //R << 10, 0,
+          //     0, 10;
      
-          covar << 0.1, 0, 0, 0,
-               0, 0.1, 0, 0,
-               0, 0, 0.1, 0,
-               0, 0, 0, 0.1;
+          double v = 0.1;
+          //double v = 1;
+          covar << v, 0, 0, 0,
+                   0, v, 0, 0,
+                   0, 0, v, 0,
+                   0, 0, 0, v;
      
           z.resize(2,1);
           u.resize(2,1);
@@ -91,6 +95,12 @@ namespace wb {
                return centroid_;
           }          
      }
+     
+     Ellipse Entity::error_ellipse(int dim0, int dim1, double confidence)
+     {
+          return kf_.error_ellipse(dim0, dim1, confidence);
+     }
+
      void Entity::predict_tracker()
      {
           //cv::Mat prediction = KF_.predict();

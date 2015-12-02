@@ -269,9 +269,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.process_frame(dilate, median, thresh_value_);
       
      cv::Mat blob_img;
-     blob_process_.overlay_blobs(gray, blob_img);      
-      
-     blob_process_.overlay_tracks(blob_img, blob_img);
+     //blob_process_.overlay_blobs(gray, blob_img);            
+     //blob_process_.overlay_tracks(blob_img, blob_img);
+     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
      cv::imshow("Blobs", blob_img);        
       
      cv::Mat blob_consolidate;
@@ -279,7 +279,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::imshow("Consolidate", blob_consolidate);      
      
      cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, false, true, false, true);
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
      cv::imshow("Tracks", original_rects);
      
      //////////////////////////////////////////////////////////////

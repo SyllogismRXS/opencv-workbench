@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-20 16:24:26 syllogismrxs>
+/// Time-stamp: <2015-12-02 15:18:06 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -48,6 +48,7 @@
 
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/KalmanFilter.h>
+#include <opencv_workbench/utils/Ellipse.h>
 
 namespace wb {
 
@@ -128,6 +129,7 @@ namespace wb {
           void predict_tracker();
           void correct_tracker();
           cv::Point estimated_centroid();
+          Ellipse error_ellipse(int dim0, int dim1, double confidence);
           
           void set_matched(bool matched) { matched_ = matched; }
           bool matched() { return matched_; }

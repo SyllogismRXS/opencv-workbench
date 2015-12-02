@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-18 14:47:21 syllogismrxs>
+/// Time-stamp: <2015-12-02 15:51:54 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -49,8 +49,23 @@
 
 #include "Blob.h"
 
+typedef enum OverlayFlags {
+     BLOBS       = 1 << 0,
+     RECTS       = 1 << 1,
+     TRACKS      = 1 << 2,
+     IDS         = 1 << 3,
+     ERR_ELLIPSE = 1 << 4
+}OverlayFlags_t;
+     
+inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)
+{
+     return static_cast<OverlayFlags_t>(static_cast<int>(a) | 
+                                        static_cast<int>(b));
+}
+
 class BlobProcess {
-public:
+public:          
+     
      BlobProcess();
      
      int process_frame(cv::Mat &input, cv::Mat &original, int thresh);
@@ -62,8 +77,7 @@ public:
      void overlay_blobs(cv::Mat &src, cv::Mat &dst);
      void overlay_tracks(cv::Mat &src, cv::Mat &dst);  
 
-     void overlay(cv::Mat &src, cv::Mat &dst, bool show_blobs, bool rects, 
-                  bool tracks, bool ids);  
+     void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);  
      
      std::vector<wb::Blob> & blobs() { return blobs_; }
 
