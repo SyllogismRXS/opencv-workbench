@@ -31,7 +31,17 @@ namespace syllo
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles)
      {
-          plot(vectors, title, labels, styles, std::string(""));
+          std::vector<std::string> objects;
+          plot(vectors, title, labels, styles, std::string(""), objects);
+     }
+     
+     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+                     const std::string &title, 
+                     std::vector<std::string> &labels,
+                     std::vector<std::string> &styles,
+                     std::vector<std::string> &objects)
+     {
+          plot(vectors, title, labels, styles, std::string(""), objects);
      }
 
      void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
@@ -39,6 +49,17 @@ namespace syllo
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
                      std::string options)
+     {
+          std::vector<std::string> objects;
+          plot(vectors, title, labels, styles, options, objects);
+     }
+     
+     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+                     const std::string &title, 
+                     std::vector<std::string> &labels,
+                     std::vector<std::string> &styles,
+                     std::string options,
+                     std::vector<std::string> &objects)
      {
           //gp_ << "plot sin(x)" << endl;                   
           //return;
@@ -67,6 +88,13 @@ namespace syllo
           //gp_ << "set size 1,1\n";
           //gp_ << "set yrange [*:] reverse\n";          
 
+          // Draw objects
+          for(std::vector<std::string>::iterator it = objects.begin(); 
+              it != objects.end(); it++) {
+               gp_ << *it << endl;
+               cout << *it << endl;
+          }
+          
           gp_ << "plot";
 
           int count = 0;
