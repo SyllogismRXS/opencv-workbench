@@ -161,7 +161,8 @@ THE SOFTWARE.
 // Unfortunately, this means you will miss out on legitimate error messages.
 #	define GNUPLOT_DEFAULT_COMMAND "gnuplot -persist 2> NUL"
 #else
-#	define GNUPLOT_DEFAULT_COMMAND "gnuplot -persist"
+//#	define GNUPLOT_DEFAULT_COMMAND "gnuplot -persist"
+#	define GNUPLOT_DEFAULT_COMMAND "gnuplot"
 #endif
 #endif
 
