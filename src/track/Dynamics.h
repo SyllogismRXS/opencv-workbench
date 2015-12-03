@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-30 13:31:07 syllogismrxs>
+/// Time-stamp: <2015-12-03 16:46:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -67,7 +67,8 @@ public:
      
      typedef enum Model {
           constant_velocity = 0,
-          cart         
+          cart,
+          roomba
      }Model_t;
      
      Dynamics();
@@ -76,6 +77,8 @@ public:
      void set_model(Model_t model) { model_ = model; }
      void compute_trajectory();     
      void cart_model(const state_3d_type &x , state_3d_type &dxdt , double t);
+     void roomba_model(const state_3d_type &x , state_3d_type &dxdt , double t);
+     
      void set_input(state_5d_type input);     
      void set_process_noise(double noise) { process_noise_ = noise; }
      void set_measurement_noise(double noise) { measurement_noise_ = noise; } 
@@ -83,6 +86,7 @@ public:
      
      std::vector<cv::Point2d> & truth_points() { return truth_points_; }
      std::vector<cv::Point2d> & measured_points() { return measured_points_; }
+     std::vector<state_5d_type> & state() { return state_; }
 
 protected:
 private:
@@ -90,6 +94,7 @@ private:
      std::vector<double> headings_;
      std::vector<cv::Point2d> truth_points_;
      std::vector<cv::Point2d> measured_points_;
+     std::vector<state_5d_type> state_;
      
      double t0_;
      double dt_;

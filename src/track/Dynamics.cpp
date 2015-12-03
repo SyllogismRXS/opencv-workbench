@@ -43,7 +43,7 @@ void Dynamics::compute_trajectory()
      headings_.clear();
      truth_points_.clear();
 
-     if (model_ == cart) { 
+     if (model_ == cart || model_ == roomba) { 
           state_3d_type x = {x0_[0], x0_[1], x0_[2]};     
           runge_kutta4< state_3d_type > stepper;     
           
@@ -59,8 +59,20 @@ void Dynamics::compute_trajectory()
                headings_.push_back(x[2]*180.0/PI);
                truth_points_.push_back(truth);
                measured_points_.push_back(measured);
+               
+               state_5d_type state;
+               state[0] = x[0];
+               state[1] = x[1];
+               state[2] = x[2];
+               state[3] = 0;
+               state[4] = 0;
+               state_.push_back(state);
           
-               stepper.do_step(make_ode_wrapper( *this , &Dynamics::cart_model ), x , *it , dt_ );
+               if (model_ == cart) {
+                    stepper.do_step(make_ode_wrapper( *this , &Dynamics::cart_model ), x , *it , dt_ );
+               } else { 
+                    stepper.do_step(make_ode_wrapper( *this , &Dynamics::roomba_model ), x , *it , dt_ );
+               }
           } 
      } else if (model_ == constant_velocity) {
      }
@@ -89,4 +101,21 @@ void Dynamics::cart_model(const state_3d_type &x , state_3d_type &dxdt , double 
      dxdt[0] = u*cos(x[2]) + var_nor() * process_noise_; 
      dxdt[1] = u*sin(x[2]) + var_nor() * process_noise_; 
      dxdt[2] = u/L*tan(u_theta) + var_nor() * process_noise_;
+}
+
+void Dynamics::roomba_model(const state_3d_type &x , state_3d_type &dxdt , double t)
+{
+     /// 0 : x-position
+     /// 1 : y-position
+     /// 2 : theta
+
+     double R = 1;
+     double b = 0.5;
+	  
+     double w_r = u_[0];
+     double w_l = u_[1];
+     
+     dxdt[0] = R*cos(x[2])*(w_r + w_l)/2;
+     dxdt[1] = R*sin(x[2])*(w_r + w_l)/2;
+     dxdt[2] = R*(w_r-w_l)/(2*b);
 }
