@@ -39,14 +39,8 @@ int main(int argc, char *argv[])
 
      double t0 = 0;
      double dt = 0.1;
-     double tend = 20;     
- 
-     // Setup boost RNG
-     boost::mt19937 rng;
-     boost::normal_distribution<> nd(0,1.0);
-     boost::variate_generator<boost::mt19937&, 
-                              boost::normal_distribution<> > var_nor(rng,nd);
-     
+     double tend = 20;      
+          
      ///////////////////////////////////////////////////////
      // Setup Cart Model 
      Dynamics::state_5d_type input;
@@ -59,8 +53,8 @@ int main(int argc, char *argv[])
      dyn.set_model(Dynamics::cart);
      dyn.set_input(input);
      dyn.set_process_noise(0.0);
-     //dyn.set_measurement_noise(0.1);
-     dyn.set_measurement_noise(2);
+     dyn.set_measurement_noise(0.5);
+     //dyn.set_measurement_noise(2);
      
      dyn.compute_trajectory();     
      std::vector<cv::Point2d> truth = dyn.truth_points();
@@ -92,6 +86,8 @@ int main(int argc, char *argv[])
      
      bool step_flag = false;
      
+     syllo::Plot plot_frame;
+     
      for(; it != measured.end(); it++) {                             
           
           vectors.clear() ; labels.clear(); styles.clear();
@@ -103,9 +99,18 @@ int main(int argc, char *argv[])
           vectors.push_back(measured_disp);
           labels.push_back("Measured");
           styles.push_back("points");              
-
+          
           plot.plot(vectors, title, labels, styles, options);
 
+          // Frame plot          
+          vectors.clear() ; labels.clear(); styles.clear();
+          std::vector<cv::Point2d> frame;
+          frame.push_back(*it);
+          labels.push_back("Measured");
+          styles.push_back("points");                        
+          vectors.push_back(frame);
+          plot_frame.plot(vectors, title, labels, styles);
+          
           if (step_flag) {
                int key = cv::waitKey(0);    
                if (key == 'q' || key == 1048689) { // 'q' key
@@ -135,12 +140,7 @@ int main(int argc, char *argv[])
      
      vectors.push_back(measured);
      labels.push_back("Measured");
-     styles.push_back("points");
-     
-     //std::string options;
-     //options = "set size ratio -1\n";
-     //options += "set view equal xy\n"; 
-     //options += "set size 1,1\n";
+     styles.push_back("points");    
      
      syllo::Plot plot_end;
      plot_end.plot(vectors, title, labels, styles, options);
