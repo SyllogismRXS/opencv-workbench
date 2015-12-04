@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-02 15:18:06 syllogismrxs>
+/// Time-stamp: <2015-12-03 22:45:53 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -62,7 +62,8 @@ namespace wb {
                Clutter,
                Rock,
                Barrel,
-               Mammal          
+               Mammal,
+               Sensor
           }EntityType_t;
           
           Entity();
@@ -177,8 +178,8 @@ namespace wb {
           bool matched_;
 
           void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }
-
+          float distance() { return distance_; }          
+          
      private:
      };
 

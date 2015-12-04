@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-03 16:46:14 syllogismrxs>
+/// Time-stamp: <2015-12-04 11:41:11 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -55,7 +55,7 @@
 class Dynamics {
 public:
      
-     const double PI;
+     double PI;
      
      typedef boost::array< double, 1 > state_1d_type;
      typedef boost::array< double, 2 > state_2d_type;
@@ -64,6 +64,7 @@ public:
      typedef boost::array< double, 5 > state_5d_type;
      
      typedef boost::numeric::odeint::runge_kutta4< state_3d_type > stepper_3d_type;
+     typedef boost::numeric::odeint::runge_kutta4< state_5d_type > stepper_5d_type;
      
      typedef enum Model {
           constant_velocity = 0,
@@ -72,12 +73,15 @@ public:
      }Model_t;
      
      Dynamics();
-     
+
+     static std::vector<double> time_vector(double t0, double dt, double tend);
+
      void set_time(double t0, double dt, double tend);
      void set_model(Model_t model) { model_ = model; }
      void compute_trajectory();     
-     void cart_model(const state_3d_type &x , state_3d_type &dxdt , double t);
-     void roomba_model(const state_3d_type &x , state_3d_type &dxdt , double t);
+     void step_motion_model(double dt);
+     void cart_model(const state_5d_type &x , state_5d_type &dxdt , double t);
+     void roomba_model(const state_5d_type &x , state_5d_type &dxdt , double t);
      
      void set_input(state_5d_type input);     
      void set_process_noise(double noise) { process_noise_ = noise; }
@@ -86,15 +90,25 @@ public:
      
      std::vector<cv::Point2d> & truth_points() { return truth_points_; }
      std::vector<cv::Point2d> & measured_points() { return measured_points_; }
-     std::vector<state_5d_type> & state() { return state_; }
+     std::vector<state_5d_type> & states() { return states_; }
+     state_5d_type state() { return state_; }
+     
+     int id() { return id_; }
+     void set_id(int id) { id_ = id; }
 
-protected:
+     std::string type() { return type_; }
+     void set_type(std::string type) { type_ = type; }
+     
+protected:          
+     
+     stepper_5d_type stepper_;
+
 private:
      std::vector<double> tt_;
      std::vector<double> headings_;
      std::vector<cv::Point2d> truth_points_;
      std::vector<cv::Point2d> measured_points_;
-     std::vector<state_5d_type> state_;
+     std::vector<state_5d_type> states_;
      
      double t0_;
      double dt_;
@@ -103,14 +117,18 @@ private:
      Model_t model_;
      state_5d_type u_;
      state_5d_type x0_;
-     
-     boost::mt19937 rng_;
+     state_5d_type state_;
+          
+     boost::mt19937 *rng_;
      boost::normal_distribution<> nd_;
-     boost::variate_generator<boost::mt19937&, 
+     boost::variate_generator<boost::mt19937*, 
           boost::normal_distribution<> > var_nor;
 
      double process_noise_;
      double measurement_noise_;
+
+     int id_;
+     std::string type_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

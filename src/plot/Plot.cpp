@@ -120,6 +120,72 @@ namespace syllo
           gp_ << endl;
      }
 
+     void Plot::plot(std::map< std::string, std::vector<cv::Point2d> > &vectors,
+                     const std::string &title, 
+                     std::vector<std::string> &labels,
+                     std::vector<std::string> &styles,
+                     std::string options,
+                     std::vector<std::string> &objects)
+     {
+          //gp_ << "plot sin(x)" << endl;                   
+          //return;
+
+          // used to plot "tracks"
+          /// gp_ << "reset\n";
+          /// //gp_ << "set terminal wxt\n";
+          /// gp_ << "set title '" << title << "'\n";
+          /// gp_ << "set size ratio -1\n";
+          /// //gp_ << "set view equal xy\n";
+          /// gp_ << "set grid xtics ytics\n";
+          /// gp_ << "set size 1,1\n";
+          /// gp_ << "set yrange [*:] reverse\n";          
+          /// gp_ << "plot";
+
+          gp_ << "reset\n";
+          gp_ << "set title '" << title << "'\n";          
+          gp_ << "set grid xtics ytics\n";   
+
+          if (options != "") {
+               gp_ << options;
+          }
+
+          //gp_ << "set size ratio -1\n";
+          //gp_ << "set view equal xy\n";
+          //gp_ << "set size 1,1\n";
+          //gp_ << "set yrange [*:] reverse\n";          
+
+          // Draw objects
+          for(std::vector<std::string>::iterator it = objects.begin(); 
+              it != objects.end(); it++) {
+               gp_ << *it << endl;               
+          }
+          
+          gp_ << "plot";
+
+          int count = 0;
+          std::map< std::string, std::vector<cv::Point2d> >::iterator it;
+          for (it = vectors.begin(); it != vectors.end(); it++) {
+               std::vector<double> xLocs;
+               std::vector<double> yLocs;
+        	    
+               std::vector<cv::Point2d>::iterator it2;
+               for (it2 = it->second.begin() ; it2 != it->second.end() ; it2++) {
+                    xLocs.push_back(it2->x);
+                    yLocs.push_back(it2->y);
+               } 
+
+               gp_ << gp_.file1d(std::make_pair(xLocs,yLocs)) 
+                   << "with linespoints title '" << it->first << "'";
+
+               if (++it != vectors.end()) {
+                    gp_ << ",";
+               }
+               --it;
+               ++count;                    
+          }
+          gp_ << endl;
+     }
+
      void Plot::plot_heading_position(
           std::vector< std::vector<state_5d_type> > &vectors, 
           const std::string &title, 

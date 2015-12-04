@@ -53,6 +53,13 @@ namespace syllo
                     std::vector<std::string> &styles,
                     std::string options);
 
+          void plot(std::map< std::string, std::vector<cv::Point2d> > &vectors,
+                    const std::string &title, 
+                    std::vector<std::string> &labels,
+                    std::vector<std::string> &styles,
+                    std::string options,
+                    std::vector<std::string> &objects);
+          
           void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
