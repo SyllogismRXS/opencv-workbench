@@ -148,9 +148,9 @@ void Dynamics::roomba_model(const state_5d_type &x , state_5d_type &dxdt , doubl
 
      double R = 1;
      double b = 0.5;
-	  
-     double w_r = u_[0];
-     double w_l = u_[1];
+	
+     double w_l = u_[0];
+     double w_r = u_[1];     
      
      dxdt[0] = R*cos(x[2])*(w_r + w_l)/2;
      dxdt[1] = R*sin(x[2])*(w_r + w_l)/2;

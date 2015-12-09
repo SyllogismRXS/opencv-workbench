@@ -1,5 +1,5 @@
 time_step: 0.05
-time_end: 4
+time_end: 8
 
 # x - East = 0 degrees
 # y - North = 90 degrees
@@ -14,7 +14,7 @@ entities:
   position: [0, 0, 0]
   heading: 0
   motion: roomba  
-  control_input: [0.1, 0.15]
+  control_input: [0.01, -0.01]  # [left, right]
   sonar_noise: 0.0
   sonar_range: 20.0
 
@@ -23,11 +23,18 @@ entities:
   position: [15, 0, 0]
   heading: 90
   motion: cart
-  control_input: [0, 0]
+  control_input: [0.6, 0]
 
 - type: unknown
   id: 2
   position: [5, 0, 0]
+  heading: 90
+  motion: cart
+  control_input: [0, 0]
+
+- type: unknown
+  id: 3
+  position: [5, 1, 0]
   heading: 90
   motion: cart
   control_input: [0, 0]

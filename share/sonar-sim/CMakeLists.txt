@@ -24,4 +24,5 @@ target_link_libraries(${APP_NAME}
   plot
   wb
   ${YAMLCPP_LIBRARY}
+  trajectory  
   )

@@ -5,6 +5,8 @@
 #include <time.h>
 #include <math.h>
 #include <unistd.h>
+#include <map>
+#include <list>
 
 #include <Eigen/Eigenvalues>
 
@@ -25,6 +27,8 @@
 #include <opencv_workbench/track/Dynamics.h>
 #include <opencv_workbench/track/KalmanFilter.h>
 #include <opencv_workbench/track/EKF.h>
+#include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
 
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -211,13 +215,20 @@ int main(int argc, char *argv[])
      cv::Mat rot_mat(2,3,CV_8UC1);
      rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
      
+     TrajectoryAnalysis traj;
+     std::map<int, std::list<wb::Entity> > tracks_history;
+     
      // Loop through all generated trajectories
      bool step_flag = true;
+     int frame_number = 0;
      std::vector<double> tt = Dynamics::time_vector(t0,dt,tend);     
-     for (std::vector<double>::iterator it = tt.begin(); it != tt.end(); it++) {
+     for (std::vector<double>::iterator it = tt.begin(); it != tt.end(); 
+          it++, frame_number++) {
+          
+          img = cv::Scalar(255,255,255);
                     
           // Rotate the sonar image to "pointing back up"
-          cv::warpAffine(img, img, rot_mat, img.size());
+          //cv::warpAffine(img, img, rot_mat, img.size());
 
           // Clear out the plot vectors
           //vectors.clear() ; labels.clear(); styles.clear();          
@@ -252,7 +263,8 @@ int main(int argc, char *argv[])
                double bearing_to_cnt = atan2(cnt_relative_pos.y, 
                                              cnt_relative_pos.x);
                
-               double dist = cv::norm(offset);
+               double dist = cv::norm(offset);               
+               
                if ((min_angle_ <= bearing_to_cnt) && (bearing_to_cnt <= max_angle_) && 
                    (dist >= x_min) && dist <= x_max) {
                     // Put target in sonar's image
@@ -265,19 +277,31 @@ int main(int argc, char *argv[])
                 
                     // x = R*cos(theta), y = R*sin(theta);
                     double x = R*cos(theta);
-                    double y = R*sin(theta);
+                    double y = R*sin(theta);                    
                      
-                    //int x_pos = img_width/2 + offset.y / (y_max/2) * img_height*sin(max_angle_);
-                    //int y_pos = offset.x / x_max * img_height;
-                    int x_pos = cvRound(img_width/2 + y / (y_max/2) * img_height*sin(max_angle_));
-                    int y_pos = cvRound(x / x_max * img_height);
-                                                  
+                    int x_pos = cvRound(img_width/2 - y / (y_max/2) * img_height*sin(max_angle_));
+                    int y_pos = cvRound(img_height - x / x_max * img_height);                                            
+                    
                     if (x_pos < 0 || x_pos > img.cols || y_pos < 0 || y_pos > img.rows) {
                          // error, skip
                          cout << "bounds" << endl;
                          continue;
                     }                         
+
+                    wb::Entity entity;
+                    entity.set_id(it_ent->id());
+                    entity.set_undistorted_centroid(cv::Point2f(x,y));
+                    entity.set_centroid(cv::Point(x_pos,y_pos));
+                    entity.set_frame(frame_number);
+                    entity.set_age(10);// assume we are tracking
+                    tracks_history[it_ent->id()].push_back(entity);
+                    
                     cv::circle(img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
+                    
+                    std::ostringstream convert;
+                    convert << it_ent->id();               
+                    const std::string& text = convert.str();
+                    cv::putText(img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
                }               
           }          
                     
@@ -286,9 +310,9 @@ int main(int argc, char *argv[])
           // Draw the sonar's outside polygon
           double start_angle = (PI - beam_width_) / 2 ;
           double end_angle = start_angle + beam_width_;// * PI / 180.0;//90.0 * PI / 180.0;//1.963495408;
-          cv::Point start(img_width/2,0);
-          cv::Point end_1(start.x+img_height*cos(start_angle), start.y+img_height*sin(start_angle));
-          cv::Point end_2(start.x+img_height*cos(end_angle), start.y+img_height*sin(end_angle));
+          cv::Point start(img_width/2,img_height);
+          cv::Point end_1(start.x+img_height*cos(start_angle), start.y-img_height*sin(start_angle));
+          cv::Point end_2(start.x+img_height*cos(end_angle), start.y-img_height*sin(end_angle));
                     
           // Line from sonar head to start of outer-arc
           cv::line(img_color, start, end_1, cv::Scalar(0,0,0), 1, 8, 0);
@@ -299,7 +323,7 @@ int main(int argc, char *argv[])
           double step = (end_angle - start_angle) / num_pts;
           for (double ang = start_angle; ang <= end_angle; ang += step) {
                //contour.push_back(cv::Point(start.x+img_height*cos(ang), start.y+img_height*sin(ang)));
-               cv::Point p(cv::Point(start.x+img_height*cos(ang), start.y+img_height*sin(ang)));
+               cv::Point p(cv::Point(start.x+img_height*cos(ang), start.y-img_height*sin(ang)));
                cv::line(img_color, prev, p, cv::Scalar(0,0,0), 1, 8, 0);
                prev = p;
           }
@@ -309,13 +333,18 @@ int main(int argc, char *argv[])
      
           // Line from outer-arc back to sonar head
           cv::line(img_color, end_2, start, cv::Scalar(0,0,0), 1, 8, 0);
-     
-          // Rotate image and display
-          cv::warpAffine(img_color, img_color, rot_mat, img_color.size());
-          cv::imshow("Sonar", img_color);     
-          cv::moveWindow("Sonar", 800,800);
-          /////////////////////////////////////////////////////////////////////                              
           
+          // Compute Trajectory Analysis
+          cv::Mat traj_img = img_color;//.clone();
+          traj.trajectory_similarity(tracks_history, frame_number, 
+                                     traj_img, 0.004);
+          
+          // Rotate image and display
+          //cv::warpAffine(traj_img, traj_img, rot_mat, traj_img.size());
+          cv::imshow("Sonar", traj_img);     
+          cv::moveWindow("Sonar", 800,800);
+          /////////////////////////////////////////////////////////////////////                    
+                    
           // Handle pausing / stepping
           if (step_flag) {
                int key = cv::waitKey(0);    
