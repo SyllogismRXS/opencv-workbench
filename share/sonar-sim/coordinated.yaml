@@ -48,11 +48,18 @@ entities:
   position: [10, 1, 0]
   heading: -90
   motion: cart
-  control_input: [1, 0]
+  control_input: [1, 0.5]
 
 - type: unknown
   id: 5
   position: [12, 1, 0]
+  heading: -90
+  motion: cart
+  control_input: [1, 0.5]
+
+- type: unknown
+  id: 6
+  position: [9, 2, 0]
   heading: -90
   motion: cart
   control_input: [1, 0]
