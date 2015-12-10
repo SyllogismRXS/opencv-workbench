@@ -42,3 +42,17 @@ entities:
   heading: 90
   motion: cart
   control_input: [0, 0]
+
+- type: unknown
+  id: 4
+  position: [10, 1, 0]
+  heading: -90
+  motion: cart
+  control_input: [1, 0]
+
+- type: unknown
+  id: 5
+  position: [12, 1, 0]
+  heading: -90
+  motion: cart
+  control_input: [1, 0]

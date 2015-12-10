@@ -131,6 +131,41 @@ void operator >> (const YAML::Node& node, Dynamics &dyn) {
      }         
 }
 
+void draw_sonar_lines(cv::Mat &src, cv::Mat &dst, double beam_width)
+{
+     double img_height = src.cols;
+     double img_width = src.rows;
+     
+     dst = src.clone();
+     /////////////////////////////////////////////////////////////////////
+     // Draw the sonar's outside polygon
+     double start_angle = (PI - beam_width) / 2 ;
+     double end_angle = start_angle + beam_width;// * PI / 180.0;//90.0 * PI / 180.0;//1.963495408;
+     cv::Point start(img_width/2,img_height);
+     cv::Point end_1(start.x+img_height*cos(start_angle), start.y-img_height*sin(start_angle));
+     cv::Point end_2(start.x+img_height*cos(end_angle), start.y-img_height*sin(end_angle));
+                    
+     // Line from sonar head to start of outer-arc
+     cv::line(dst, start, end_1, cv::Scalar(0,0,0), 1, 8, 0);
+     cv::Point prev = end_1;
+          
+     // Draw outer-arc polygon
+     double num_pts = 25;
+     double step = (end_angle - start_angle) / num_pts;
+     for (double ang = start_angle; ang <= end_angle; ang += step) {
+          //contour.push_back(cv::Point(start.x+img_height*cos(ang), start.y+img_height*sin(ang)));
+          cv::Point p(cv::Point(start.x+img_height*cos(ang), start.y-img_height*sin(ang)));
+          cv::line(dst, prev, p, cv::Scalar(0,0,0), 1, 8, 0);
+          prev = p;
+     }
+     
+     // Line from outer-arc to real final arc position
+     cv::line(dst, prev, end_2, cv::Scalar(0,0,0), 1, 8, 0);
+     
+     // Line from outer-arc back to sonar head
+     cv::line(dst, end_2, start, cv::Scalar(0,0,0), 1, 8, 0);          
+}
+
 int main(int argc, char *argv[])
 {
      cout << "================================" << endl;
@@ -154,7 +189,13 @@ int main(int argc, char *argv[])
      // Get time information:
      doc["time_step"] >> dt;
      doc["time_end"] >> tend;
-          
+
+     double traj_threshold;
+     doc["traj_threshold"] >> traj_threshold;
+
+     bool display_plot;
+     doc["display_plot"] >> display_plot;
+     
      // Get entity information:
      std::vector<Dynamics> dyns;
      const YAML::Node& entities = doc["entities"];
@@ -205,11 +246,14 @@ int main(int argc, char *argv[])
      
      int img_width = 600;
      int img_height = 600;
-     cv::Mat img = cv::Mat::zeros(img_height, img_width, CV_8UC3);
-     img = cv::Scalar(255,255,255);
+     cv::Mat frame_img = cv::Mat::zeros(img_height, img_width, CV_8UC3);
+     frame_img = cv::Scalar(255,255,255);
+     
+     cv::Mat history_img = cv::Mat::zeros(img_height, img_width, CV_8UC3);
+     history_img = cv::Scalar(255,255,255);     
      
      // Setup rotation matrix
-     cv::Point center = cv::Point( img.cols/2, img.rows/2 );
+     cv::Point center = cv::Point( frame_img.cols/2, frame_img.rows/2 );
      double angle = 180.0;
      double rot_scale = 1.0;     
      cv::Mat rot_mat(2,3,CV_8UC1);
@@ -225,7 +269,7 @@ int main(int argc, char *argv[])
      for (std::vector<double>::iterator it = tt.begin(); it != tt.end(); 
           it++, frame_number++) {
           
-          img = cv::Scalar(255,255,255);
+          frame_img = cv::Scalar(255,255,255);
                     
           // Rotate the sonar image to "pointing back up"
           //cv::warpAffine(img, img, rot_mat, img.size());
@@ -282,7 +326,7 @@ int main(int argc, char *argv[])
                     int x_pos = cvRound(img_width/2 - y / (y_max/2) * img_height*sin(max_angle_));
                     int y_pos = cvRound(img_height - x / x_max * img_height);                                            
                     
-                    if (x_pos < 0 || x_pos > img.cols || y_pos < 0 || y_pos > img.rows) {
+                    if (x_pos < 0 || x_pos > frame_img.cols || y_pos < 0 || y_pos > frame_img.rows) {
                          // error, skip
                          cout << "bounds" << endl;
                          continue;
@@ -296,53 +340,39 @@ int main(int argc, char *argv[])
                     entity.set_age(10);// assume we are tracking
                     tracks_history[it_ent->id()].push_back(entity);
                     
-                    cv::circle(img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
-                    
+                    cv::circle(frame_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
+                    cv::circle(history_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
+                                        
                     std::ostringstream convert;
                     convert << it_ent->id();               
                     const std::string& text = convert.str();
-                    cv::putText(img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
+                    cv::putText(frame_img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
+                    //cv::putText(history_img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
                }               
           }          
-                    
-          cv::Mat img_color = img;          
-          /////////////////////////////////////////////////////////////////////
-          // Draw the sonar's outside polygon
-          double start_angle = (PI - beam_width_) / 2 ;
-          double end_angle = start_angle + beam_width_;// * PI / 180.0;//90.0 * PI / 180.0;//1.963495408;
-          cv::Point start(img_width/2,img_height);
-          cv::Point end_1(start.x+img_height*cos(start_angle), start.y-img_height*sin(start_angle));
-          cv::Point end_2(start.x+img_height*cos(end_angle), start.y-img_height*sin(end_angle));
-                    
-          // Line from sonar head to start of outer-arc
-          cv::line(img_color, start, end_1, cv::Scalar(0,0,0), 1, 8, 0);
-          cv::Point prev = end_1;
           
-          // Draw outer-arc polygon
-          double num_pts = 25;
-          double step = (end_angle - start_angle) / num_pts;
-          for (double ang = start_angle; ang <= end_angle; ang += step) {
-               //contour.push_back(cv::Point(start.x+img_height*cos(ang), start.y+img_height*sin(ang)));
-               cv::Point p(cv::Point(start.x+img_height*cos(ang), start.y-img_height*sin(ang)));
-               cv::line(img_color, prev, p, cv::Scalar(0,0,0), 1, 8, 0);
-               prev = p;
+          if (display_plot) {
+               // Plot the tracks          
+               std::vector<std::string> empty_objects;
+               plot.plot(vectors, title, labels, styles, options, empty_objects);
           }
-     
-          // Line from outer-arc to real final arc position
-          cv::line(img_color, prev, end_2, cv::Scalar(0,0,0), 1, 8, 0);
-     
-          // Line from outer-arc back to sonar head
-          cv::line(img_color, end_2, start, cv::Scalar(0,0,0), 1, 8, 0);
+          
+          // Draw sonar lines on images
+          draw_sonar_lines(frame_img, frame_img, beam_width_);          
+          draw_sonar_lines(history_img, history_img, beam_width_);          
           
           // Compute Trajectory Analysis
-          cv::Mat traj_img = img_color;//.clone();
+          cv::Mat traj_img = frame_img;//img_color;//.clone();
           traj.trajectory_similarity(tracks_history, frame_number, 
-                                     traj_img, 0.004);
+                                     traj_img, traj_threshold);
+
+          cv::Mat history_traj_img = history_img;//img_color;//.clone();
+          traj.trajectory_similarity(tracks_history, frame_number, 
+                                     history_traj_img, traj_threshold);
           
-          // Rotate image and display
-          //cv::warpAffine(traj_img, traj_img, rot_mat, traj_img.size());
-          cv::imshow("Sonar", traj_img);     
-          cv::moveWindow("Sonar", 800,800);
+          cv::imshow("History", history_traj_img);
+          cv::imshow("Frame", traj_img);           
+          
           /////////////////////////////////////////////////////////////////////                    
                     
           // Handle pausing / stepping
@@ -362,11 +392,7 @@ int main(int argc, char *argv[])
                } else if (key == 'p' || key == 1048688) {
                     step_flag = 1;
                } 
-          }
-
-          // Plot the tracks          
-          std::vector<std::string> empty_objects;
-          plot.plot(vectors, title, labels, styles, options, empty_objects);
+          }          
      }     
      cv::waitKey(0);     
      return 0;
