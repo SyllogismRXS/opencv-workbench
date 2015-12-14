@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-14 00:20:17 syllogismrxs>
+/// Time-stamp: <2015-12-14 00:46:29 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -105,6 +105,7 @@ protected:
      std::vector<wb::Blob> blobs_;
      std::vector<wb::Blob> prev_blobs_;
      std::vector<wb::Blob> short_lived_;
+     std::vector<wb::Blob> new_tracks_;
 
 private:
      int count_;

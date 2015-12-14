@@ -366,6 +366,7 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
      int * assignment = new int[rows*cols];
      hungarian_get_assignment(&p, assignment);
          
+     new_tracks_.clear();
      // Use the assignment to update the old tracks with new blob measurement     
      r = 0;
      it = meas.begin();
@@ -388,6 +389,8 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                               // And a new track
                               it->new_track(next_available_id());
                               fused.push_back(*it);
+
+                              new_tracks_.push_back(*it);
                               
                          } else {
                               // Found an assignment. Update the new measurement
@@ -403,6 +406,8 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                          // Possible new track
                          it->new_track(next_available_id());
                          fused.push_back(*it);
+                         
+                         new_tracks_.push_back(*it);
                     }
                     break; // There is only one assignment per row
                }
@@ -643,12 +648,20 @@ void BlobProcess::overlay_short_lived(cv::Mat &src, cv::Mat &dst)
           color = src;
      }
      dst = color;
-          
-     std::vector<wb::Blob>::iterator it = short_lived_.begin();
-     for(; it != short_lived_.end(); it++) {
+               
+     for(std::vector<wb::Blob>::iterator it = short_lived_.begin();
+         it != short_lived_.end(); it++) {
 
           cv::Rect rect = it->bbox().rectangle();
           cv::rectangle(dst, rect, cv::Scalar(0,0,255), -1, 8, 0);
+     }
+
+     
+     for(std::vector<wb::Blob>::iterator it = new_tracks_.begin();
+         it != new_tracks_.end(); it++) {
+
+          cv::Rect rect = it->bbox().rectangle();
+          cv::rectangle(dst, rect, cv::Scalar(0,255,0), -1, 8, 0);
      }
 }
 
