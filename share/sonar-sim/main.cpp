@@ -20,7 +20,7 @@
 #include <opencv2/video/tracking.hpp>
 
 #include <opencv_workbench/syllo/syllo.h>
-//
+
 #include <opencv_workbench/utils/AnnotationParser.h>
 #include <opencv_workbench/utils/ColorMaps.h>
 #include <opencv_workbench/plot/Plot.h>
@@ -28,6 +28,8 @@
 #include <opencv_workbench/track/KalmanFilter.h>
 #include <opencv_workbench/track/EKF.h>
 #include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/wb/Blob.h>
+#include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
 
 #include <boost/random.hpp>
@@ -56,17 +58,6 @@ struct Vec3_Yaml {
 struct Vec2_Yaml {
      double x, y;
 };
-
-//struct Entity_Yaml {
-//     std::string type;
-//     int id;
-//     Vec3_Yaml position;
-//     double heading;
-//     std::string motion;
-//     Vec2_Yaml control_input;
-//     double sonar_noise;
-//     double sonar_range;
-//};
 
 void operator >> (const YAML::Node& node, Vec2_Yaml& v)
 {
@@ -260,8 +251,10 @@ int main(int argc, char *argv[])
      rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
      
      TrajectoryAnalysis traj;
-     std::map<int, std::list<wb::Entity> > tracks_history;
+     std::map<int, std::list<wb::Blob> > tracks_history;
      
+     BlobProcess blob_process;
+     std::vector<wb::Blob> tracks;
      // Loop through all generated trajectories
      bool step_flag = true;
      int frame_number = 0;
@@ -281,6 +274,17 @@ int main(int argc, char *argv[])
           cv::Point2d sonar_pos(sonar_state[0], sonar_state[1]);
           double sonar_heading = sonar_state[2];
 
+          std::vector<wb::Blob> measurements;          
+          
+          // Run Kalman Filter on all tracks          
+          for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
+              it != tracks.end(); it++) {
+               if (it->is_tracked()) {
+                    it->predict_tracker();
+               }
+          }
+          
+          // Loop through all objects that have dynamics
           for (std::vector<Dynamics>::iterator it_ent = dyns.begin();
                it_ent != dyns.end(); it_ent++) {
                
@@ -333,13 +337,19 @@ int main(int argc, char *argv[])
                          continue;
                     }                         
 
-                    wb::Entity entity;
-                    entity.set_id(it_ent->id());
-                    entity.set_undistorted_centroid(cv::Point2f(x,y));
-                    entity.set_centroid(cv::Point(x_pos,y_pos));
-                    entity.set_frame(frame_number);
-                    entity.set_age(10);// assume we are tracking
-                    tracks_history[it_ent->id()].push_back(entity);
+                    wb::Blob blob;
+                    blob.set_id(it_ent->id());
+                    blob.set_undistorted_centroid(cv::Point2f(x,y));
+                    wb::Point p;
+                    p.set_position(cv::Point(x_pos,y_pos));
+                    p.set_value(255);
+                    blob.add_point(p);
+                    blob.set_frame(frame_number);                    
+                    blob.init();
+                    
+                    tracks_history[it_ent->id()].push_back(blob);
+                    
+                    measurements.push_back(blob);
                     
                     cv::circle(frame_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
                     cv::circle(history_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
@@ -361,6 +371,19 @@ int main(int argc, char *argv[])
           // Draw sonar lines on images
           draw_sonar_lines(frame_img, frame_img, beam_width_);          
           draw_sonar_lines(history_img, history_img, beam_width_);          
+
+          // Send "measurements" to hungarian assignment algorithm
+          std::vector<wb::Blob> fused_tracks;
+          blob_process.assign_hungarian(measurements, tracks, fused_tracks);
+          tracks = fused_tracks;
+          blob_process.set_blobs(tracks);          
+          
+          cout << "Blob Size: " << tracks.size() << endl;
+          // Draw Tracks on image
+          cv::Mat tracks_img(frame_img.size(), CV_8UC3);
+          tracks_img = cv::Scalar(255,0,0);
+          blob_process.overlay(tracks_img, tracks_img, RECTS | TRACKS | IDS);
+          cv::imshow("Tracks", tracks_img);
           
           // Compute Trajectory Analysis
           cv::Mat traj_img = frame_img;//img_color;//.clone();

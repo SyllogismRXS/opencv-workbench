@@ -121,7 +121,12 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //blob_process_.overlay_blobs(gray, blob_img);            
      //blob_process_.overlay_tracks(blob_img, blob_img);
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
      cv::imshow("Blobs", blob_img);        
+
+     cv::Mat short_lived;
+     blob_process_.overlay_short_lived(gray, short_lived);
+     cv::imshow("Short",short_lived);
       
      cv::Mat blob_consolidate;
      blob_process_.consolidate_tracks(gray, blob_consolidate);
@@ -158,9 +163,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           it->set_undistorted_centroid(cv::Point2f(x,y));
           it->set_frame(frame_number);
            
-          tracks_history_[it->id()].push_back((wb::Entity)*it);
+          tracks_history_[it->id()].push_back(*it);
            
-          tracks_.push_back((wb::Entity)*it);
+          tracks_.push_back(*it);
      }
       
      // Calculate Similarity between current tracks

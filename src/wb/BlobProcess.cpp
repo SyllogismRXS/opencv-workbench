@@ -384,6 +384,11 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                               // Probably a missed track
                               it_prev->missed_track();
                               fused.push_back(*it_prev);
+
+                              // And a new track
+                              it->new_track(next_available_id());
+                              fused.push_back(*it);
+                              
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
@@ -392,7 +397,6 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                               fused.push_back(*it);
                          }
                     } else if (r >= meas_count) {
-
                          it_prev->missed_track();
                          fused.push_back(*it_prev);                              
                     } else if (c >= tracks_count) {
@@ -446,12 +450,18 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
 void BlobProcess::blob_maintenance()
 {
-     // cull dead.
+     short_lived_.clear();
+     
+     // cull dead
+     // Also, keep track of tracks that are short lived
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      while(it != blobs_.end()) {
           it->set_matched(false);
           
           if (it->is_dead()) {
+               if (it->age() < 5) {
+                    short_lived_.push_back(*it);
+               }                
                it = blobs_.erase(it);
           } else {
                it++;
@@ -622,6 +632,24 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst,
 void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst)
 {
      this->overlay_blobs(src, dst, blobs_);
+}
+
+void BlobProcess::overlay_short_lived(cv::Mat &src, cv::Mat &dst)
+{
+     cv::Mat color;
+     if (src.channels() == 1) {
+          cv::cvtColor(src, color, CV_GRAY2BGR);     
+     } else {
+          color = src;
+     }
+     dst = color;
+          
+     std::vector<wb::Blob>::iterator it = short_lived_.begin();
+     for(; it != short_lived_.end(); it++) {
+
+          cv::Rect rect = it->bbox().rectangle();
+          cv::rectangle(dst, rect, cv::Scalar(0,0,255), -1, 8, 0);
+     }
 }
 
 void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)

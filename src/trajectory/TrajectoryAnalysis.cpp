@@ -43,10 +43,10 @@ double TrajectoryAnalysis::trajectory_diff(std::list<cv::Point2d> &t1,
      return RMSE;
 }
 
-void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Entity> &traj,
+void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Blob> &traj,
                                              std::list<cv::Point2d> &diffs)
 {
-     std::list<wb::Entity>::reverse_iterator it = traj.rbegin();
+     std::list<wb::Blob>::reverse_iterator it = traj.rbegin();
      cv::Point2d prev;
      for(; it != traj.rend(); it++) {
           if (it == traj.rbegin()) {
@@ -78,11 +78,11 @@ void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Entity> &traj,
      }
 }
 
-void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Entity> > &tracks_history, int frame_number, cv::Mat &img, double RMSE_threshold)
+void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob> > &tracks_history, int frame_number, cv::Mat &img, double RMSE_threshold)
 {
      //cout << "==========================================" << endl;          
      std::map<int, std::list<cv::Point2d> > trajectories;
-     for (std::map<int, std::list<wb::Entity> >::iterator 
+     for (std::map<int, std::list<wb::Blob> >::iterator 
                it = tracks_history.begin(); it != tracks_history.end(); ) {
           
           if (it->second.back().frame() < frame_number) {
@@ -138,7 +138,7 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Entit
      // Print out the RMSEs for this frame:
      for(std::map<std::string, struct TrajRMSE>::iterator it = RMSEs.begin();
          it != RMSEs.end(); it++) {
-          cout << it->first << ": " << it->second.RMSE << endl;
+          /// cout << it->first << ": " << it->second.RMSE << endl;
      
           // If the RMSE between two trajectories is less than a threshold,
           // circle the trajectories

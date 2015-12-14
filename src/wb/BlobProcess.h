@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-13 14:26:02 syllogismrxs>
+/// Time-stamp: <2015-12-14 00:20:17 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -82,10 +82,13 @@ public:
      void overlay_tracks(cv::Mat &src, cv::Mat &dst);  
 
      void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);  
-     
+     void overlay_short_lived(cv::Mat &src, cv::Mat &dst);
      std::vector<wb::Blob> & blobs() { return blobs_; }
+     void set_blobs(std::vector<wb::Blob> &blobs) { blobs_ = blobs; }
 
      bool consolidate_tracks(cv::Mat &in, cv::Mat &out);
+     
+     
      
 protected:
      
@@ -101,6 +104,7 @@ protected:
      //std::map<int,wb::Blob> prev_blobs_;
      std::vector<wb::Blob> blobs_;
      std::vector<wb::Blob> prev_blobs_;
+     std::vector<wb::Blob> short_lived_;
 
 private:
      int count_;

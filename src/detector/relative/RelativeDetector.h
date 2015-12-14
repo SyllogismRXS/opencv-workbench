@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-08 21:41:53 syllogismrxs>
+/// Time-stamp: <2015-12-13 23:03:28 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -69,7 +69,7 @@ protected:
      cv::Mat erosionConfig_;
      cv::Mat dilationConfig_;
 
-     std::map<int, std::list<wb::Entity> > tracks_history_;
+     std::map<int, std::list<wb::Blob> > tracks_history_;
      
      TrajectoryAnalysis traj_;
      

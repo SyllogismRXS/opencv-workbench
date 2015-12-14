@@ -4,7 +4,7 @@
 /// @file TrajectoryAnalysis.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-09 18:23:48 syllogismrxs>
+/// Time-stamp: <2015-12-13 23:01:47 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 08 Dec 2015
@@ -42,7 +42,7 @@
 #include <list>
 
 #include <opencv_workbench/wb/WB.h>
-#include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/wb/Blob.h>
 
 
 class TrajectoryAnalysis {
@@ -59,10 +59,10 @@ public:
      double trajectory_diff(std::list<cv::Point2d> &t1,
                             std::list<cv::Point2d> &t2);
 
-     void trajectory_polar_diff(std::list<wb::Entity> &traj,
+     void trajectory_polar_diff(std::list<wb::Blob> &traj,
                                 std::list<cv::Point2d> &diffs);
 
-     void trajectory_similarity(std::map<int, std::list<wb::Entity> > 
+     void trajectory_similarity(std::map<int, std::list<wb::Blob> > 
                                 &tracks_history,int frame_number, 
                                 cv::Mat &img, double RMSE_threshold);
 protected:
