@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-04 11:41:11 syllogismrxs>
+/// Time-stamp: <2015-12-13 19:48:52 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -92,16 +92,19 @@ public:
      std::vector<cv::Point2d> & measured_points() { return measured_points_; }
      std::vector<state_5d_type> & states() { return states_; }
      state_5d_type state() { return state_; }
+     state_5d_type measurement() { return measurement_; }
      
      int id() { return id_; }
      void set_id(int id) { id_ = id; }
 
      std::string type() { return type_; }
-     void set_type(std::string type) { type_ = type; }
-     
+     void set_type(std::string type) { type_ = type; }         
+
 protected:          
      
-     stepper_5d_type stepper_;
+     stepper_5d_type stepper_;     
+     
+     static unsigned int seed_;
 
 private:
      std::vector<double> tt_;
@@ -109,7 +112,7 @@ private:
      std::vector<cv::Point2d> truth_points_;
      std::vector<cv::Point2d> measured_points_;
      std::vector<state_5d_type> states_;
-     
+          
      double t0_;
      double dt_;
      double tend_;
@@ -118,6 +121,8 @@ private:
      state_5d_type u_;
      state_5d_type x0_;
      state_5d_type state_;
+     
+     state_5d_type measurement_;
           
      boost::mt19937 *rng_;
      boost::normal_distribution<> nd_;
@@ -130,6 +135,8 @@ private:
      int id_;
      std::string type_;
 };
+
+unsigned int Dynamics::seed_ = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // ode_wrapper class is required to bind the

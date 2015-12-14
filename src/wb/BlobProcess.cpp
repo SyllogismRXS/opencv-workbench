@@ -260,27 +260,10 @@ void delete_matrix(int **array, int rows, int cols)
      free (array);
 }
 
-int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
+void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas, 
+                                   std::vector<wb::Blob> &tracks,
+                                   std::vector<wb::Blob> &fused)
 {
-     blobs_.clear();
-
-     std::vector<wb::Blob> new_blobs;     
-     this->find_blobs(input, new_blobs, min_blob_size_);          
-     
-     // First match blobs based on overlapping bounding boxes
-
-     //////////////////////////////////////////////////////////////////////////
-     // Run Kalman filter update on blobs from previous iteration
-     //////////////////////////////////////////////////////////////////////////
-     std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
-     for(; it != prev_blobs_.end(); it++) {
-          if (it->is_tracked()) {
-               it->predict_tracker();
-          }
-     }
-
-#if 1
-
      //////////////////////////////////////////////////////////////////////////
      // Use the Hungarian Method to match new blob measurements with previous
      // blob tracks
@@ -288,32 +271,32 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
      // Create cost matrix using the euclidean distance between previous and 
      // current blob centroids
-     int blob_count = new_blobs.size();
-     int prev_blob_count = prev_blobs_.size();
+     int meas_count = meas.size();
+     int tracks_count = tracks.size();
 
-     // Determine max of blob_count and prev_blob_count
+     // Determine max of meas_count and tracks
      int rows = -1, cols = -1;
           
      int r_start = 0, r_end = 0;
      int c_start = 0, c_end = 0;
 
-     if (blob_count == prev_blob_count) {
+     if (meas_count == tracks_count) {
           // Equal number of tracks and measurements
-          rows = cols = blob_count;          
-     } else if (blob_count > prev_blob_count) {
+          rows = cols = meas_count;          
+     } else if (meas_count > tracks_count) {
           // More measurements than tracks
-          rows = cols = blob_count;
+          rows = cols = meas_count;
           
           r_start = 0;
           r_end = rows;
-          c_start = prev_blob_count;
-          c_end = blob_count;
+          c_start = tracks_count;
+          c_end = meas_count;
      } else {
           // More tracks than measurements
-          rows = cols = prev_blob_count;
+          rows = cols = tracks_count;
           
-          r_start = blob_count;
-          r_end = prev_blob_count;
+          r_start = meas_count;
+          r_end = tracks_count;
           c_start = 0;
           c_end = cols;
      }
@@ -322,13 +305,13 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
           
      // New blob measurements are along the Y-axis (left hand side)
      // Old Blob tracks are along x-axis (top-side)
-     it = new_blobs.begin();
+     std::vector<wb::Blob>::iterator it = meas.begin();
      int r = 0;
      int max_cost = -1e3;
-     for(; it != new_blobs.end(); it++) {          
-          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
+     for(; it != meas.end(); it++) {          
+          std::vector<wb::Blob>::iterator it_prev = tracks.begin();
           int c = 0;
-          for (; it_prev != prev_blobs_.end(); it_prev++) {
+          for (; it_prev != tracks.end(); it_prev++) {
                cv::Point p1 = it->estimated_centroid(); //it->centroid();
                cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
                int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
@@ -342,10 +325,11 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
                //}
                //printf("%d\n",dist);
                //int curr_cost = 0.6 * dist + 0.4 * size_diff;
+               
                int curr_cost = dist;
-               if (curr_cost > 1000) {
-                    curr_cost = INT_MAX;
-               }
+               /// if (curr_cost > 1000) {
+               ///      curr_cost = INT_MAX;
+               /// }
                
                cost[r*cols + c] = curr_cost;
 
@@ -384,12 +368,12 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
          
      // Use the assignment to update the old tracks with new blob measurement     
      r = 0;
-     it = new_blobs.begin();
+     it = meas.begin();
      for(int r = 0; r < rows; r++) {          
-          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
+          std::vector<wb::Blob>::iterator it_prev = tracks.begin();
           for (int c = 0; c < cols; c++) {
                if (assignment[r*cols + c] == 1) {
-                    if (r < blob_count && c < prev_blob_count) {
+                    if (r < meas_count && c < tracks_count) {
 
                          cv::Point p1 = it->estimated_centroid();//it->centroid();
                          cv::Point p2 = it_prev->estimated_centroid(); //it->it_prev->centroid();                                        
@@ -399,139 +383,59 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
                               // TOO MUCH OF A JUMP IN POSITION
                               // Probably a missed track
                               it_prev->missed_track();
-                              blobs_.push_back(*it_prev);
+                              fused.push_back(*it_prev);
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
-                              // to blobs_ vector                              
+                              // to fused vector                              
                               it->matched_track(*it_prev);
-                              blobs_.push_back(*it);
+                              fused.push_back(*it);
                          }
-                    } else if (r >= blob_count) {
-#if 0 // Improvement? Decreases threshold and checks for smaller blob
-                         if ((unsigned)c < prev_blobs_.size()) {
-                              // Possible missed track (dec age and copy over)                         
-                              wb::Blob b = prev_blobs_[c];
-                         
-                              cv::Rect rect;
-                              rect.x = b.estimated_centroid().x - 8;
-                              rect.y = b.estimated_centroid().y - 8;
-                              rect.width = 16;
-                              rect.height = 16;
+                    } else if (r >= meas_count) {
 
-                              if (rect.x < 0) { rect.x = 0; }
-                              if (rect.y < 0) { rect.y = 0; }
-                              if (rect.x + rect.width >= input.cols) { rect.width = input.cols - rect.x; }
-                              if (rect.y + rect.height >= input.rows) { rect.height = input.rows - rect.y; }
-
-                              cv::Mat temp_img = input.clone();
-                              cv::circle(temp_img, b.estimated_centroid(), 10, 255, 1, 8, 0);
-                              cv::imshow("temp_img", temp_img);
-                              
-                              cv::Mat roi(original, rect);
-                              cv::threshold(roi, roi, thresh-10, 255, cv::THRESH_TOZERO);
-                         
-                              std::vector<wb::Blob> roi_blobs;
-                              find_blobs(roi, roi_blobs, min_blob_size_-5);
-                              //cv::waitKey(0);
-                         
-                              if (roi_blobs.size() > 0) {
-                                   //// Found an assignment. Update the new measurement
-                                   //// with the track ID and age of older track. Add
-                                   //// to blobs_ vector                                   
-                                   //b.inc_age();
-                                   //b.set_occluded(false);
-                                   blobs_.push_back(b);
-                              } else {
-                                   //it_prev->dec_age();
-                                   //it_prev->set_occluded(true);
-                                   it_prev->missed_track();
-                                   blobs_.push_back(*it_prev);                              
-                              }                                                      
-                         } else {
-                              //it_prev->dec_age();
-                              //it_prev->set_occluded(true);
-                              it_prev->missed_track();
-                              blobs_.push_back(*it_prev);                              
-                         }
-#else
-                         //it_prev->dec_age();
-                         //it_prev->set_occluded(true);
                          it_prev->missed_track();
-                         blobs_.push_back(*it_prev);                              
-#endif
-
-                    } else if (c >= prev_blob_count) {
+                         fused.push_back(*it_prev);                              
+                    } else if (c >= tracks_count) {
                          // Possible new track
                          it->new_track(next_available_id());
-                         //it->set_age(1);
-                         //it->set_occluded(false);
-                         blobs_.push_back(*it);
+                         fused.push_back(*it);
                     }
                     break; // There is only one assignment per row
                }
-               if (c < prev_blob_count-1) {
+               if (c < tracks_count-1) {
                     it_prev++;
                }
           }
-          if (r < blob_count-1) {
+          if (r < meas_count-1) {
                it++;
           }
      }     
      
      hungarian_free(&p);
      free(m);               
-     delete[] assignment;
+     delete[] assignment;     
+}
 
-#else
-     // Greedy Global Nearest Neighbors
-     double gate = 40;
-     it = new_blobs.begin();
-     for(; it != new_blobs.end(); it++) {
-          double min_dist = 1e9;
-          std::vector<wb::Blob>::iterator it_match;          
-          std::vector<wb::Blob>::iterator it_prev = prev_blobs_.begin();
-          for(; it_prev != prev_blobs_.end(); it_prev++) {
-               cv::Point p1 = it->centroid();
-               cv::Point p2 = it_prev->centroid();
-               double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
+int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
+{         
+     std::vector<wb::Blob> new_blobs;     
+     this->find_blobs(input, new_blobs, min_blob_size_);
+     
+     // First match blobs based on overlapping bounding boxes
 
-               if (dist < min_dist) {
-                    min_dist = dist;
-                    it_match = it_prev;
-               }
-          }
-
-          if (min_dist < gate) {
-               // Match       
-               it->matched_track(it_match);               
-               //it->set_id(it_match->id());
-               //it->set_age(it_match->age());               
-               //it->set_tracker(it_match->tracker());
-               //it->correct_tracker();
-               //it->detected_track();               
-               blobs_.push_back(*it);
-               
-               //prev_blobs_.erase(it_match); // remove old blob track from previous
-          } else {
-               // New target?
-               it->new_track(next_available_id());
-               //it->set_id(next_available_id());
-               //it->set_age(1);
-               //it->set_occluded(false);
-               blobs_.push_back(*it);
+     //////////////////////////////////////////////////////////////////////////
+     // Run Kalman filter update on blobs from previous iteration
+     //////////////////////////////////////////////////////////////////////////
+     std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
+     for(; it != prev_blobs_.end(); it++) {
+          if (it->is_tracked()) {
+               it->predict_tracker();
           }
      }
-#endif
-     
-     //std::map<int,syllo::Blob>::iterator it;
-     //for(it=blobs_.begin();it!=blobs_.end();it++)
-     //{
-     //     printf("id: %d \t size:%d\n",it->first,it->second.getSize());
-     //}
 
-     //output = reduced;         
-     
+     blobs_.clear();
+     this->assign_hungarian(new_blobs, prev_blobs_, blobs_);
+          
      blob_maintenance();
      
      prev_blobs_.clear();
@@ -545,9 +449,6 @@ void BlobProcess::blob_maintenance()
      // cull dead.
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      while(it != blobs_.end()) {
-          //if (it->id() == 1) {
-          //     cout << "Blob ID 1 Age: " << it->age() << endl;
-          //}
           it->set_matched(false);
           
           if (it->is_dead()) {

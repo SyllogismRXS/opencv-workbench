@@ -167,6 +167,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //this->trajectory_similarity(frame_number, blob_consolidate);
      traj_.trajectory_similarity(tracks_history_, frame_number, 
                                  blob_consolidate, 0.017);
+
+     cv::imshow("Traj", blob_consolidate);
       
      ///////////////////////////////////////////////////
      // Display images

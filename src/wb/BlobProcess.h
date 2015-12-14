@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-02 15:51:54 syllogismrxs>
+/// Time-stamp: <2015-12-13 14:26:02 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -71,6 +71,10 @@ public:
      int process_frame(cv::Mat &input, cv::Mat &original, int thresh);
      void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
                             int min_blob_size);
+
+     void assign_hungarian(std::vector<wb::Blob> &meas, 
+                           std::vector<wb::Blob> &tracks,
+                           std::vector<wb::Blob> &fused);
      
      void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> & blobs);

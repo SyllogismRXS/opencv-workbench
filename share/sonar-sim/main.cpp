@@ -285,10 +285,11 @@ int main(int argc, char *argv[])
                it_ent != dyns.end(); it_ent++) {
                
                // Grab the current state and then step the model
-               Dynamics::state_5d_type state = it_ent->state();
+               //Dynamics::state_5d_type state = it_ent->state();
+               Dynamics::state_5d_type measurement = it_ent->measurement();
                it_ent->step_motion_model(dt);
 
-               cv::Point2d pos(state[0], state[1]);
+               cv::Point2d pos(measurement[0], measurement[1]);
 
                vectors[syllo::int2str(it_ent->id())].push_back(pos);
                

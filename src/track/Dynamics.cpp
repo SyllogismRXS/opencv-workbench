@@ -19,6 +19,8 @@ Dynamics::Dynamics() : PI(3.14159265359), rng_(new boost::mt19937()),
           x0_[i] = 0;
           state_[i] = 0;
      }
+     
+     rng_->seed((++seed_) + time(NULL));     
 }
 
 std::vector<double> Dynamics::time_vector(double t0, double dt, double tend)
@@ -47,7 +49,11 @@ void Dynamics::set_x0(state_5d_type x0)
      for(int i = 0; i < 5; i++) {
           x0_[i] = x0[i];          
           state_[i] = x0[i];
+          measurement_[i] = 0;
      }
+     
+     measurement_[0] = x0[0] + var_nor() * measurement_noise_;
+     measurement_[1] = x0[1] + var_nor() * measurement_noise_;
 }
 
 void Dynamics::compute_trajectory()
@@ -105,6 +111,12 @@ void Dynamics::step_motion_model(double dt)
           measured.x = truth.x + var_nor() * measurement_noise_;
           measured.y = truth.y + var_nor() * measurement_noise_;
                
+          measurement_[0] = measured.x;
+          measurement_[1] = measured.y;
+          measurement_[2] = 0;
+          measurement_[3] = 0;
+          measurement_[4] = 0;
+          
           headings_.push_back(state_[2]*180.0/PI);
           truth_points_.push_back(truth);
           measured_points_.push_back(measured);

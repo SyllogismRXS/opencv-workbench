@@ -1,7 +1,8 @@
 time_step: 0.05
 time_end: 8
 
-traj_threshold: 0.002
+#traj_threshold: 0.002 # good for no noise
+traj_threshold: 0.035 # good for noise of 0.02
 
 display_plot: true
 
@@ -19,7 +20,7 @@ entities:
   heading: 0
   motion: roomba  
   control_input: [0.0, 0.0]  # [left, right]
-  sonar_noise: 0.0
+  sonar_noise: 0.02
   sonar_range: 20.0
 
 - type: unknown
