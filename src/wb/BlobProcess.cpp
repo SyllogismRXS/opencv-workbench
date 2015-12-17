@@ -653,15 +653,14 @@ void BlobProcess::overlay_short_lived(cv::Mat &src, cv::Mat &dst)
          it != short_lived_.end(); it++) {
 
           cv::Rect rect = it->bbox().rectangle();
-          cv::rectangle(dst, rect, cv::Scalar(0,0,255), -1, 8, 0);
+          cv::rectangle(dst, rect, cv::Scalar(0,255,0), -1, 8, 0);
      }
-
      
      for(std::vector<wb::Blob>::iterator it = new_tracks_.begin();
          it != new_tracks_.end(); it++) {
 
           cv::Rect rect = it->bbox().rectangle();
-          cv::rectangle(dst, rect, cv::Scalar(0,255,0), -1, 8, 0);
+          cv::rectangle(dst, rect, cv::Scalar(255,0,0), -1, 8, 0);
      }
 }
 

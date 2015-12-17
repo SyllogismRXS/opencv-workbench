@@ -75,7 +75,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      } else {
           gray = original.clone();
      }
-     cv::imshow("Gray", gray);
+     cv::imshow("Gray", gray);   
+
+     cv::Mat flow_img;
+     flow_.sparse_flow(gray, flow_img);          
+     cv::imshow("Flow", flow_img);     
 
      cv::Mat mask;
      wb::get_sonar_mask(original, mask);
@@ -126,7 +130,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 
      cv::Mat short_lived;
      blob_process_.overlay_short_lived(gray, short_lived);
-     cv::imshow("Short",short_lived);
+     cv::imshow("Tracking Tracks",short_lived);
       
      cv::Mat blob_consolidate;
      blob_process_.consolidate_tracks(gray, blob_consolidate);

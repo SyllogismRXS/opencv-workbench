@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-13 23:03:28 syllogismrxs>
+/// Time-stamp: <2015-12-17 15:49:28 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -48,6 +48,7 @@
 #include <opencv_workbench/wb/NDT.h>
 #include <opencv_workbench/utils/Stream.h>
 #include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/wb/OpticalFlow.h>
 #include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
 
 class RelativeDetector : public Detector{
@@ -72,6 +73,7 @@ protected:
      std::map<int, std::list<wb::Blob> > tracks_history_;
      
      TrajectoryAnalysis traj_;
+     OpticalFlow flow_;
      
 private:
 };
