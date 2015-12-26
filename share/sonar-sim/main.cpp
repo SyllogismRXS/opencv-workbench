@@ -251,6 +251,7 @@ int main(int argc, char *argv[])
      rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
      
      TrajectoryAnalysis traj;
+     traj.set_simulated(true);
      std::map<int, std::list<wb::Blob> > tracks_history;
      
      BlobProcess blob_process;
@@ -378,7 +379,6 @@ int main(int argc, char *argv[])
           tracks = fused_tracks;
           blob_process.set_blobs(tracks);          
           
-          cout << "Blob Size: " << tracks.size() << endl;
           // Draw Tracks on image
           cv::Mat tracks_img(frame_img.size(), CV_8UC3);
           tracks_img = cv::Scalar(255,0,0);

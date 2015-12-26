@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
      BlobProcess blob_process;
      blob_process.find_blobs(gray, blobs, min_blob_size);     
-
+     
      //cv::SimpleBlobDetector::Params params; 
      //params.minDistBetweenBlobs = 2.0;  // minimum 10 pixels between blobs
      //params.filterByArea = true;         // filter my blobs by area of blob

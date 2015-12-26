@@ -7,9 +7,8 @@
 using std::cout;
 using std::endl;
 
-TrajectoryAnalysis::TrajectoryAnalysis()
+TrajectoryAnalysis::TrajectoryAnalysis() : simulated_(false)
 {
-     
 }
 
 double TrajectoryAnalysis::trajectory_diff(std::list<cv::Point2d> &t1,
@@ -80,7 +79,7 @@ void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Blob> &traj,
 
 void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob> > &tracks_history, int frame_number, cv::Mat &img, double RMSE_threshold)
 {
-     //cout << "==========================================" << endl;          
+     cout << "==========================================" << endl;          
      std::map<int, std::list<cv::Point2d> > trajectories;
      for (std::map<int, std::list<wb::Blob> >::iterator 
                it = tracks_history.begin(); it != tracks_history.end(); ) {
@@ -89,7 +88,7 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob>
                // Clear out track IDs that are dead
                tracks_history.erase(it++);
           } else {
-               if (it->second.back().is_tracked()) {                    
+               if (it->second.back().is_tracked() || simulated_) {                    
                     // Compute derivative of each current track's trajectory
                     trajectory_polar_diff(it->second, trajectories[it->first]);                    
                }
@@ -138,7 +137,7 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob>
      // Print out the RMSEs for this frame:
      for(std::map<std::string, struct TrajRMSE>::iterator it = RMSEs.begin();
          it != RMSEs.end(); it++) {
-          /// cout << it->first << ": " << it->second.RMSE << endl;
+          cout << it->first << ": " << it->second.RMSE << endl;
      
           // If the RMSE between two trajectories is less than a threshold,
           // circle the trajectories

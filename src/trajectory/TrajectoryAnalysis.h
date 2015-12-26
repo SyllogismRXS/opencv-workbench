@@ -4,7 +4,7 @@
 /// @file TrajectoryAnalysis.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-13 23:01:47 syllogismrxs>
+/// Time-stamp: <2015-12-18 15:01:07 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 08 Dec 2015
@@ -65,7 +65,12 @@ public:
      void trajectory_similarity(std::map<int, std::list<wb::Blob> > 
                                 &tracks_history,int frame_number, 
                                 cv::Mat &img, double RMSE_threshold);
+
+     void set_simulated(bool simulated) { simulated_ = simulated; }
+     
 protected:
+
+     bool simulated_;
 private:
 };
 
