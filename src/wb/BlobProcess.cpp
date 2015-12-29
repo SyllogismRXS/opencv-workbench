@@ -260,6 +260,12 @@ void delete_matrix(int **array, int rows, int cols)
      free (array);
 }
 
+void assign_mht(std::vector<wb::Blob> &meas, 
+                     std::vector<wb::Blob> &tracks,
+                     std::vector<wb::Blob> &fused)
+{
+}
+
 void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas, 
                                    std::vector<wb::Blob> &tracks,
                                    std::vector<wb::Blob> &fused)

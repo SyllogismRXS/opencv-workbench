@@ -21,4 +21,5 @@ add_subdirectory(overlap-rect-test)
 add_subdirectory(ground-plane)
 add_subdirectory(camera-test)
 add_subdirectory(sonar-sim)
+add_subdirectory(mht-test)
 

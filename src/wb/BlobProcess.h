@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-14 00:46:29 syllogismrxs>
+/// Time-stamp: <2015-12-26 19:21:31 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -75,6 +75,10 @@ public:
      void assign_hungarian(std::vector<wb::Blob> &meas, 
                            std::vector<wb::Blob> &tracks,
                            std::vector<wb::Blob> &fused);
+
+     void assign_mht(std::vector<wb::Blob> &meas, 
+                     std::vector<wb::Blob> &tracks,
+                     std::vector<wb::Blob> &fused);
      
      void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> & blobs);
