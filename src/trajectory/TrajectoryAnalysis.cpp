@@ -39,6 +39,7 @@ double TrajectoryAnalysis::trajectory_diff(std::list<cv::Point2d> &t1,
           
      double mean = total_diff / (double)diffs.size();
      double RMSE = sqrt(mean);
+     //double RMSE = mean;
      return RMSE;
 }
 

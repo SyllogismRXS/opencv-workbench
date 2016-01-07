@@ -1,5 +1,5 @@
 time_step: 0.05
-time_end: 8
+time_end: 12
 
 traj_threshold: 0.002 # good for no noise
 #traj_threshold: 0.035 # good for noise of 0.02
@@ -32,11 +32,17 @@ entities:
   motion: roomba
   input_sequence:
   - time: 0
-    control_input: [0.05, -0.05]  # [left, right]
-  - time: 1
-    control_input: [-0.05, 0.05]  # [left, right]               
+    control_input: [0.02, -0.02]  # [left, right]
   - time: 2
-    control_input: [0.05, -0.05]  # [left, right]
+    control_input: [-0.02, 0.02]  # [left, right]               
+  - time: 4
+    control_input: [0.02, -0.01]  # [left, right]
+  - time: 6
+    control_input: [0.04, 0.05]  # [left, right]
+  - time: 8
+    control_input: [0.02, -0.02]  # [left, right]
+  - time: 10
+    control_input: [0.07, 0.08]  # [left, right]
   sonar_noise: 0.0 #0.02
   sonar_range: 20.0
 
