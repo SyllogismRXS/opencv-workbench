@@ -96,8 +96,18 @@ void Dynamics::compute_trajectory()
      }
 }
 
-void Dynamics::step_motion_model(double dt)
+void Dynamics::step_motion_model(double dt, double time)
 {
+     if (input_sequence_.size() > 0 && input_sequence_.front().time <= time) {
+          cout << "Using input: " << endl;
+          for (int i = 0; i < 5; i++) {
+               u_[i] = input_sequence_.front().input[i];
+               
+               printf("%d : %f\n", i, u_[i]);
+          }
+          input_sequence_.erase(input_sequence_.begin());
+     }
+     
      if (model_ == cart || model_ == roomba) {                          
           if (model_ == cart) {
                stepper_.do_step(make_ode_wrapper( *this , &Dynamics::cart_model ), state_ , 0 , dt );
@@ -127,8 +137,41 @@ void Dynamics::step_motion_model(double dt)
 
 void Dynamics::set_input(state_5d_type input)
 {     
+     input_sequence_.clear();
+     
+     ControlInput control_input;
+     control_input.time = 0;
      for(int i = 0; i < 5; i++) {
-          u_[i] = input[i];          
+          control_input.input[i] = input[i];
+     }          
+     
+     input_sequence_.push_back(control_input);          
+}
+
+void Dynamics::set_input(state_5d_type input, double time)
+{
+     ControlInput control_input;
+     control_input.time = time;
+     for(int i = 0; i < 5; i++) {
+          control_input.input[i] = input[i];
+     }          
+     
+     input_sequence_.push_back(control_input);          
+}
+
+void Dynamics::set_input_sequence(std::vector<ControlInput> &input_sequence)
+{
+     input_sequence_.clear();
+     
+     for (std::vector<ControlInput>::iterator it = input_sequence.begin();
+          it != input_sequence.end(); it++) {
+          
+          ControlInput control_input;
+          control_input.time = it->time;
+          for(int i = 0; i < 5; i++) {
+               control_input.input[i] = it->input[i];
+          }          
+          input_sequence_.push_back(control_input);
      }
 }
 

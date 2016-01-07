@@ -4,7 +4,7 @@
 /// @file Dynamics.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-13 19:48:52 syllogismrxs>
+/// Time-stamp: <2016-01-07 13:09:35 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Oct 2015
@@ -52,6 +52,8 @@
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
 
+class ControlInput;
+
 class Dynamics {
 public:
      
@@ -79,11 +81,14 @@ public:
      void set_time(double t0, double dt, double tend);
      void set_model(Model_t model) { model_ = model; }
      void compute_trajectory();     
-     void step_motion_model(double dt);
+     void step_motion_model(double dt, double time);
      void cart_model(const state_5d_type &x , state_5d_type &dxdt , double t);
      void roomba_model(const state_5d_type &x , state_5d_type &dxdt , double t);
      
-     void set_input(state_5d_type input);     
+     void set_input(state_5d_type input);
+     void set_input(state_5d_type input, double time);
+     void set_input_sequence(std::vector<ControlInput> &input_sequence);
+     
      void set_process_noise(double noise) { process_noise_ = noise; }
      void set_measurement_noise(double noise) { measurement_noise_ = noise; } 
      void set_x0(state_5d_type x0);
@@ -119,6 +124,9 @@ private:
 
      Model_t model_;
      state_5d_type u_;
+     
+     std::vector<ControlInput> input_sequence_;
+     
      state_5d_type x0_;
      state_5d_type state_;
      
@@ -134,6 +142,14 @@ private:
 
      int id_;
      std::string type_;
+};
+
+class ControlInput {
+public:
+     ControlInput() : time(0) { }     
+     
+     double time;
+     Dynamics::state_5d_type input;
 };
 
 unsigned int Dynamics::seed_ = 0;

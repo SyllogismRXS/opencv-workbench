@@ -106,12 +106,27 @@ void operator >> (const YAML::Node& node, Dynamics &dyn) {
           dyn.set_model(Dynamics::cart);
      }
      
-     Vec2_Yaml vec2;
-     node["control_input"] >> vec2;
-     Dynamics::state_5d_type input;
-     input[0] = vec2.x;
-     input[1] = vec2.y;
-     dyn.set_input(input);
+     if(const YAML::Node *pInputs = node.FindValue("input_sequence")) {
+          for(unsigned int i = 0; i < pInputs->size(); i++) {
+               Vec2_Yaml vec2;
+               (*pInputs)[i]["control_input"] >> vec2;
+               Dynamics::state_5d_type input;
+               input[0] = vec2.x;
+               input[1] = vec2.y;
+               
+               double time;
+               (*pInputs)[i]["time"] >> time;
+               
+               dyn.set_input(input,time);               
+          }
+     } else {
+          Vec2_Yaml vec2;
+          node["control_input"] >> vec2;
+          Dynamics::state_5d_type input;
+          input[0] = vec2.x;
+          input[1] = vec2.y;
+          dyn.set_input(input);
+     }         
      
      if(const YAML::Node *pName = node.FindValue("sonar_noise")) {
           *pName >> sonar_noise;
@@ -278,10 +293,10 @@ int main(int argc, char *argv[])
           std::vector<wb::Blob> measurements;          
           
           // Run Kalman Filter on all tracks          
-          for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
-              it != tracks.end(); it++) {
-               if (it->is_tracked()) {
-                    it->predict_tracker();
+          for(std::vector<wb::Blob>::iterator it_tracks = tracks.begin(); 
+              it_tracks != tracks.end(); it_tracks++) {
+               if (it_tracks->is_tracked()) {
+                    it_tracks->predict_tracker();
                }
           }
           
@@ -292,7 +307,7 @@ int main(int argc, char *argv[])
                // Grab the current state and then step the model
                //Dynamics::state_5d_type state = it_ent->state();
                Dynamics::state_5d_type measurement = it_ent->measurement();
-               it_ent->step_motion_model(dt);
+               it_ent->step_motion_model(dt, *it);
 
                cv::Point2d pos(measurement[0], measurement[1]);
 
