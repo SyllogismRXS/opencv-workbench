@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-26 19:21:31 syllogismrxs>
+/// Time-stamp: <2016-01-05 15:40:52 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -47,6 +47,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <boost/graph/adjacency_list.hpp> 
+#include <boost/graph/graphviz.hpp>
+
 #include "Blob.h"
 
 typedef enum OverlayFlags {
@@ -63,6 +66,21 @@ inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)
                                         static_cast<int>(b));
 }
 
+////////////////////////////////////////
+// Definitions for Boost Graph Library
+////////////////////////////////////////
+namespace boost {
+enum vertex_Blob_t { vertex_Blob };
+BOOST_INSTALL_PROPERTY(vertex, Blob);
+}
+
+// //Define the graph using those classes
+typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, wb::Blob> Graph;
+//Some typedefs for simplicity
+typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+
+////////////////////////////
 class BlobProcess {
 public:          
      
@@ -79,6 +97,12 @@ public:
      void assign_mht(std::vector<wb::Blob> &meas, 
                      std::vector<wb::Blob> &tracks,
                      std::vector<wb::Blob> &fused);
+
+     void build_tree(vertex_t &vertex,     
+                     std::vector<wb::Blob>::iterator it_meas,
+                     std::vector<wb::Blob> &meas, 
+                     std::vector<wb::Blob> tracks,
+                     int next_id);
      
      void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> & blobs);
@@ -110,6 +134,8 @@ protected:
      std::vector<wb::Blob> prev_blobs_;
      std::vector<wb::Blob> short_lived_;
      std::vector<wb::Blob> new_tracks_;
+
+     Graph graph_;
 
 private:
      int count_;

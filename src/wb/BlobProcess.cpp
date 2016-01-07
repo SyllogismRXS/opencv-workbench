@@ -7,10 +7,16 @@
 #include <opencv_workbench/utils/OpenCV_Helpers.h>
 #include <opencv_workbench/utils/Ellipse.h>
 
+#include <boost/graph/adjacency_list.hpp> 
+#include <boost/graph/graphviz.hpp>
+
+#include <opencv_workbench/wb/Entity.h>
 #include "BlobProcess.h"
 
 using std::cout;
 using std::endl;
+
+using namespace boost; 
 
 BlobProcess::BlobProcess()
 {
@@ -260,10 +266,92 @@ void delete_matrix(int **array, int rows, int cols)
      free (array);
 }
 
-void assign_mht(std::vector<wb::Blob> &meas, 
-                     std::vector<wb::Blob> &tracks,
-                     std::vector<wb::Blob> &fused)
+void BlobProcess::build_tree(vertex_t &vertex,     
+                             std::vector<wb::Blob>::iterator it_meas,
+                             std::vector<wb::Blob> &meas, 
+                             std::vector<wb::Blob> tracks,
+                             int next_id)
 {
+     if (it_meas == meas.end()) {
+          return;
+     }     
+
+     // It could be a false positive
+     vertex_t fp = boost::add_vertex(graph_);
+     graph_[fp].mht_type = wb::Entity::fp;
+     graph_[fp].set_id(0);
+     edge_t fp_e; bool fp_b;
+     boost::tie(fp_e,fp_b) = boost::add_edge(vertex,fp,graph_);
+
+     build_tree(fp, it_meas+1, meas, tracks, next_id+1);
+     
+     // It could be a new track
+     vertex_t nt = boost::add_vertex(graph_);
+     graph_[nt].mht_type = wb::Entity::nt;
+     graph_[nt].set_id(next_id);
+     edge_t nt_e; bool nt_b;     
+     boost::tie(nt_e,nt_b) = boost::add_edge(vertex,nt,graph_);
+     
+     build_tree(nt, it_meas+1, meas, tracks, next_id+1);
+          
+     // Does the measurement fall within a track's gate?     
+     std::vector<wb::Blob>::iterator it = tracks.begin();
+     while (it != tracks.end()) {                    
+          if (cv::norm(it_meas->undistorted_centroid() - it->undistorted_centroid()) <= 2.0) {
+               // The measurement falls within a track's gate.
+               // Add it to the hyp tree, remove the track from the track's
+               // vector and recurse.
+               vertex_t dt = boost::add_vertex(graph_);
+               graph_[dt] = *it;               
+               graph_[dt].mht_type = wb::Entity::dt;
+               
+               edge_t dt_e; bool dt_b;
+               boost::tie(dt_e,dt_b) = boost::add_edge(vertex,dt,graph_);
+
+               // Remove the current track, since it was used
+               it = tracks.erase(it);               
+               // recurse
+               build_tree(dt, it_meas+1, meas, tracks, next_id+1);
+          } else {
+               it++;
+          }
+     }                         
+     return;
+}
+
+void BlobProcess::assign_mht(std::vector<wb::Blob> &meas, 
+                             std::vector<wb::Blob> &tracks,
+                             std::vector<wb::Blob> &fused)
+{
+     //vertex_t node = boost::add_vertex(graph_);
+     //graph_[node].set_id(4);
+     //
+     //wb::Blob b;
+     //graph_[node] = b;
+
+     // Each measurement can be:
+     // 1. A New Track
+     // 2. A Detected Track
+     // 3. A False Positive Track
+
+     vertex_t root = boost::add_vertex(graph_);
+     graph_[root].set_id(-2);
+     int next_id = 3;
+     
+     std::vector<wb::Blob>::iterator it_meas = meas.begin();
+     std::vector<wb::Blob>::iterator it_tracks = tracks.begin();
+     build_tree(root, it_meas, meas, tracks, next_id);
+     
+     // write graph to console
+     cout << "\n-- graphviz output START --" << endl;
+     boost::write_graphviz(std::cout, graph_,
+                           boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
+     cout << "\n------------" << endl;  
+
+     std::ofstream dotfile ("/home/syllogismrxs/test.dot");
+     boost::write_graphviz(dotfile, graph_,
+                           boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
+
 }
 
 void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas, 

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-03 22:45:53 syllogismrxs>
+/// Time-stamp: <2016-01-05 15:41:59 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -65,6 +65,14 @@ namespace wb {
                Mammal,
                Sensor
           }EntityType_t;
+
+          typedef enum MhtType {
+               fp = 0,
+               dt,
+               nt
+          }MhtType_t;
+
+          MhtType_t mht_type;
           
           Entity();
 
@@ -140,8 +148,9 @@ namespace wb {
           void set_frame(int frame) { frame_ = frame; }
           int frame() { return frame_; }
           
-     protected:
-          int id_;    
+          int id_;
+          
+     protected:          
           std::string name_;
           EntityType_t type_;
           std::vector<wb::Point> points_;
@@ -157,7 +166,7 @@ namespace wb {
 
           int frame_;
 
-          int matched_id_;
+          int matched_id_;          
 
           //cv::KalmanFilter KF_;
           cv::Mat_<float> transition_matrix_;
