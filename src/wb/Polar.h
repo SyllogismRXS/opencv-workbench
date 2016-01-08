@@ -4,7 +4,7 @@
 /// @file Polar.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-13 15:18:15 syllogismrxs>
+/// Time-stamp: <2016-01-08 13:14:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 13 Oct 2015
@@ -45,6 +45,22 @@ public:
      Polar(double range, double th) : r(range), theta(th) { }  
      double r;
      double theta;
+
+     static Polar cart2polar(cv::Point2d &p)
+     {
+          Polar polar;
+          polar.r = sqrt( pow(p.x,2) + pow(p.y,2) );
+          polar.theta = atan(p.y / p.x);
+          return polar;
+     }
+
+     static double distance(Polar &p1, Polar &p2)
+     {
+          double dist;
+          dist = sqrt( pow(p1.r,2) + pow(p2.r, 2) - 2*p1.r*p2.r*cos(p1.theta-p2.theta));
+          return dist;
+     }
+     
 protected:
 private:
 };

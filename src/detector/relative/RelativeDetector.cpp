@@ -95,11 +95,15 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::medianBlur(gray, median,5);
      cv::imshow("median", median);          
       
-     /// // Compute estimated gradient
-     /// cv::Mat grad;     
-     /// wb::gradient_sobel(median, grad);
-     /// cv::imshow("gradient", grad);
-     /// 
+     // Compute estimated gradient
+     cv::Mat grad;     
+     wb::gradient_sobel(median, grad);
+     cv::imshow("gradient", grad);
+
+     cv::Mat grad_thresh;
+     cv::threshold(grad, grad_thresh, 100, 255, cv::THRESH_TOZERO);
+     cv::imshow("grad_thresh", grad_thresh);     
+      
      ///cv::Mat thresh_grad;
      ///wb::adaptive_threshold(grad, thresh_grad, grad_thresh_value_, 0.001, 0.002, 10, 5);
      /// cv::imshow("grad thresh", thresh_grad);        
@@ -108,11 +112,15 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
      //cout << "thresh_value: " << thresh_value_ << endl;
      cv::imshow("thresh amp", thresh_amp);
+
+     cv::Mat grad_plus_thresh = grad_thresh + thresh_amp;
+     cv::imshow("grad_plus_thresh", grad_plus_thresh);
       
      /// cv::Mat thresh_and_grad = thresh_amp + thresh_grad;
      /// cv::imshow("thresh and grad", thresh_and_grad);     
      cv::Mat erode;
      cv::erode(thresh_amp, erode, erosionConfig_);
+     //cv::erode(grad_plus_thresh, erode, erosionConfig_);
      cv::imshow("erode", erode);
       
      cv::Mat dilate;
@@ -145,6 +153,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      ////////////////////////////////////////////////////
      tracks_.clear(); // clear out the tracks from previous loop
       
+     std::map<int, wb::Blob> tracks_frame;
      std::vector<wb::Blob> blobs = blob_process_.blobs();
      std::vector<wb::Blob>::iterator it = blobs.begin();
      for (; it != blobs.end(); it++) {
@@ -168,15 +177,17 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           it->set_frame(frame_number);
            
           tracks_history_[it->id()].push_back(*it);
+          tracks_frame[it->id()] = *it;
            
           tracks_.push_back(*it);
      }
       
      // Calculate Similarity between current tracks
-     //this->trajectory_similarity(frame_number, blob_consolidate);
      traj_.trajectory_similarity(tracks_history_, frame_number, 
                                  blob_consolidate, 0.017);
-
+     //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+     //                                       blob_consolidate, 0.02);
+     
      cv::imshow("Traj", blob_consolidate);
       
      ///////////////////////////////////////////////////

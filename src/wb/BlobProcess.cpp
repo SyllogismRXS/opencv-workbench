@@ -421,9 +421,9 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                //int curr_cost = 0.6 * dist + 0.4 * size_diff;
                
                int curr_cost = dist;
-               /// if (curr_cost > 1000) {
-               ///      curr_cost = INT_MAX;
-               /// }
+               if (curr_cost > 1000) {
+                    curr_cost = INT_MAX;
+               }
                
                cost[r*cols + c] = curr_cost;
 

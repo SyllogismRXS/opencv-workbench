@@ -277,6 +277,8 @@ int main(int argc, char *argv[])
      std::vector<double> tt = Dynamics::time_vector(t0,dt,tend);     
      for (std::vector<double>::iterator it = tt.begin(); it != tt.end(); 
           it++, frame_number++) {
+
+          std::map<int, wb::Blob> tracks_frame;
           
           frame_img = cv::Scalar(255,255,255);
                     
@@ -364,6 +366,7 @@ int main(int argc, char *argv[])
                     blob.init();
                     
                     tracks_history[it_ent->id()].push_back(blob);
+                    tracks_frame[it_ent->id()] = blob;
                     
                     measurements.push_back(blob);
                     
@@ -400,17 +403,22 @@ int main(int argc, char *argv[])
           blob_process.overlay(tracks_img, tracks_img, RECTS | TRACKS | IDS);
           cv::imshow("Tracks", tracks_img);
           
-          // Compute Trajectory Analysis
-          cv::Mat traj_img = frame_img;//img_color;//.clone();
-          traj.trajectory_similarity(tracks_history, frame_number, 
-                                     traj_img, traj_threshold);
-
-          cv::Mat history_traj_img = history_img;//img_color;//.clone();
-          traj.trajectory_similarity(tracks_history, frame_number, 
-                                     history_traj_img, traj_threshold);
+          //// Compute Trajectory Analysis
+          //cv::Mat traj_img = frame_img;//img_color;//.clone();
+          //traj.trajectory_similarity(tracks_history, frame_number, 
+          //                           traj_img, traj_threshold);
+          //
+          //cv::Mat history_traj_img = history_img;//img_color;//.clone();
+          //traj.trajectory_similarity(tracks_history, frame_number, 
+          //                           history_traj_img, traj_threshold);
+          //cv::imshow("History", history_traj_img);
+          //cv::imshow("Frame", traj_img);           
           
-          cv::imshow("History", history_traj_img);
-          cv::imshow("Frame", traj_img);           
+          cv::Mat traj_img = frame_img;
+          traj.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+                                                traj_img, traj_threshold);
+          
+          cv::imshow("Frame", traj_img);
           
           /////////////////////////////////////////////////////////////////////                    
                     

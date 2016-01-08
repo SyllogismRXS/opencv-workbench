@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include <opencv_workbench/syllo/syllo.h>
 
@@ -24,6 +25,11 @@ double TrajectoryAnalysis::trajectory_diff(std::list<cv::Point2d> &t1,
          it1++, it2++) {               
           
           double diff = pow(it1->x - it2->x, 2) + pow(it1->y - it2->y, 2);
+          //double diff = sqrt(pow(it1->x - it2->x, 2) + pow(it1->y - it2->y, 2));
+          //Polar polar1(it1->x, it1->y);
+          //Polar polar2(it2->x, it2->y);
+          //double diff = Polar::distance(polar1, polar2);
+          
           diffs.push_back(cv::Point2d(frame,diff));               
           total_diff += diff;
           frame++;               
@@ -76,6 +82,95 @@ void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Blob> &traj,
                
           prev = it->undistorted_centroid();
      }
+}
+
+void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob> &tracks_frame,
+                                                          int frame_number, 
+                                                          cv::Mat &img, double threshold)
+{
+     cout << "==========================================" << endl; 
+
+     std::map<std::string, struct Avgs> RMSEs;
+     // Store RMSE between each trajectory in a map/hash. A string will be used
+     // to hash the values. The string is of the form "n:m", where n and m are
+     // the trajectory IDs and n is less than m.
+     
+     // Reset computed
+     for (std::map<std::string, Avgs>::iterator it = traj_avgs_.begin();
+          it != traj_avgs_.end(); it++) {
+          it->second.computed = false;
+     }
+     
+     for (std::map<int, wb::Blob>::iterator it_1 = tracks_frame.begin(); 
+          it_1 != tracks_frame.end(); it_1++) {
+          for (std::map<int, wb::Blob>::iterator it_2 = tracks_frame.begin(); 
+               it_2 != tracks_frame.end(); it_2++) {
+               
+               // Determine if this trajectory difference has already been
+               // calculated
+               std::string key;
+               Avgs avg;
+               if (it_1->first == it_2->first) {
+                    // Don't calculate trajectory diff between two trajectories
+                    // with the same ID. This is the same trajectory.
+                    continue;
+               } else if (it_1->first < it_2->first) {
+                    key = syllo::int2str(it_1->first) + ":" + syllo::int2str(it_2->first);
+                    avg.ID1 = it_1->first;
+                    avg.ID2 = it_2->first;
+               } else {
+                    key = syllo::int2str(it_2->first) + ":" + syllo::int2str(it_1->first);
+                    avg.ID1 = it_2->first;
+                    avg.ID2 = it_1->first;
+               }                   
+               
+               // Determine if we already computed this pair's similarity               
+               if (traj_avgs_.count(key) != 0 && traj_avgs_[key].computed) {
+                    continue;
+               }
+
+               traj_avgs_[key].ID1 = avg.ID1;
+               traj_avgs_[key].ID2 = avg.ID2;
+               
+               cv::Point2d p1 = it_1->second.undistorted_centroid();
+               cv::Point2d p2 = it_2->second.undistorted_centroid();
+
+               Polar polar1 = Polar::cart2polar(p1);
+               Polar polar2 = Polar::cart2polar(p2);
+               
+               double diff = Polar::distance(polar1,polar2);
+               
+               traj_avgs_[key].diff_sum += diff;
+               traj_avgs_[key].count++;
+               traj_avgs_[key].computed = true; 
+
+               
+               
+               if (simulated_ || (it_1->second.is_tracked() && 
+                                  it_2->second.is_tracked())) {
+                    
+                    double diff_avg = traj_avgs_[key].diff_sum / (double)traj_avgs_[key].count;
+               
+                    cout << "--------" << endl;
+                    cout << key << endl;               
+                    cout << "Diff: " << diff << endl;
+                    cout << "Diff Avg: " << diff_avg << endl;                                             
+                              
+                    double abs_diff = std::abs(diff-diff_avg);
+                    cout << "Value: " << abs_diff << endl;
+                    
+                    if (abs_diff < threshold) {
+                         cv::Point c1 = it_1->second.centroid();
+                         cv::Point c2 = it_2->second.centroid();
+                         if (img.channels() == 1) {
+                              cv::line(img, c1, c2, 0, 1, 8, 0);
+                         } else {
+                              cv::line(img, c1, c2, cv::Scalar(0,255,255), 1, 8, 0);
+                         }
+                    }
+               } 
+          }
+     }     
 }
 
 void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob> > &tracks_history, int frame_number, cv::Mat &img, double RMSE_threshold)

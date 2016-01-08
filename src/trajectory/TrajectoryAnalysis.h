@@ -4,7 +4,7 @@
 /// @file TrajectoryAnalysis.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-18 15:01:07 syllogismrxs>
+/// Time-stamp: <2016-01-08 13:17:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 08 Dec 2015
@@ -43,6 +43,8 @@
 
 #include <opencv_workbench/wb/WB.h>
 #include <opencv_workbench/wb/Blob.h>
+#include <opencv_workbench/wb/Polar.h>
+#include <opencv_workbench/track/KalmanFilter.h>
 
 
 class TrajectoryAnalysis {
@@ -52,6 +54,18 @@ public:
           int ID1;
           int ID2;
           double RMSE;
+     };
+
+     
+     class Avgs {
+     public:
+     Avgs() : computed(false), count(0) {}
+          
+          bool computed;
+          int ID1;
+          int ID2;
+          double diff_sum;          
+          int count;
      };
      
      TrajectoryAnalysis();
@@ -67,9 +81,17 @@ public:
                                 cv::Mat &img, double RMSE_threshold);
 
      void set_simulated(bool simulated) { simulated_ = simulated; }
+
+     void trajectory_similarity_track_diff(std::map<int, wb::Blob> &tracks_frame,
+                                           int frame_number, 
+                                           cv::Mat &img, double threshold);
+
+     
      
 protected:
 
+     std::map<std::string, Avgs> traj_avgs_;
+     
      bool simulated_;
 private:
 };
