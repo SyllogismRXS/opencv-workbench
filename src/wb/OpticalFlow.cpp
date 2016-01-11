@@ -44,6 +44,7 @@ int OpticalFlow::dense_flow(const cv::Mat &input_gray, cv::Mat &output)
 int OpticalFlow::sparse_flow(cv::Mat &input_gray, cv::Mat &output)
 {
      output = input_gray.clone();
+     cv::cvtColor(output, output, CV_GRAY2BGR);
           
      if( needToInit ) {
           // automatic initialization
@@ -55,7 +56,8 @@ int OpticalFlow::sparse_flow(cv::Mat &input_gray, cv::Mat &output)
           if(prev_gray.empty())
                input_gray.copyTo(prev_gray);
                
-          cv::calcOpticalFlowPyrLK(prev_gray, input_gray, points[0], points[1], status, err, winSize,
+          cv::calcOpticalFlowPyrLK(prev_gray, input_gray, points[0], points[1], 
+                                   status, err, winSize,
                                    3, termcrit, 0, 0.001);
           size_t i, k;
           for( i = k = 0; i < points[1].size(); i++ )

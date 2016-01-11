@@ -1,6 +1,7 @@
 add_subdirectory(blank)
 add_subdirectory(displace)
 add_subdirectory(relative)
+#add_subdirectory(relative-2)
 add_subdirectory(vertical)
 
 # Push up the OPENCV_WORKBENCH_LIBS variable
