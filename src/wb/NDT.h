@@ -4,7 +4,7 @@
 /// @file NDT.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-06 19:04:48 syllogismrxs>
+/// Time-stamp: <2016-01-11 18:01:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 06 Sep 2015
@@ -44,12 +44,30 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+
+class Cell {
+public:
+     Cell() { 
+          mean_ = cv::Mat_<double>(2,1,CV_64F);
+          covar_ = cv::Mat_<double>(2,2,CV_64F);
+          is_valid_ = false;
+     }
+     cv::Mat_<double> mean_;//(2,1,CV_64F);
+     cv::Mat_<double> covar_;//(2,2);
+     bool is_valid_;
+};
+
 class NDT {
 public:
      NDT();
      void set_frame(cv::Mat &src, cv::Mat &dst);
 protected:
-     int cell_length_;
+     int cell_col_size_;
+     int cell_row_size_;
+
+     std::vector< std::vector< std::vector<Cell> > > cells_;
+     std::vector< std::vector< std::vector<Cell> > > prev_cells_;     
+     
 private:
 };
 

@@ -84,11 +84,22 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat mask;
      wb::get_sonar_mask(original, mask);
      //cv::imshow("Sonar Mask", mask*255);     
-     //wb::showHistogram(gray, mask);
-           
-     //cv::Mat ndt_img;
-     //ndt_.set_frame(gray, ndt_img);
-     //cv::imshow("ndt", ndt_img);
+     //wb::showHistogram(gray, mask);               
+
+     //std::vector<cv::KeyPoint> keypoints_1;
+     //int fast_threshold = 40;
+     //bool nonmaxSuppression = true;
+     //std::vector<cv::Point2f> points1;
+     //cv::FAST(gray, keypoints_1, fast_threshold, nonmaxSuppression);
+     //cv::KeyPoint::convert(keypoints_1, points1, vector<int>());
+     //
+     //cv::Mat key_img = gray.clone();
+     //cv::cvtColor(key_img, key_img, CV_GRAY2BGR);
+     //for (std::vector<cv::Point2f>::iterator it = points1.begin(); 
+     //     it != points1.end() ;it++) {
+     //     cv::circle(key_img, *it, 1, cv::Scalar(0,255,0), -1, 8, 0);
+     //}
+     //cv::imshow("key points", key_img);
       
      // Compute median
      cv::Mat median;
@@ -126,6 +137,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat dilate;
      cv::dilate(erode, dilate, dilationConfig_);
      cv::imshow("Dilate", dilate);      
+     
+     cv::Mat ndt_img;
+     ndt_.set_frame(dilate, ndt_img);
+     cv::imshow("ndt", ndt_img);
       
      blob_process_.process_frame(dilate, median, thresh_value_);
       
