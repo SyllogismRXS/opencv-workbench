@@ -261,6 +261,24 @@ namespace syllo
                }
                return bearing;
           }
+
+          cv::Point get_pixel(double range, double bearing)
+          {         
+               cv::Point result(0,0);
+               
+               switch (type_) {
+	       case MovieType:
+                    break;
+	       case CameraType:
+                    break;
+               case SonarType:
+                    result = sonar.get_pixel(range, bearing);
+                    break;
+	       default:
+                    break;
+               }
+               return result;
+          }
        
           bool isLive()
           {

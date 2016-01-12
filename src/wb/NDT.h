@@ -4,7 +4,7 @@
 /// @file NDT.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-11 18:01:16 syllogismrxs>
+/// Time-stamp: <2016-01-12 17:21:01 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 06 Sep 2015
@@ -44,23 +44,33 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <opencv_workbench/utils/Stream.h>
+
+#include <Eigen/Dense>
+
 
 class Cell {
 public:
      Cell() { 
-          mean_ = cv::Mat_<double>(2,1,CV_64F);
-          covar_ = cv::Mat_<double>(2,2,CV_64F);
+     mean_.resize(2,1);// = cv::Mat_<double>(2,1,CV_64F);
+     covar_.resize(2,2);// = cv::Mat_<double>(2,2,CV_64F);
           is_valid_ = false;
      }
-     cv::Mat_<double> mean_;//(2,1,CV_64F);
-     cv::Mat_<double> covar_;//(2,2);
+
+     Eigen::MatrixXd mean_idx_;
+     Eigen::MatrixXd covar_idx_;
+
+     Eigen::MatrixXd mean_;
+     Eigen::MatrixXd covar_;
+//cv::Mat_<double> mean_;//(2,1,CV_64F);
+//cv::Mat_<double> covar_;//(2,2);
      bool is_valid_;
 };
 
 class NDT {
 public:
      NDT();
-     void set_frame(cv::Mat &src, cv::Mat &dst);
+void set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream);
 protected:
      int cell_col_size_;
      int cell_row_size_;

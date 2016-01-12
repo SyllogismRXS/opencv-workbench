@@ -472,6 +472,39 @@ double Sonar::pixel_bearing(int row, int col)
      return BVTColorImage_GetPixelRelativeBearing(cimg_, row, col);
 }
 
+cv::Point Sonar::get_pixel(double range, double bearing)
+{
+     int origin_row = BVTColorImage_GetOriginRow(cimg_);
+     int origin_col = BVTColorImage_GetOriginCol(cimg_);
+     double range_resolution = BVTColorImage_GetRangeResolution(cimg_);
+     
+     //cout << "---------" << endl;
+     //cout << "Range: " << range << endl;
+     //cout << "Bearing: " << bearing << endl;
+     //cout << "Origin Row: " << origin_row << endl;
+     //cout << "Origin Col: " << origin_col << endl;
+     
+     double x,y;
+     x = range*sin(bearing)/range_resolution;
+     y = range*cos(bearing)/range_resolution;     
+
+     //cout << "X: " << x << endl;
+     //cout << "Y: " << y << endl;
+
+     cv::Point result;
+     result.x = origin_col + cvRound(x);
+     result.y = origin_row - cvRound(y);
+
+     //cout << "Result X: " << result.x << endl;
+     //cout << "Result Y: " << result.y << endl;
+     //
+     //cout << "Check..." << endl;
+     //cout << "Pixel Range: " << pixel_range(result.y,result.x) << endl;
+     //cout << "Pixel Bearing: " << pixel_bearing(result.y,result.x)*0.017453293 << endl; // pi/180 << endl;
+
+     return result;
+}
+
 
 int Sonar::width() 
 { 

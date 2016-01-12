@@ -139,7 +139,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::imshow("Dilate", dilate);      
      
      cv::Mat ndt_img;
-     ndt_.set_frame(dilate, ndt_img);
+     ndt_.set_frame(dilate, ndt_img, stream_);
      cv::imshow("ndt", ndt_img);
       
      blob_process_.process_frame(dilate, median, thresh_value_);

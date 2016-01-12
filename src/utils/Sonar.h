@@ -56,6 +56,11 @@ public:
      double pixel_range(int row, int col);
      double pixel_bearing(int row, int col);
 
+     //double get_range_resolution();
+     //double get_bearing_resolution();
+     //cv::Point get_origin();
+     cv::Point get_pixel(double range, double bearing);
+
      Status_t SonarLogEnable(bool enable);
      const std::string& current_sonar_file();
 

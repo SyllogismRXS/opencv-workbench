@@ -20,6 +20,8 @@ target_link_libraries(${LIBRARY_NAME_1}
   ${OpenCV_LIBS}   
   track
   workbench-utils
+  syllo  
+  sonar-sdk  
   )
 
 # Push up the OPENCV_WORKBENCH_LIBS variable
