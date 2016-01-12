@@ -181,6 +181,16 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst)
      cv::normalize(ndt_total, ndt_total_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
      cv::imshow("NDT",ndt_total_norm);
 
+     // Compute Jacobian and Hessian
+     double phi = 0;
+     double x = 0, y = 0;
+     cv::Mat_<double> JT(2,3);
+     JT << 1, 0, -x*sin(phi)-y*cos(phi),
+           0, 1, x*cos(phi)-y*sin(phi);
+
+     cv::Mat_<double> H(3,2);
+     
+     
      // Save the currently computed cells in the previous cells container
      cells_.swap(prev_cells_);
 }
