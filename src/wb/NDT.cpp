@@ -231,7 +231,7 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
      //cv::Mat_<double> JT(2,3,CV_64F);
      Eigen::MatrixXd JT(2,3);
      JT << 1, 0, -x_est*sin(phi_est)-y_est*cos(phi_est),
-          0, 1, x_est*cos(phi_est)-y_est*sin(phi_est);
+           0, 1, x_est*cos(phi_est)-y_est*sin(phi_est);
      
      Eigen::MatrixXd JT_0(2,1);
      Eigen::MatrixXd JT_1(2,1);
@@ -265,7 +265,7 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                     Eigen::MatrixXd sample_point(2,1);
                     sample_point << x , y;
           
-                    Eigen::MatrixXd point_mapped(2,1);
+                    Eigen::MatrixXd point_mapped(2,1); //x'_i
                     point_mapped = T_map(sample_point, p);
 
                     //Convert to polar...
@@ -281,25 +281,41 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                     //bearing = stream->pixel_bearing(recovered.y,recovered.x) * 0.017453293;
                     //cout << "Check: " << range << " , " << bearing << endl;
                     ////////////
-     
-                    int r_map = (double)recovered.y / (double)used_row_cells * (double)cells_down;
-                    int c_map = (double)recovered.x / (double)used_col_cells * (double)cells_across;                                       
-                    
+                                             
                     // TODO: Calculate probabilty of this point being here..
-                    
-                    for (int i = 0; i < 4; i++) {                         
-                         prev_cells_[i][r_map][c_map];
-                    }
-                    
+
                     // Need to determine previous covariance and mean from this cell
                     Eigen::MatrixXd cov(2,2);
-                    cov << 1, 0, 1, 0;
-     
+                    cov << 1,1;
+                    
                     Eigen::MatrixXd cov_inv = cov.inverse();
                     
                     Eigen::MatrixXd prev_mean(2,1);
-                    prev_mean << 1, 1;
-     
+                    prev_mean << 1,1;
+                                        
+                    double score = 0;
+                    
+                    int img_index = 0;
+                    for (int row_shift = 0; row_shift < 2; row_shift++) {
+                         for (int col_shift = 0; col_shift < 2; col_shift++) {
+                              unsigned int r_map = ((double)recovered.y + row_shift*cell_row_size_/2) / (double)used_row_cells * (double)cells_down;
+                              unsigned int c_map = ((double)recovered.x + col_shift*cell_col_size_/2) / (double)used_col_cells * (double)cells_across;
+                              
+                              if (r_map < prev_cells_[img_index].size() && 
+                                  c_map < prev_cells_[img_index][c_map].size()) {
+                                   //cov = prev_cells_[img_index][r_map][c_map].covar_;
+                                   //prev_mean = prev_cells_[img_index][r_map][c_map].mean_;
+                                   //cov_inv = cov.inverse();
+
+                                   //double s = exp( -1/2 * ((point_mapped-prev_mean).transpose() * cov_inv * (point_mapped-prev_mean))(0,0));
+                                   //score += s;
+                              }                              
+                              img_index++;
+                         }                         
+                    }                                        
+                    
+                    
+                    
                     Eigen::MatrixXd q(2,1);
                     q = point_mapped - prev_mean;          
      
