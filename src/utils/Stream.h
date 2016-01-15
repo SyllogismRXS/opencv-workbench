@@ -43,12 +43,7 @@ namespace syllo
           MPEG_1,
           MOTION_JPG
      }Codec_t;
-
-     typedef enum{
-          image = 0,
-          range
-     }SonarDataMode_t;
-
+     
      class Stream {
      protected:
 	  cv::VideoCapture *vcap_;
@@ -103,20 +98,7 @@ namespace syllo
                     return CV_FOURCC('M','J','P','G');
                }
           }
-
-          Status set_sonar_data_mode(SonarDataMode_t mode)
-          {
-               if (mode == image) {
-                    sonar.set_data_mode(Sonar::image);
-               } else if (mode == range) {
-                    sonar.set_data_mode(Sonar::range);
-               } else {
-                    cout << "Invalid Sonar Data Mode" << endl;
-                    return Failure;
-               }
-               return Success;
-          }
-
+          
           Status open(int num)
 	  {           
                if (vcap_ != NULL) {
@@ -152,7 +134,6 @@ namespace syllo
                if ( ext == "SON") {
                     sonar.set_mode(Sonar::sonar_file);
                     sonar.set_input_son_filename(fn);
-                    sonar.set_data_mode(Sonar::image);
                     // TODO : this needs to be in a configuration file
                     //sonar.set_color_map("/home/syllogismrxs/repos/sonar-processing/bvtsdk/colormaps/jet.cmap");
                     //sonar.set_color_map("/home/syllogismrxs/repos/blueview_driver/driver_bvtsdk64/colormaps/jet.cmap");
@@ -335,6 +316,22 @@ namespace syllo
                     return false;
                }
 
+               return status;
+	  }
+
+          bool range_image(cv::Mat &img) 
+	  {               
+               bool status = false;
+	       if(type_ == SonarType) {
+                    sonar.range_image(img);
+		    status = true;                    
+               } else if (type_ == ImageType) {
+                    status = false;
+               } else if (type_ == MovieType){
+                    status = false;
+	       } else if (type_ == CameraType){
+                    status = false;
+	       }
                return status;
 	  }
 

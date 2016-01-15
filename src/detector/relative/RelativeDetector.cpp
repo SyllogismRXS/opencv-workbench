@@ -59,33 +59,43 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {               
      cv::Mat original_w_tracks, original_copy;          
      original_w_tracks = original;
-     original_copy = original;
-      
-     //cv::cvtColor(original_copy, original_copy, CV_RGBA2BGR);
-     //wb::show_nonzero(original_copy);
-      
-     //cv::Mat bad_gray;
-     //cv::applyColorMap(original, bad_gray, CV_BGR2GRAY);
-     //cv::cvtColor(original, bad_gray, CV_BGR2GRAY);
-     //cv::imshow("bad", bad_gray);         
-     
+     original_copy = original;           
+     // //cv::cvtColor(original_copy, original_copy, CV_RGBA2BGR);
+     // //wb::show_nonzero(original_copy);
+     //  
+     // //cv::Mat bad_gray;
+     // //cv::applyColorMap(original, bad_gray, CV_BGR2GRAY);
+     // //cv::cvtColor(original, bad_gray, CV_BGR2GRAY);
+     // //cv::imshow("bad", bad_gray);         
+     // 
      cv::Mat gray;
      if (original.channels() != 1) {           
           Jet2Gray_matlab(original,gray);           
      } else {
           gray = original.clone();
      }
-     cv::imshow("Gray", gray);   
+     cv::imshow("Gray", gray);  
+
+     cv::Mat range_image;
+     stream_->range_image(range_image);
+     cv::imshow("Range", range_image);
+
+     cout << "range size: " << range_image.rows << " x " << range_image.cols << endl;
+     cout << "gray size: " << gray.rows << " x " << gray.cols << endl;
+     
+     cv::Mat blend;
+     cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());
+     cv::imshow("blend", blend);
      
      //cv::Mat flow_img;
      //flow_.sparse_flow(gray, flow_img);          
      //cv::imshow("Flow", flow_img);     
-
+     
      cv::Mat mask;
      wb::get_sonar_mask(original, mask);
      //cv::imshow("Sonar Mask", mask*255);     
      //wb::showHistogram(gray, mask);               
-
+     
      //std::vector<cv::KeyPoint> keypoints_1;
      //int fast_threshold = 40;
      //bool nonmaxSuppression = true;
@@ -123,7 +133,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
      //cout << "thresh_value: " << thresh_value_ << endl;
      cv::imshow("thresh amp", thresh_amp);
-
+     
      //cv::Mat grad_plus_thresh = grad_thresh + thresh_amp;
      //cv::imshow("grad_plus_thresh", grad_plus_thresh);
       
@@ -140,28 +150,29 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat ndt_img;
      ndt_.set_frame(dilate, ndt_img, stream_);
+     //ndt_.set_frame(range_image, ndt_img, stream_);
      cv::imshow("ndt", ndt_img);
-      
-     blob_process_.process_frame(dilate, median, thresh_value_);
-      
-     cv::Mat blob_img;
-     //blob_process_.overlay_blobs(gray, blob_img);            
-     //blob_process_.overlay_tracks(blob_img, blob_img);
-     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
-     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
-     cv::imshow("Blobs", blob_img);        
-
-     cv::Mat short_lived;
-     blob_process_.overlay_short_lived(gray, short_lived);
-     cv::imshow("Tracking Tracks",short_lived);
-      
-     cv::Mat blob_consolidate;
-     blob_process_.consolidate_tracks(gray, blob_consolidate);
-     cv::imshow("Consolidate", blob_consolidate);      
-     
-     cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
-     cv::imshow("Tracks", original_rects);
+     //  
+     // blob_process_.process_frame(dilate, median, thresh_value_);
+     //  
+     // cv::Mat blob_img;
+     // //blob_process_.overlay_blobs(gray, blob_img);            
+     // //blob_process_.overlay_tracks(blob_img, blob_img);
+     // blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     // //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
+     // cv::imshow("Blobs", blob_img);        
+     // 
+     // cv::Mat short_lived;
+     // blob_process_.overlay_short_lived(gray, short_lived);
+     // cv::imshow("Tracking Tracks",short_lived);
+     //  
+     // cv::Mat blob_consolidate;
+     // blob_process_.consolidate_tracks(gray, blob_consolidate);
+     // cv::imshow("Consolidate", blob_consolidate);      
+     // 
+     // cv::Mat original_rects = original.clone();
+     // blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
+     // cv::imshow("Tracks", original_rects);
      
      //////////////////////////////////////////////////////////////
      /// Tracking     
@@ -180,9 +191,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           double x, y;
           if (stream_ != NULL && stream_->type() == syllo::SonarType) {           
                double range = stream_->pixel_range(p.y, p.x); //row, col
-               double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180
-               y = -range*cos(bearing);
+               double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180               
                x = range*sin(bearing);
+               y = -range*cos(bearing);
           } else {
                x = p.x;
                y = p.y;
@@ -197,13 +208,13 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           tracks_.push_back(*it);
      }
       
-     // Calculate Similarity between current tracks
-     traj_.trajectory_similarity(tracks_history_, frame_number, 
-                                 blob_consolidate, 0.017);
-     //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
-     //                                       blob_consolidate, 0.02);
+     // // Calculate Similarity between current tracks
+     // traj_.trajectory_similarity(tracks_history_, frame_number, 
+     //                             blob_consolidate, 0.017);
+     // //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+     // //                                       blob_consolidate, 0.02);
      
-     cv::imshow("Traj", blob_consolidate);
+     //cv::imshow("Traj", blob_consolidate);
       
      ///////////////////////////////////////////////////
      // Display images

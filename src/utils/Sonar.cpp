@@ -17,7 +17,7 @@ using std::endl;
 
 Sonar::Sonar()
      : initialized_(false), fn_(""), ip_addr_(""), logging_(false), 
-       mode_(Sonar::net), data_mode_(Sonar::image), save_directory_("./"), 
+       mode_(Sonar::net), save_directory_("./"), 
        color_map_(""), min_range_(0), max_range_(40)
 {     
 }
@@ -314,142 +314,151 @@ Sonar::Status_t Sonar::getSonarImage(cv::Mat &image, int index)
           }
      }
 
-     if (data_mode_ == Sonar::image) {
-
+     
 // Grayscale
 #if 0
-          //BVTMagImage img ;
-          BVTPing_GetImageXY ( ping , &img_ ) ;
-          height_ = BVTMagImage_GetHeight ( img_ ) ;
-          width_ = BVTMagImage_GetWidth ( img_ ) ;
+     //BVTMagImage img ;
+     BVTPing_GetImageXY ( ping , &img_ ) ;
+     height_ = BVTMagImage_GetHeight ( img_ ) ;
+     width_ = BVTMagImage_GetWidth ( img_ ) ;
      
-          IplImage * gray_img = cvCreateImageHeader ( cvSize ( width_ , height_ ) , IPL_DEPTH_16U , 1 ) ;
-          cvSetImageData ( gray_img , BVTMagImage_GetBits ( img_ ) , width_*2 ) ;
+     IplImage * gray_img = cvCreateImageHeader ( cvSize ( width_ , height_ ) , IPL_DEPTH_16U , 1 ) ;
+     cvSetImageData ( gray_img , BVTMagImage_GetBits ( img_ ) , width_*2 ) ;
      
-          //image = cv::cvarrToMat(gray_img);
-          //cv::Mat temp_img(gray_img);
-          //image = temp_img;
-          image = gray_img;
+     image = gray_img;
      
-          cvReleaseImageHeader(&gray_img);     
-          BVTMagImage_Destroy ( img_ );
+     cvReleaseImageHeader(&gray_img);     
+     BVTMagImage_Destroy ( img_ );
      
 // Color
 #else
      
-          ret = BVTPing_GetImage(ping, &img_);
-          if (ret != 0) {
-               printf("BVTPing_GetImage: ret=%d\n", ret);
-               return Sonar::Failure;
-          }     
+     ret = BVTPing_GetImage(ping, &img_);
+     if (ret != 0) {
+          printf("BVTPing_GetImage: ret=%d\n", ret);
+          return Sonar::Failure;
+     }     
      
-          // Perform the colormapping
-          ret = BVTColorMapper_MapImage(mapper_, img_, &cimg_);
-          if (ret != 0) {
-               printf("BVTColorMapper_MapImage: ret=%d\n", ret);
-               return Sonar::Failure;
-          }
-        
-          height_ = BVTColorImage_GetHeight(cimg_);
-          width_ = BVTColorImage_GetWidth(cimg_);
+     // Perform the colormapping
+     ret = BVTColorMapper_MapImage(mapper_, img_, &cimg_);
+     if (ret != 0) {
+          printf("BVTColorMapper_MapImage: ret=%d\n", ret);
+          return Sonar::Failure;
+     }
      
-          IplImage* sonarImg;
-          sonarImg = cvCreateImageHeader(cvSize(width_,height_), IPL_DEPTH_8U, 4);
+     height_ = BVTColorImage_GetHeight(cimg_);
+     width_ = BVTColorImage_GetWidth(cimg_);
+     
+     IplImage* sonarImg;
+     sonarImg = cvCreateImageHeader(cvSize(width_,height_), IPL_DEPTH_8U, 4);
         
-          // And set it's data
-          cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
-        
-          image = cv::cvarrToMat(sonarImg);    
-          cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
-          
-          cvReleaseImageHeader(&sonarImg);
+     // And set it's data
+     cvSetImageData(sonarImg,  BVTColorImage_GetBits(cimg_), width_*4);
+     
+     image = cv::cvarrToMat(sonarImg);    
+     cv::cvtColor(image, image, cv::COLOR_BGRA2BGR, 3);
+     
+     cvReleaseImageHeader(&sonarImg);
+     
+     //////////////////////////////////////////////////////
+     // Generate image from range data
+     BVTRangeData rangeData;
+     ret=BVTPing_GetRangeData(ping, &rangeData);
+     if(ret!=0) {
+          printf("BVTPing_GetRangeData:ret=%d\n",ret);
+          return Sonar::Failure;
+     }
 
-     } else {
-          // Generate image from range data
-          BVTRangeData rangeData;
-          ret=BVTPing_GetRangeData(ping, &rangeData);
-          if(ret!=0) {
-               printf("BVTPing_GetRangeData:ret=%d\n",ret);
-               return Sonar::Failure;
-          }
+     int range_count = BVTRangeData_GetCount(rangeData);
+       
+     // Use height/width from above image
+     //height_ = 600;
+     //width_ = 600;
+     float rotate = PI/2;
+     range_image_ = cv::Mat::zeros(height_, width_, CV_8UC1);
+     
+     int origin_row = BVTColorImage_GetOriginRow(cimg_);
+     int origin_col = BVTColorImage_GetOriginCol(cimg_);
+     double range_resolution = BVTColorImage_GetRangeResolution(cimg_);
+     
+     cv::Point origin(origin_col, origin_row);
+     
+     double min_intensity = 1e9;
+     double max_intensity = -1e9;
+     
+     for (int i = 0; i < range_count; i++) {
+          double range = BVTRangeData_GetRangeValue(rangeData,i);
+          if (range < 1000) {
+               double intensity = BVTRangeData_GetIntensityValue(rangeData, i);
+               
+               if (intensity > max_intensity) {
+                    max_intensity = intensity;
+               } else if (intensity < min_intensity) {
+                    min_intensity = intensity;
+               }
+                    
+               double theta = BVTRangeData_GetBearingValue(rangeData,i) * PI / 180.0;
+                    
+               double x = range * cos(theta+rotate);
+               double y = range * sin(theta+rotate);
 
-          int range_count = BVTRangeData_GetCount(rangeData);
+               double x_res = x / range_resolution;
+               double y_res = y / range_resolution;
+               cv::Point p(origin.x - cvRound(x_res), origin.y - cvRound(y_res));
+               
+               //x =  x / stop_range_ * width_;
+               //y =  y / stop_range_ * height_;
+                    
+               //cv::Point p2(origin.x + x, origin.y + y);
+                                   
+               //cout << "-------------" << endl;
+               //cout << "origin: " << origin << endl;
+               //cout << "x: " << x << endl;
+               //cout << "y: " << y << endl;
+               //cout << "x_res: " << x_res << endl;
+               //cout << "y_yes: " << y_res << endl;
+               //cout << "Intensity: " << intensity << endl;
+               //cout << "Theta: " << theta << endl;
+               //cout << "Range: " << range << endl;
+               //cout << "Point: " << endl;
+               //cout << "resolution: " << range_resolution << endl;
+               //cout << "\t(" << p.x << "," << p.y << ")" << endl;
+               
+               //cv::circle(img, p, 4, cv::Scalar(0,0,255), -1, 8, 0);
+               //cv::circle(img, p2, 4, cv::Scalar(255,0,0), -1, 8, 0);
+               //cv::line(img, p, p2, cv::Scalar(255,255,255), 1, 8, 0);
+                    
+               //image.at<uchar>(p2) = intensity;
+               range_image_.at<uchar>(p) = intensity;
+          }               
+     }
+     
+     // Normalize range elements that are greater than zero.
+     // Norm from 1 to 255;
+     int nRows = range_image_.rows;
+     int nCols = range_image_.cols;
           
-          height_ = 600;
-          width_ = 600;
-          float rotate = PI/2;
-          image = cv::Mat::zeros(height_, width_, CV_8UC1);
-          cv::Point origin(width_/2,0);          
-
-          double min_intensity = 1e9;
-          double max_intensity = -1e9;
-          
-          for (int i = 0; i < range_count; i++) {
-               double range = BVTRangeData_GetRangeValue(rangeData,i);               
-               if (range < 1000) {
-                    double intensity = BVTRangeData_GetIntensityValue(rangeData, i);
-          
-                    if (intensity > max_intensity) {
-                         max_intensity = intensity;
-                    } else if (intensity < min_intensity) {
-                         min_intensity = intensity;
-                    }
-                    
-                    double theta = BVTRangeData_GetBearingValue(rangeData,i) * PI / 180.0;
-                    
-                    double x = range * cos(theta+rotate);
-                    double y = range * sin(theta+rotate);
-                    cv::Point p(origin.x + x, origin.y + y);
-                    
-                    x =  x / stop_range_ * width_;
-                    y =  y / stop_range_ * height_;
-                    
-                    cv::Point p2(origin.x + x, origin.y + y);
-                    
-                    //cout << "-------------" << endl;
-                    //cout << "Intensity: " << intensity << endl;
-                    //cout << "Theta: " << theta << endl;
-                    //cout << "Range: " << range << endl;
-                    //cout << "Point before: " << endl;
-                    //cout << "\t(" << p.x << "," << p.y << ")" << endl;
-                    //cout << "Point transform: " << endl;
-                    //cout << "\t(" << p2.x << "," << p2.y << ")" << endl;
-                    //cv::circle(img, p, 4, cv::Scalar(0,0,255), -1, 8, 0);
-                    //cv::circle(img, p2, 4, cv::Scalar(255,0,0), -1, 8, 0);
-                    //cv::line(img, p, p2, cv::Scalar(255,255,255), 1, 8, 0);
-                    
-                    image.at<uchar>(p2) = intensity;
-               }               
-          }
-          
-          // Normalize range elements that are greater than zero.
-          // Norm from 1 to 255;
-          int nRows = image.rows;
-          int nCols = image.cols;
-          
-          int i,j;
-          uchar* p;                         
-          for( i = 0; i < nRows; ++i) {
-               p = image.ptr<uchar>(i);
-               for ( j = 0; j < nCols; ++j) {
-                    if (p[j] > 0) {
-                         p[j] = round((p[j] - min_intensity) / (max_intensity - min_intensity) * 255.0);
-                         //printf("p[j]: %d\n", p[j]);
-                    }
+     int i,j;
+     uchar* p;                         
+     for( i = 0; i < nRows; ++i) {
+          p = range_image_.ptr<uchar>(i);
+          for ( j = 0; j < nCols; ++j) {
+               if (p[j] > 0) {
+                    p[j] = round((p[j] - min_intensity) / (max_intensity - min_intensity) * 255.0);                    
                }
           }
+     }
           
-          //////////////////////////////////////////////
-          // Rotate the sonar image to pointing "up"
-          //////////////////////////////////////////////
-          cv::Point center = cv::Point( image.cols/2, image.rows/2 );
-          double angle = 180.0;
-          double rot_scale = 1.0;
-          
-          cv::Mat rot_mat(2,3,CV_8UC1);
-          rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
-          cv::warpAffine(image, image, rot_mat, image.size());
-     } 
+     //////////////////////////////////////////////
+     // Rotate the sonar image to pointing "up"
+     //////////////////////////////////////////////
+     //cv::Point center = cv::Point( image.cols/2, image.rows/2 );
+     //double angle = 180.0;
+     //double rot_scale = 1.0;
+     //     
+     //cv::Mat rot_mat(2,3,CV_8UC1);
+     //rot_mat = cv::getRotationMatrix2D( center, angle, rot_scale );
+     //cv::warpAffine(image, image, rot_mat, image.size());
 
 #endif
 
@@ -479,28 +488,31 @@ cv::Point Sonar::get_pixel(double range, double bearing)
      double range_resolution = BVTColorImage_GetRangeResolution(cimg_);
      
      //cout << "---------" << endl;
-     //cout << "Range: " << range << endl;
-     //cout << "Bearing: " << bearing << endl;
+     cout << "Range: " << range << endl;
+     cout << "Bearing: " << bearing << endl;
      //cout << "Origin Row: " << origin_row << endl;
      //cout << "Origin Col: " << origin_col << endl;
      
      double x,y;
-     x = range*sin(bearing)/range_resolution;
-     y = range*cos(bearing)/range_resolution;     
+     // These are flipped on-purpose
+     //x = range*sin(bearing)/range_resolution;
+     //y = range*cos(bearing)/range_resolution;
+     x = range*cos(bearing)/range_resolution;
+     y = range*sin(bearing)/range_resolution;
 
-     //cout << "X: " << x << endl;
-     //cout << "Y: " << y << endl;
-
+     cout << "X: " << x << endl;
+     cout << "Y: " << y << endl;
+     
      cv::Point result;
-     result.x = origin_col + cvRound(x);
-     result.y = origin_row - cvRound(y);
-
-     //cout << "Result X: " << result.x << endl;
-     //cout << "Result Y: " << result.y << endl;
-     //
-     //cout << "Check..." << endl;
-     //cout << "Pixel Range: " << pixel_range(result.y,result.x) << endl;
-     //cout << "Pixel Bearing: " << pixel_bearing(result.y,result.x)*0.017453293 << endl; // pi/180 << endl;
+     result.x = origin_col + cvRound(y);
+     result.y = origin_row - cvRound(x);
+          
+     cout << "Result X: " << result.x << endl;
+     cout << "Result Y: " << result.y << endl;
+     
+     cout << "Check..." << endl;
+     cout << "Pixel Range: " << pixel_range(result.y,result.x) << endl;
+     cout << "Pixel Bearing: " << pixel_bearing(result.y,result.x)*0.017453293 << endl; // pi/180 << endl;
 
      return result;
 }
@@ -519,11 +531,6 @@ int Sonar::height()
 void Sonar::set_mode(SonarMode_t mode)
 {
      mode_ = mode;
-}
-
-void Sonar::set_data_mode(DataMode_t data_mode)
-{
-     data_mode_ = data_mode;
 }
 
 void Sonar::set_ip_addr(const std::string &ip_addr)

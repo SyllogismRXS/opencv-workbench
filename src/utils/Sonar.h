@@ -21,12 +21,7 @@ public:
      typedef enum SonarMode{
           net = 0,
           sonar_file
-     }SonarMode_t;
-     
-     typedef enum DataMode{
-          image = 0,
-          range
-     }DataMode_t;
+     }SonarMode_t;          
 
      typedef enum Status{
           Success = 0,
@@ -44,7 +39,6 @@ public:
      Status_t init();
      
      void set_mode(SonarMode_t mode);
-     void set_data_mode(DataMode_t data_mode);
      void set_ip_addr(const std::string &ip_addr);
      void set_input_son_filename(const std::string &fn);
      void set_range(double min_range, double max_range);
@@ -68,15 +62,19 @@ public:
      int height();
      int width();
 
+     void range_image(cv::Mat &img) { img = range_image_; }
+
 protected:
+
+     cv::Mat range_image_;
+     
      bool initialized_;     
      std::string fn_;
      std::string ip_addr_;    
      bool logging_;
 
      SonarMode_t mode_;
-     DataMode_t data_mode_;
-     
+          
      float stop_range_;
      float start_range_;
      

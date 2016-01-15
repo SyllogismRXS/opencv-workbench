@@ -1,3 +1,4 @@
+add_subdirectory(cell-test)
 add_subdirectory(range-test)
 add_subdirectory(hungarian-test)
 add_subdirectory(larks-test)

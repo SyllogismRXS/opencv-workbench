@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 
      // Cells must be divisible by 2
      
-     int col_side = 200;
-     int row_side = 301;          
+     int col_side = 466;
+     int row_side = 576;          
      int cell_col_size_ = 10;
      int cell_row_size_ = 10;
 
