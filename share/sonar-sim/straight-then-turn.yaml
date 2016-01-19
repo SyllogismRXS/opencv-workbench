@@ -1,0 +1,34 @@
+time_step: 0.05
+time_end: 8
+
+traj_threshold: 0.002 # good for no noise
+#traj_threshold: 0.035 # good for noise of 0.02
+
+display_plot: true
+
+# x - East = 0 degrees
+# y - North = 90 degrees
+# Heading in degrees
+
+# Can only use one sensor for now
+# Sensor has to be first element in list
+entities:
+- type: sensor
+  id: 0  
+  position: [0, 0, 0]
+  heading: 0
+  motion: roomba
+  input_sequence:
+   - time: 0
+     control_input: [0.5, 0.5]  # [left, right]
+   - time: 5
+     control_input: [0.1, 0.05]  # [left, right]     
+
+  sonar_noise: 0.0 #0.02
+  sonar_range: 20.0
+- type: unknown
+  id: 2
+  position: [15, 0, 0]
+  heading: 90
+  motion: cart
+  control_input: [0, 0]
