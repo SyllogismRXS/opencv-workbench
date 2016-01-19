@@ -315,6 +315,9 @@ namespace wb {
           case Clutter:
                name_ = "clutter:" + convert.str();
                break;
+          case APoint:
+               name_ = "point:" + convert.str();
+               break;
           default:
                name_ = "unknown:" + convert.str();
           }                             

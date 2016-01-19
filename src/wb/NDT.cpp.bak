@@ -15,6 +15,8 @@ using std::endl;
 #define SHIFT 1
 #endif
 
+#define PRIORITY_ROTATE 1
+
 // Use cartesian (X/Y) (=1) or (row,column) (0)
 #define USE_XY 1
 
@@ -470,44 +472,45 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
           parameters << 0,0,-.001;  // tx, ty, phi
 
           double lambda = 0.1;
+          cv::Point2f offset_sum = 0;
+          int offset_count = 0;
           for (int iter = 0; iter < 5; iter++) {
                cout << "========================================" << endl;
                cout << "Iteration: " << iter << endl;
                cout << "Parameters: " << parameters << endl;
 
-               //Eigen::MatrixXd JT(3,3);
-               //JT << 1,0,-parameters(0,0)*sin(parameters(2,0)) - parameters(1,0)*cos(parameters(2,0)),
-               //     0,1,+parameters(0,0)*cos(parameters(2,0)) - parameters(1,0)*sin(parameters(2,0)),
-               //     0,0,1; 
-
-               //Eigen::MatrixXd H_pseudo(3,3);
-               //H_pseudo = JT.transpose() * JT;
-               
                Eigen::MatrixXd JT_0(2,1);
                Eigen::MatrixXd JT_1(2,1);
                Eigen::MatrixXd JT_2(2,1);
 
+               Eigen::MatrixXd H_0(2,1);
+               Eigen::MatrixXd H_1(2,1);
+
+#if PRIORITY_ROTATE
+               JT_0 << 0,0;
+               JT_1 << 0,0;
+               JT_2 << -sin(parameters(2,0))-cos(parameters(2,0)), 
+                    cos(parameters(2,0))-sin(parameters(2,0));
+
+               H_0 << 0,0;
+               H_1 << -cos(parameters(2,0)) + sin(parameters(2,0)), 
+                    -sin(parameters(2,0)) - cos(parameters(2,0));
+#else
                JT_0 << 1,0;
                JT_1 << 0,1;
                JT_2 << -parameters(0,0)*sin(parameters(2,0))-parameters(1,0)*cos(parameters(2,0)), 
                         parameters(0,0)*cos(parameters(2,0))-parameters(1,0)*sin(parameters(2,0));
 
-               Eigen::MatrixXd H_0(2,1);
-               Eigen::MatrixXd H_1(2,1);
-
                H_0 << 0,0;
                H_1 << -parameters(0,0)*cos(parameters(2,0)) + parameters(1,0)*sin(parameters(2,0)), 
                       -parameters(0,0)*sin(parameters(2,0)) - parameters(1,0)*cos(parameters(2,0));
-
-               //cv::Mat iter_img = prev_ndt_img_.clone();
+#endif
                cv::Mat iter_img = prev_img_.clone();
                cv::cvtColor(iter_img, iter_img, CV_GRAY2BGR);
                
                double score = 0;
                Eigen::MatrixXd gradient_total = Eigen::MatrixXd::Constant(3,1,0);
                Eigen::MatrixXd H_total = Eigen::MatrixXd::Constant(3,3,0);
-               //Eigen::MatrixXd JT_total = Eigen::MatrixXd::Constant(3,3,0);
-               //Eigen::MatrixXd H_pseudo_total = Eigen::MatrixXd::Constant(3,3,0);
                int H_count = 0;
 
                // For each non-zero value in newest scan...
@@ -542,9 +545,9 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                    iter_img.at<cv::Vec3b>(recovered.y,recovered.x) = cv::Vec3b(0,255,0);
                               } else {                                   
                                    // TODO: look into why this is happening
-                                   //cout << "Recovered outside of bounds==========> " << recovered << endl;
-                                   //cout << "range_map: " << range_map << endl;
-                                   //cout << "bearing_map: " << bearing_map << endl;                                   
+                                   cout << "ERROR - Recovered outside of bounds==========> " << recovered << endl;
+                                   cout << "range_map: " << range_map << endl;
+                                   cout << "bearing_map: " << bearing_map << endl;                                   
                               }                                                            
 
                               int find_row = recovered.y;
@@ -570,8 +573,6 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                   cout << "Img: " << img_index;
                                                   cout << " , rect: (" << rect.x << "," << rect.y << ") to ";
                                                   cout << "(" << rect.x+rect.width << "," << rect.y+rect.height << ")" << endl;
-                                                  //std::string str;
-                                                  //std::cin >> str;
                                                   continue;
                                              }
 
@@ -661,8 +662,6 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                   //if (!contains_non_positive) {
                                                   gradient_total += gradient;
                                                   H_total += H;
-                                                  //JT_total += JT;
-                                                  //H_pseudo_total += H_pseudo;
                                                   H_count++;
                                                   score += exp_num;
                                                   //}
@@ -864,6 +863,14 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                     dp = H.colPivHouseholderQr().solve(-gradient);
                     Eigen::MatrixXd lm_parameters = parameters + dp;
 
+#if PRIORITY_ROTATE
+                    // Lock tx, ty at zero for now.
+                    parameters(0,0) = 0;
+                    parameters(1,0) = 0;
+                    lm_parameters(0,0) = 0;
+                    lm_parameters(1,0) = 0;
+#endif
+
                     // Recalculate score only!
                     cout << "Scoring New Parameters: " << lm_parameters << endl;
                     double new_score = 0;
@@ -982,6 +989,9 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                }
           } // iteration
           
+#if PRIORITY_ROTATE          
+#endif // PRIORITY_ROTATE          
+
           cout << "-------" << endl;
           cout << "Final Parameters: " << parameters << endl;          
           

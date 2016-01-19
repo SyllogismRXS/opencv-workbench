@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-05 15:41:59 syllogismrxs>
+/// Time-stamp: <2016-01-19 01:06:02 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -63,7 +63,8 @@ namespace wb {
                Rock,
                Barrel,
                Mammal,
-               Sensor
+               Sensor,
+               APoint
           }EntityType_t;
 
           typedef enum MhtType {

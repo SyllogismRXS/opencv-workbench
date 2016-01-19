@@ -34,22 +34,22 @@ QSize ClickableLabel::sizeHint() const
 
 void ClickableLabel::mousePressEvent ( QMouseEvent * event )
 {
-     const QPoint p = event->pos();
-     emit mousePressed( p );
+     //const QPoint p = event->pos();
+     emit mousePressed( event );
      //emit clicked();
 }
 
 void ClickableLabel::mouseReleaseEvent ( QMouseEvent * event )
 {
-     const QPoint p = event->pos();
-     emit mouseReleased( p );
+     //const QPoint p = event->pos();
+     emit mouseReleased( event );
      //emit clicked();
 }
 
 void ClickableLabel::mouseMoveEvent ( QMouseEvent * event )
 {
-     const QPoint p = event->pos();
-     emit mouseMoved( p );
+     //const QPoint p = event->pos();
+     emit mouseMoved( event );
      //emit clicked();
 }
 

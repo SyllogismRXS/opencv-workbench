@@ -24,21 +24,21 @@ entities:
 
 - type: unknown
   id: 1
-  position: [15, -3, 0]
+  position: [15, 1, 0]
   heading: 90
   motion: cart
   control_input: [0, 0]
 
 - type: unknown
   id: 2
-  position: [5, 1, 0]
+  position: [3, -1, 0]
   heading: 90
   motion: cart
   control_input: [0, 0]
 
 - type: unknown
   id: 3
-  position: [6, 0, 0]
+  position: [8, -3, 0]
   heading: 90
   motion: cart
-  control_input: [0.5, 0]
+  control_input: [0.1, 0]

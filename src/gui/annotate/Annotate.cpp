@@ -65,13 +65,15 @@ Annotate::Annotate(VideoWindow *parent)
      edit_pt2_ = false; 
      edit_box_ = false;
      box_present_ = false;
+     point_present_ = false;
+     edit_pt_ = false;
 
      edit_enabled_ = false;
 
      near_thresh = 25;     
      
-     connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
-     connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));       
+     connect(ui.image_frame, SIGNAL(mousePressed(QMouseEvent*)), this, SLOT(mousePressed(QMouseEvent*)));
+     connect(ui.image_frame, SIGNAL(mouseReleased(QMouseEvent*)), this, SLOT(mouseReleased(QMouseEvent*)));       
      
      add_shortcut("Qt::Key_E", QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
      add_shortcut("Qt::Key_M", QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
@@ -121,39 +123,49 @@ void Annotate::on_open()
      parser_.set_number_of_frames(stream_.get_frame_count());     
 }
 
-void Annotate::mousePressed(QPoint p)
+void Annotate::mousePressed(QMouseEvent * event)
 {    
-     // If the box has already been drawn, check to see if the user is trying
-     // to edit the corners of the box
-     if (box_present_) {
-          // Is the user trying to edit point 1, point 2, or is the user
-          // trying to move the entire box?
-          if (nearby(p,pt1_,near_thresh)) {
-               edit_pt1_ = true;               
-          } else if (nearby(p,pt2_,near_thresh)) {
-               edit_pt2_ = true;
-          } else if (inside(p,pt1_,pt2_)) {
-               edit_box_ = true;
-               pt1_drag_offset_ = pt1_ - p;
-               pt2_drag_offset_ = pt2_ - p;
+     QPoint p = event->pos();
+
+     if (event->button()==Qt::RightButton){
+          point_present_ = true;
+          pt_ = p;
+          edit_pt_ = true;
+     } else {      
+          // If the box has already been drawn, check to see if the user is trying
+          // to edit the corners of the box
+          if (box_present_) {
+               // Is the user trying to edit point 1, point 2, or is the user
+               // trying to move the entire box?
+               if (nearby(p,pt1_,near_thresh)) {
+                    edit_pt1_ = true;               
+               } else if (nearby(p,pt2_,near_thresh)) {
+                    edit_pt2_ = true;
+               } else if (inside(p,pt1_,pt2_)) {
+                    edit_box_ = true;
+                    pt1_drag_offset_ = pt1_ - p;
+                    pt2_drag_offset_ = pt2_ - p;
+               } else {
+                    // User is trying to draw a new box
+                    pt1_ = p;
+                    pt2_ = p;
+                    edit_pt2_ = true;
+               }
           } else {
-               // User is trying to draw a new box
+               // First time drawing a box
                pt1_ = p;
                pt2_ = p;
-               edit_pt2_ = true;
+               edit_pt2_ = true;          
           }
-     } else {
-          // First time drawing a box
-          pt1_ = p;
-          pt2_ = p;
-          edit_pt2_ = true;          
-     }
 
-     box_present_ = true;
+          box_present_ = true;
+     }
 }
 
-void Annotate::on_mouseMoved(QPoint p)
+void Annotate::on_mouseMoved(QMouseEvent * event)
 {
+     QPoint p = event->pos();
+     
      if (edit_pt1_) {
           pt1_ = p;
      } else if (edit_pt2_) {               
@@ -161,15 +173,20 @@ void Annotate::on_mouseMoved(QPoint p)
      } else if (edit_box_) {
           pt1_ = p + pt1_drag_offset_;
           pt2_ = p + pt2_drag_offset_;
-     }               
+     }
+
+     if (edit_pt_) {
+          pt_ = p;
+     }
 }
 
-void Annotate::mouseReleased(QPoint p)
-{
+void Annotate::mouseReleased(QMouseEvent * event)
+{     
      // Reset all state variables
      edit_pt1_ = false;
      edit_pt2_ = false;
      edit_box_ = false;
+     edit_pt_ = false;
 }
 
 void Annotate::before_next_frame()
@@ -182,15 +199,24 @@ void Annotate::before_next_frame()
      int next_frame_number = stream_.next_frame_number();
      // Is this frame annotated already?
      
-     if (parser_.frames.count(next_frame_number) > 0) {
-          box_present_ = true;
-          cv::Rect rect = parser_.frames[next_frame_number].objects["diver"].bbox().rectangle();
-          //pt1_ = QPoint(rect.pt1().x(), rect.pt1().y());
-          //pt2_ = QPoint(rect.pt2().x(), rect.pt2().y());
-          pt1_ = QPoint(rect.tl().x, rect.tl().y);
-          pt2_ = QPoint(rect.br().x, rect.br().y);
+     if (parser_.frames.count(next_frame_number) >= 0) {
+          if (parser_.frames[next_frame_number].objects.count("diver:1") > 0) {
+               box_present_ = true;
+               cv::Rect rect = parser_.frames[next_frame_number].objects["diver:1"].bbox().rectangle();
+               pt1_ = QPoint(rect.tl().x, rect.tl().y);
+               pt2_ = QPoint(rect.br().x, rect.br().y);
+          }
+
+          if (parser_.frames[next_frame_number].objects.count("point:1") > 0) {
+               point_present_ = true;
+               cv::Rect rect = parser_.frames[next_frame_number].objects["point:1"].bbox().rectangle();
+               pt_ = QPoint( cvRound((rect.tl().x + rect.br().x)/2.0), 
+                             cvRound((rect.tl().y + rect.br().y)/2.0));
+          }
+          
      } else if (!edit_enabled_) {
-          box_present_ = false;         
+          box_present_ = false;  
+          point_present_ = false;
      }
 }
 
@@ -204,26 +230,39 @@ void Annotate::save_annotation_data()
           return;
      }
      
-     if(!box_present_) {
-          return;
-     }
-
-     Frame frame;
-     frame.set_frame_number(frame_number);
-     //Object object;
-     wb::Entity object;
-     object.set_name("diver");
-     object.set_bbox(BoundingBox(std::min(pt1_.x(),pt2_.x()), 
-                                 std::max(pt1_.x(),pt2_.x()),
-                                 std::min(pt1_.y(),pt2_.y()), 
-                                 std::max(pt1_.y(),pt2_.y())));
-
-     // Save object to current frame
-     frame.objects[object.name()] = object;
-
-     // Save frame to parser
+     // Erase previous frame (if it existed)
      if (parser_.frames.count(frame_number) > 0) {
           parser_.frames.erase(frame_number);
+     }
+     
+     Frame frame;
+     frame.set_frame_number(frame_number);
+     
+     if(box_present_) {
+          //Object object;
+          wb::Entity object;
+          object.set_type(wb::Entity::Diver);
+          object.set_id(1);
+          object.set_bbox(BoundingBox(std::min(pt1_.x(),pt2_.x()), 
+                                      std::max(pt1_.x(),pt2_.x()),
+                                      std::min(pt1_.y(),pt2_.y()), 
+                                      std::max(pt1_.y(),pt2_.y())));
+
+          // Save object to current frame
+          frame.objects[object.name()] = object;               
+     }
+
+     if (point_present_) {
+          //Object object;
+          wb::Entity object;
+          object.set_name("point");
+          object.set_id(1);
+          object.set_type(wb::Entity::APoint);
+          object.set_bbox(BoundingBox(pt_.x()-1, pt_.x()+1,
+                                      pt_.y()-1, pt_.y()+1));
+
+          // Save object to current frame
+          frame.objects[object.name()] = object;               
      }
      
      parser_.frames[frame_number] = frame;
@@ -243,6 +282,12 @@ void Annotate::before_display(cv::Mat &img)
           cv::rectangle(img,pt1,pt2,cv::Scalar(0,255,0),1,8,0);
           cv::circle(img, pt1, 1, cv::Scalar(255,255,255), 1, 8, 0);
           cv::circle(img, pt2, 1, cv::Scalar(255,255,255), 1, 8, 0);
+     }
+
+     if (point_present_) {
+          cv::Point pt(pt_.x(), pt_.y());
+          cv::circle(img, pt, 1, cv::Scalar(0,0,0), 1, 8, 0);
+          cv::circle(img, pt, 5, cv::Scalar(255,255,255), 1, 8, 0);
      }
 }
 

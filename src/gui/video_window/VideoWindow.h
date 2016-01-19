@@ -97,7 +97,7 @@ class VideoWindow : public QWidget
      
      private slots:
      void tooltip_enabled();
-     void mouseMoved(QPoint p);
+     void mouseMoved(QMouseEvent * event);
      void about();
      void open();     
      void timer_video_loop();
@@ -164,7 +164,7 @@ protected:
      QPoint mouse_pos_;
 
      virtual void on_open();
-     virtual void on_mouseMoved(QPoint p);     
+     virtual void on_mouseMoved(QMouseEvent * event);     
           
 private:
      std::map<std::string, QShortcut*> shortcuts_;

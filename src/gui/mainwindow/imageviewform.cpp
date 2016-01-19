@@ -100,8 +100,8 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      
      connect(ui.cam_id_spinbox, SIGNAL(valueChanged(int)), this, SLOT(set_cam_id(int)));
 
-     connect(ui.image_frame, SIGNAL(mousePressed(QPoint)), this, SLOT(mousePressed(QPoint)));
-     connect(ui.image_frame, SIGNAL(mouseReleased(QPoint)), this, SLOT(mouseReleased(QPoint)));
+     connect(ui.image_frame, SIGNAL(mousePressed(QMouseEvent*)), this, SLOT(mousePressed(QMouseEvent*)));
+     connect(ui.image_frame, SIGNAL(mouseReleased(QMouseEvent*)), this, SLOT(mouseReleased(QMouseEvent*)));
      
      // Keyboard shortcuts
      // Note: Get deleted automatically when program closes.
@@ -119,8 +119,9 @@ ImageViewForm::ImageViewForm(QMainWindow *parent)
      connect(timer_, SIGNAL(timeout()), this, SLOT(timer_loop()));
 }
 
-void ImageViewForm::mousePressed(QPoint p)
+void ImageViewForm::mousePressed(QMouseEvent * event)
 {
+     QPoint p = event->pos();
      if (!mouse_dragging_) {
           // check to see if the user wants to adjust the rectangle
           if (first_click_.x() != -1) {               
@@ -151,15 +152,17 @@ void ImageViewForm::mousePressed(QPoint p)
      }           
 }
 
-void ImageViewForm::mouseMoved(QPoint p)
+void ImageViewForm::mouseMoved(QMouseEvent * event)
 {
-     mouse_loc_ = p;
+     mouse_loc_ = event->pos();
      //cout << "X: " << p.x() << endl;
      //cout << "Y: " << p.y() << endl;
 }
 
-void ImageViewForm::mouseReleased(QPoint p)
+void ImageViewForm::mouseReleased(QMouseEvent * event)
 {
+     QPoint p = event->pos();
+     
      if (mouse_dragging_) {
           if (moving_second_pt_) {
                second_click_ = p;

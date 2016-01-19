@@ -91,7 +91,7 @@ VideoWindow::VideoWindow(QWidget *parent)
      connect(timer_video_, SIGNAL(timeout()), this, SLOT(timer_video_loop()));     
      connect(timer_refresh_, SIGNAL(timeout()), this, SLOT(timer_refresh_loop()));
      
-     connect(ui.image_frame, SIGNAL(mouseMoved(QPoint)), this, SLOT(mouseMoved(QPoint)));     
+     connect(ui.image_frame, SIGNAL(mouseMoved(QMouseEvent*)), this, SLOT(mouseMoved(QMouseEvent*)));     
 
      timer_refresh_fps_ = 30;
      timer_refresh_->setInterval(1000.0/timer_refresh_fps_);
@@ -108,14 +108,14 @@ void VideoWindow::add_shortcut(std::string name, const QKeySequence & key, QWidg
      shortcuts_[name] = new QShortcut(key, parent, member);
 }
 
-void VideoWindow::mouseMoved(QPoint p)
+void VideoWindow::mouseMoved(QMouseEvent * event)
 {     
-     mouse_pos_ = p;
-     this->on_mouseMoved(p);
+     mouse_pos_ = event->pos();
+     this->on_mouseMoved(event);
 }
 
 // override this
-void VideoWindow::on_mouseMoved(QPoint p)
+void VideoWindow::on_mouseMoved(QMouseEvent * event)
 {
 }
 

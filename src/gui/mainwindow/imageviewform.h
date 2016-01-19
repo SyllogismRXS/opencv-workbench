@@ -93,9 +93,9 @@ class ImageViewForm : public QMainWindow
      void open_camera();
      void save();
      void timer_loop();
-     void mousePressed(QPoint p);
-     void mouseReleased(QPoint p);
-     void mouseMoved(QPoint p);
+     void mousePressed(QMouseEvent * event);
+     void mouseReleased(QMouseEvent * event);
+     void mouseMoved(QMouseEvent * event);
 
      void space_bar();
 

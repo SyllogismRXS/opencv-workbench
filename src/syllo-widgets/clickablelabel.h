@@ -32,9 +32,12 @@ public:
  
 signals:
      //void clicked();
-     void mousePressed( const QPoint& );
-     void mouseReleased( const QPoint& );
-     void mouseMoved( const QPoint& );
+     //void mousePressed( const QPoint& );
+     //void mouseReleased( const QPoint& );
+     //void mouseMoved( const QPoint& );
+     void mousePressed( QMouseEvent * event );
+     void mouseReleased( QMouseEvent * event );
+     void mouseMoved( QMouseEvent * event );
  
 protected:
      void mousePressEvent ( QMouseEvent * event ) ;
