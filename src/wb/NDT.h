@@ -4,7 +4,7 @@
 /// @file NDT.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-14 23:28:41 syllogismrxs>
+/// Time-stamp: <2016-01-18 13:56:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 06 Sep 2015
@@ -55,6 +55,7 @@ public:
      mean_.resize(2,1);// = cv::Mat_<double>(2,1,CV_64F);
      covar_.resize(2,2);// = cv::Mat_<double>(2,2,CV_64F);
           is_valid_ = false;
+          mod_eigs_ = false;
      }
 
      cv::Rect rect_;
@@ -64,6 +65,8 @@ public:
 
      Eigen::MatrixXd mean_;
      Eigen::MatrixXd covar_;
+
+     bool mod_eigs_;
 //cv::Mat_<double> mean_;//(2,1,CV_64F);
 //cv::Mat_<double> covar_;//(2,2);
      bool is_valid_;
@@ -81,10 +84,12 @@ protected:
      std::vector< std::vector< std::vector<Cell> > > prev_cells_;     
 
      cv::Mat prev_ndt_img_;
+     cv::Mat prev_img_;
 
-     double x_est_;
-     double y_est_;
-     double phi_est_;
+     Eigen::MatrixXd xy_est_;     
+     long double phi_est_;
+
+     int frame_;
      
 private:
 };

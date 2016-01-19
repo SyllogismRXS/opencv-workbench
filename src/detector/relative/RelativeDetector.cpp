@@ -80,9 +80,6 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      stream_->range_image(range_image);
      cv::imshow("Range", range_image);
 
-     cout << "range size: " << range_image.rows << " x " << range_image.cols << endl;
-     cout << "gray size: " << gray.rows << " x " << gray.cols << endl;
-     
      cv::Mat blend;
      cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());
      cv::imshow("blend", blend);
@@ -149,8 +146,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::imshow("Dilate", dilate);      
      
      cv::Mat ndt_img;
-     ndt_.set_frame(dilate, ndt_img, stream_);
-     //ndt_.set_frame(range_image, ndt_img, stream_);
+     //ndt_.set_frame(dilate, ndt_img, stream_);
+     ndt_.set_frame(range_image, ndt_img, stream_);
      cv::imshow("ndt", ndt_img);
      //  
      // blob_process_.process_frame(dilate, median, thresh_value_);
