@@ -15,6 +15,8 @@ using std::endl;
 #define SHIFT 1
 #endif
 
+#define PRIORITY_ROTATE 1
+
 // Use cartesian (X/Y) (=1) or (row,column) (0)
 #define USE_XY 1
 
@@ -24,7 +26,7 @@ NDT::NDT()
 {
      cell_col_size_ = 20;//10;//30;//5;//20;//20;//20;//10;
      cell_row_size_ = 20;//10;//30;//5;//20;//20;//20;//10;
-     
+
      frame_ = 0;
 
      xy_est_ = Eigen::MatrixXd(2,1);
@@ -105,7 +107,7 @@ cv::Point cart_2_rc(syllo::Stream *stream, cv::Point2f cart)
 }
 
 void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
-{          
+{
      // dst = src.clone();
      // for (int r = 0 ; r < src.rows; r++) {
      //      for (int c = 0; c < src.cols; c++) {
@@ -469,45 +471,49 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
           Eigen::MatrixXd parameters(3,1);
           parameters << 0,0,-.001;  // tx, ty, phi
 
+          cv::Point2f transl_offset;
           double lambda = 0.1;
+          double score_rotation = 0;
           for (int iter = 0; iter < 5; iter++) {
                cout << "========================================" << endl;
                cout << "Iteration: " << iter << endl;
                cout << "Parameters: " << parameters << endl;
 
-               //Eigen::MatrixXd JT(3,3);
-               //JT << 1,0,-parameters(0,0)*sin(parameters(2,0)) - parameters(1,0)*cos(parameters(2,0)),
-               //     0,1,+parameters(0,0)*cos(parameters(2,0)) - parameters(1,0)*sin(parameters(2,0)),
-               //     0,0,1; 
-
-               //Eigen::MatrixXd H_pseudo(3,3);
-               //H_pseudo = JT.transpose() * JT;
-               
                Eigen::MatrixXd JT_0(2,1);
                Eigen::MatrixXd JT_1(2,1);
                Eigen::MatrixXd JT_2(2,1);
 
-               JT_0 << 1,0;
-               JT_1 << 0,1;
-               JT_2 << -parameters(0,0)*sin(parameters(2,0))-parameters(1,0)*cos(parameters(2,0)), 
-                        parameters(0,0)*cos(parameters(2,0))-parameters(1,0)*sin(parameters(2,0));
-
                Eigen::MatrixXd H_0(2,1);
                Eigen::MatrixXd H_1(2,1);
 
-               H_0 << 0,0;
-               H_1 << -parameters(0,0)*cos(parameters(2,0)) + parameters(1,0)*sin(parameters(2,0)), 
-                      -parameters(0,0)*sin(parameters(2,0)) - parameters(1,0)*cos(parameters(2,0));
+#if PRIORITY_ROTATE
+               JT_0 << 0,0;
+               JT_1 << 0,0;
+               JT_2 << -sin(parameters(2,0))-cos(parameters(2,0)),
+                    cos(parameters(2,0))-sin(parameters(2,0));
 
-               //cv::Mat iter_img = prev_ndt_img_.clone();
+               H_0 << 0,0;
+               H_1 << -cos(parameters(2,0)) + sin(parameters(2,0)),
+                    -sin(parameters(2,0)) - cos(parameters(2,0));
+#else
+               JT_0 << 1,0;
+               JT_1 << 0,1;
+               JT_2 << -parameters(0,0)*sin(parameters(2,0))-parameters(1,0)*cos(parameters(2,0)),
+                        parameters(0,0)*cos(parameters(2,0))-parameters(1,0)*sin(parameters(2,0));
+
+               H_0 << 0,0;
+               H_1 << -parameters(0,0)*cos(parameters(2,0)) + parameters(1,0)*sin(parameters(2,0)),
+                      -parameters(0,0)*sin(parameters(2,0)) - parameters(1,0)*cos(parameters(2,0));
+#endif
+               cv::Mat line_img = prev_img_.clone();
+               cv::cvtColor(line_img, line_img, CV_GRAY2BGR);
+
                cv::Mat iter_img = prev_img_.clone();
                cv::cvtColor(iter_img, iter_img, CV_GRAY2BGR);
-               
+
                double score = 0;
                Eigen::MatrixXd gradient_total = Eigen::MatrixXd::Constant(3,1,0);
                Eigen::MatrixXd H_total = Eigen::MatrixXd::Constant(3,3,0);
-               //Eigen::MatrixXd JT_total = Eigen::MatrixXd::Constant(3,3,0);
-               //Eigen::MatrixXd H_pseudo_total = Eigen::MatrixXd::Constant(3,3,0);
                int H_count = 0;
 
                // For each non-zero value in newest scan...
@@ -540,12 +546,15 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
 
                               if (recovered.x < iter_img.cols && recovered.y < iter_img.rows && recovered.x >= 0 && recovered.y >= 0) {
                                    iter_img.at<cv::Vec3b>(recovered.y,recovered.x) = cv::Vec3b(0,255,0);
-                              } else {                                   
+                              } else {
                                    // TODO: look into why this is happening
-                                   //cout << "Recovered outside of bounds==========> " << recovered << endl;
-                                   //cout << "range_map: " << range_map << endl;
-                                   //cout << "bearing_map: " << bearing_map << endl;                                   
-                              }                                                            
+                                   cout << "ERROR - Recovered outside of bounds==========> " << recovered << endl;
+                                   cout << "range_map: " << range_map << endl;
+                                   cout << "bearing_map: " << bearing_map << endl;
+                              }
+                              cv::line(line_img, cv::Point(c,r), recovered, cv::Scalar(255,0,0), 1, 8, 0);
+                              cv::circle(line_img, cv::Point(c,r), 1, cv::Scalar(0,255,0), 1, 8, 0);
+                              cv::circle(line_img, recovered, 1, cv::Scalar(0,0,255), 1, 8, 0);
 
                               int find_row = recovered.y;
                               int find_col = recovered.x;
@@ -570,8 +579,6 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                   cout << "Img: " << img_index;
                                                   cout << " , rect: (" << rect.x << "," << rect.y << ") to ";
                                                   cout << "(" << rect.x+rect.width << "," << rect.y+rect.height << ")" << endl;
-                                                  //std::string str;
-                                                  //std::cin >> str;
                                                   continue;
                                              }
 
@@ -624,48 +631,10 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                   H(2,1) = exp_num * ( (q_t*cov_inv*JT_2)*(-q_t*cov_inv*JT_1) + q_t*cov_inv*H_0 + JT_1.transpose()*cov_inv*JT_2)(0,0);
                                                   H(2,2) = exp_num * ( (q_t*cov_inv*JT_2)*(-q_t*cov_inv*JT_2) + q_t*cov_inv*H_1 + JT_2.transpose()*cov_inv*JT_2)(0,0);
 
-                                                  //Eigen::EigenSolver<Eigen::MatrixXd> es(H);
-                                                  //Eigen::MatrixXcd ev = es.eigenvectors();
-                                                  //Eigen::MatrixXd ev_real = ev.real();
-                                                  //std::vector<long double> eigs;
-                                                  //eigs.resize(3);
-                                                  //
-                                                  //bool contains_non_positive = false;
-                                                  //for (int i = 0; i < 3; i++) {
-                                                  //     if (eigs[i] <= 0) {
-                                                  //          contains_non_positive = true;
-                                                  //     }
-                                                  //}
-                                                  //
-                                                  //if (contains_non_positive) {
-                                                  //     cout << "Changing H: " << H << endl;
-                                                  //
-                                                  //     long double small_inc = 0.0001;
-                                                  //     Eigen::MatrixXd lambda(3,3);
-                                                  //     lambda << eigs[0] + small_inc, 0 , 0 ,
-                                                  //          0 , eigs[1] + small_inc, 0,
-                                                  //          0,   0, eigs[2] + small_inc;
-                                                  //
-                                                  //     H = ev_real * lambda * ev_real.inverse();
-                                                  //     cout << "Resulting H: " << H << endl;
-                                                  //}
-
-                                                  ////////////////
-                                                  //Eigen::VectorXcd eigvals = H.eigenvalues();
-                                                  //bool contains_non_positive = false;
-                                                  //for (int i = 0; i < 3; i++) {
-                                                  //     if (eigvals[i].real() <= 0) {
-                                                  //          contains_non_positive = true;
-                                                  //     }
-                                                  //}
-                                                  //if (!contains_non_positive) {
                                                   gradient_total += gradient;
                                                   H_total += H;
-                                                  //JT_total += JT;
-                                                  //H_pseudo_total += H_pseudo;
                                                   H_count++;
                                                   score += exp_num;
-                                                  //}
 
 #if 0
                                                   int count = 0;
@@ -785,23 +754,6 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                   cout << "exp_num: " << exp_num << endl;
 #endif
                                              }
-                                        } else {
-                                             //cout << "------" << endl;
-                                             //cout << "RMAP / CMAP OUT OF BOUNDS" << endl;
-                                             //cout << "Img: " << img_index << endl;
-                                             //cout << "Rows: " << src_copy.rows << endl;
-                                             //cout << "Cols: " << src_copy.cols << endl;
-                                             //cout << "Row shift: " << row_shift << endl;
-                                             //cout << "Col shift: " << col_shift << endl;
-                                             //cout << "col_even: " << col_even << endl;
-                                             //cout << "row_even: " << row_even << endl;
-                                             //cout << "find_col: " << find_col << endl;
-                                             //cout << "find_row: " << find_row << endl;
-                                             //cout << "rmap / cmap out" << endl;
-                                             //cout << "rmap: " << r_map << endl;
-                                             //cout << "cmap: " << c_map << endl;
-                                             //std::string str;
-                                             //std::cin >> str;
                                         }
                                         img_index++;
                                    } // col_shift
@@ -812,14 +764,14 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
 
                std::string iter_img_name = "Iteration: " + syllo::int2str(iter);
                cv::imshow(iter_img_name, iter_img);
-               
+
                cout << "Score: " << score << endl;
-               
+
                if (H_count > 0) {
-               
+
                     Eigen::MatrixXd gradient = gradient_total / (double)H_count;
                     Eigen::MatrixXd H = H_total / (double)H_count;
-               
+
                     // Determine if H is positive definite:
                     Eigen::VectorXcd eigvals = H.eigenvalues();
                     std::vector<double> eigs;
@@ -837,21 +789,21 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                               smallest_value = eigs[i];
                          }
                     }
-               
+
 #if 1
-                    if (contains_non_positive) {                         
+                    if (contains_non_positive) {
                          Eigen::EigenSolver<Eigen::MatrixXd> es(H);
                          Eigen::MatrixXcd ev = es.eigenvectors();
-                         Eigen::MatrixXd ev_real = ev.real();                                                  
-                         
+                         Eigen::MatrixXd ev_real = ev.real();
+
                          double inc_value = std::abs(smallest_value);
-                         
+
                          Eigen::MatrixXd eigs_corrected(3,3);
                          eigs_corrected << eigs[0] + inc_value, 0 , 0 ,
                               0 , eigs[1] + inc_value, 0,
                               0,   0, eigs[2] + inc_value;
-                         
-                         H = ev_real * eigs_corrected * ev_real.inverse();                         
+
+                         H = ev_real * eigs_corrected * ev_real.inverse();
                     }
 #endif
 
@@ -864,18 +816,28 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                     dp = H.colPivHouseholderQr().solve(-gradient);
                     Eigen::MatrixXd lm_parameters = parameters + dp;
 
+#if PRIORITY_ROTATE
+                    // Lock tx, ty at zero for now.
+                    parameters(0,0) = 0;
+                    parameters(1,0) = 0;
+                    lm_parameters(0,0) = 0;
+                    lm_parameters(1,0) = 0;
+#endif
+
                     // Recalculate score only!
                     cout << "Scoring New Parameters: " << lm_parameters << endl;
                     double new_score = 0;
                     cv::Mat line_img = prev_img_.clone();
                     cv::cvtColor(line_img, line_img, CV_GRAY2BGR);
+                    cv::Point2f transl_offset_sum(0,0);
+                    int transl_offset_count = 0;
                     ////////////////////////////////
                     // For each non-zero value in newest scan...
                     for (int r = 0 ; r < src_copy.rows; r++) {
                          for (int c = 0; c < src_copy.cols; c++) {
                               if (src_copy.at<uchar>(r,c) != 0) {
                                    cv::Point2f cart = get_cart(stream,r,c);
-                                   
+
                                    Eigen::MatrixXd sample_point(2,1);
                                    sample_point << cart.x, cart.y;
 
@@ -894,12 +856,12 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                    } else {
                                         cout << "Scoring: Recovered outside of bounds==========> " << recovered << endl;
                                         //cout << "range_map: " << range_map << endl;
-                                        //cout << "bearing_map: " << bearing_map << endl;                                                                      
-                                   }                              
+                                        //cout << "bearing_map: " << bearing_map << endl;
+                                   }
                                    cv::line(line_img, cv::Point(c,r), recovered, cv::Scalar(255,0,0), 1, 8, 0);
                                    cv::circle(line_img, cv::Point(c,r), 1, cv::Scalar(0,255,0), 1, 8, 0);
-                                   cv::circle(line_img, recovered, 1, cv::Scalar(0,0,255), 1, 8, 0);                              
-                              
+                                   cv::circle(line_img, recovered, 1, cv::Scalar(0,0,255), 1, 8, 0);
+
                                    int find_row = recovered.y;
                                    int find_col = recovered.x;
                                    img_index = 0;
@@ -910,7 +872,7 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
 
                                              if (r_map < prev_cells_[img_index].size() && c_map < prev_cells_[img_index][r_map].size()) {
                                                   cv::Rect rect = prev_cells_[img_index][r_map][c_map].rect_;
-                                                  
+
                                                   if (!contains(rect, cv::Point(find_col, find_row))) {
                                                        cout << "---------------------" << endl;
                                                        cout << "DOESN'T CONTAIN" << endl;
@@ -946,7 +908,6 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                        prev_mean = prev_cells_[img_index][r_map][c_map].mean_;
                                                        cov_inv = cov.inverse();
                                                        q = point_mapped - prev_mean;
-
 #else
                                                        cov = prev_cells_[img_index][r_map][c_map].covar_idx_;
                                                        prev_mean = prev_cells_[img_index][r_map][c_map].mean_idx_;
@@ -954,46 +915,185 @@ void NDT::set_frame(cv::Mat &src, cv::Mat &dst, syllo::Stream *stream)
                                                        q << recovered.x-rect.x, recovered.y-rect.y;
                                                        q = q - prev_mean;
 #endif
+                                                       Eigen::MatrixXd diff(2,1);
+                                                       diff = prev_mean - point_mapped;
+                                                       transl_offset_sum += cv::Point2f(diff(0,0),diff(1,0));
+                                                       transl_offset_count++;
+
                                                        Eigen::MatrixXd q_t = q.transpose();
 
                                                        Eigen::MatrixXd qt_num = (-q_t*cov_inv*q);
-                                                       double exp_num = exp( qt_num(0,0) / 2 );                                                       
-                                                       new_score += exp_num;                                                       
+                                                       double exp_num = exp( qt_num(0,0) / 2 );
+                                                       new_score += exp_num;
                                                   }
-                                             } 
+                                             }
                                              img_index++;
                                         } // col_shift
                                    } // row_shift
                               } // check for non-zero
                          } // cols
-                    } // rows      
+                    } // rows
 
                     std::string line_img_name = "Line: " + syllo::int2str(iter);
                     cv::imshow(line_img_name, line_img);
-               
+
                     if (new_score > score) {
                          lambda = lambda / 10.0;
-                         parameters = lm_parameters;                         
+                         parameters = lm_parameters;
+
+                         score_rotation = new_score;
+
+                         transl_offset.x = transl_offset_sum.x / (double)transl_offset_count;
+                         transl_offset.y = transl_offset_sum.y / (double)transl_offset_count;
                          cout << "=====> New Score: " << new_score << endl;
+                         cout << "Translation Offset: " << transl_offset << endl;
+                         cout << "Translation Offset Sum: " << transl_offset_sum << endl;
+                         cout << "transl_offset_count: " << transl_offset_count << endl;
                     } else {
                          lambda = lambda * 10;
-                    }                    
-                    cout << "lambda: " << lambda << endl;                    
+                    }
+                    cout << "lambda: " << lambda << endl;
                }
           } // iteration
-          
+#if PRIORITY_ROTATE
+
+          // Now that we have the "optimal" rotation and a calculation of the
+          // average offset, apply the offset and calculate the final score
+          // Recalculate score only!
+
+          Eigen::MatrixXd lm_parameters;
+          lm_parameters = parameters;
+          lm_parameters(0,0) = transl_offset.x;
+          lm_parameters(1,0) = transl_offset.y;
+
+          cout << "Scoring Final Parameters: " << lm_parameters << endl;
+          double final_score = 0;
+          cv::Mat line_img = prev_img_.clone();
+          cv::cvtColor(line_img, line_img, CV_GRAY2BGR);
+          cv::Mat iter_img = prev_img_.clone();
+          cv::cvtColor(iter_img, iter_img, CV_GRAY2BGR);
+          ////////////////////////////////
+          // For each non-zero value in newest scan...
+          for (int r = 0 ; r < src_copy.rows; r++) {
+               for (int c = 0; c < src_copy.cols; c++) {
+                    if (src_copy.at<uchar>(r,c) != 0) {
+                         cv::Point2f cart = get_cart(stream,r,c);
+
+                         Eigen::MatrixXd sample_point(2,1);
+                         sample_point << cart.x, cart.y;
+
+                         Eigen::MatrixXd point_mapped(2,1); //x'_i
+                         point_mapped = T_map(sample_point, lm_parameters);
+                         cart.x = point_mapped(0,0);
+                         cart.y = point_mapped(1,0);
+
+                         double range_map, bearing_map;
+                         cart2polar(cart.x, cart.y, range_map, bearing_map);
+
+                         cv::Point recovered = stream->get_pixel(range_map, bearing_map);
+
+                         if (recovered.x < iter_img.cols && recovered.y < iter_img.rows && recovered.x >= 0 && recovered.y >= 0) {
+                              iter_img.at<cv::Vec3b>(recovered.y,recovered.x) = cv::Vec3b(0,255,0);
+                         } else {
+                              cout << "Scoring: Recovered outside of bounds==========> " << recovered << endl;
+                              //cout << "range_map: " << range_map << endl;
+                              //cout << "bearing_map: " << bearing_map << endl;
+                         }
+                         cv::line(line_img, cv::Point(c,r), recovered, cv::Scalar(255,0,0), 1, 8, 0);
+                         cv::circle(line_img, cv::Point(c,r), 1, cv::Scalar(0,255,0), 1, 8, 0);
+                         cv::circle(line_img, recovered, 1, cv::Scalar(0,0,255), 1, 8, 0);
+
+                         int find_row = recovered.y;
+                         int find_col = recovered.x;
+                         img_index = 0;
+                         for (int row_shift = 0; row_shift < SHIFT; row_shift++) {
+                              for (int col_shift = 0; col_shift < SHIFT; col_shift++) {
+                                   unsigned int r_map = floor(((double)find_row + (double)row_shift*(double)cell_row_size_/2.0) / (double)cell_row_size_);
+                                   unsigned int c_map = floor(((double)find_col + (double)col_shift*(double)cell_col_size_/2.0) / (double)cell_col_size_);
+
+                                   if (r_map < prev_cells_[img_index].size() && c_map < prev_cells_[img_index][r_map].size()) {
+                                        cv::Rect rect = prev_cells_[img_index][r_map][c_map].rect_;
+
+                                        if (!contains(rect, cv::Point(find_col, find_row))) {
+                                             cout << "---------------------" << endl;
+                                             cout << "DOESN'T CONTAIN" << endl;
+                                             cout << "Rows: " << src_copy.rows << endl;
+                                             cout << "Cols: " << src_copy.cols << endl;
+                                             cout << "find_col: " << find_col << endl;
+                                             cout << "find_row: " << find_row << endl;
+                                             cout << "r_map: " << r_map << endl;
+                                             cout << "c_map: " << c_map << endl;
+                                             cout << "Img: " << img_index;
+                                             cout << " , rect: (" << rect.x << "," << rect.y << ") to ";
+                                             cout << "(" << rect.x+rect.width << "," << rect.y+rect.height << ")" << endl;
+                                             //std::string str;
+                                             //std::cin >> str;
+                                             continue;
+                                        }
+
+                                        // Determine if this cell had a valid statistic
+                                        // If not, skip this one, add one to H_count?
+                                        if (prev_cells_[img_index][r_map][c_map].is_valid_) {
+
+                                             Eigen::MatrixXd cov(2,2);
+                                             Eigen::MatrixXd cov_inv(2,2);
+                                             Eigen::MatrixXd prev_mean(2,1);
+
+                                             Eigen::MatrixXd q(2,1);
+
+                                             Eigen::MatrixXd prev_mean_idx = prev_cells_[img_index][r_map][c_map].mean_idx_;
+                                             cv::Point prev_mean_pt(cvRound(prev_mean_idx(0,0)),cvRound(prev_mean_idx(1,0)));
+#if USE_XY
+                                             // Range/bearing based : X/Y
+                                             cov = prev_cells_[img_index][r_map][c_map].covar_;
+                                             prev_mean = prev_cells_[img_index][r_map][c_map].mean_;
+                                             cov_inv = cov.inverse();
+                                             q = point_mapped - prev_mean;
+
+#else
+                                             cov = prev_cells_[img_index][r_map][c_map].covar_idx_;
+                                             prev_mean = prev_cells_[img_index][r_map][c_map].mean_idx_;
+                                             cov_inv = cov.inverse();
+                                             q << recovered.x-rect.x, recovered.y-rect.y;
+                                             q = q - prev_mean;
+#endif
+                                             Eigen::MatrixXd q_t = q.transpose();
+
+                                             Eigen::MatrixXd qt_num = (-q_t*cov_inv*q);
+                                             double exp_num = exp( qt_num(0,0) / 2 );
+                                             final_score += exp_num;
+                                        }
+                                   }
+                                   img_index++;
+                              } // col_shift
+                         } // row_shift
+                    } // check for non-zero
+               } // cols
+          } // rows
+
+                                             cv::imshow("Final Points Image", iter_img);
+                                             cv::imshow("Final Line Image" , line_img);
+
+#endif // PRIORITY_ROTATE
+
+                                             if (final_score > score_rotation) {
+                                             parameters = lm_parameters;
+                                             cout << "==================> Final Score is higher" << endl;
+                                        }
+
           cout << "-------" << endl;
-          cout << "Final Parameters: " << parameters << endl;          
-          
+          cout << "Final Parameters: " << parameters << endl;
+          cout << "Translation (Final) Score: " << final_score << endl;
+
           xy_est_ = T_map(xy_est_, parameters);
-          phi_est_ = phi_est_ + parameters(2,0);          
+          phi_est_ = phi_est_ + parameters(2,0);
 
           cout << "Adjusted x_est: " << xy_est_(0,0) << endl;
           cout << "Adjusted y_est: " << xy_est_(1,0) << endl;
           cout << "Adjusted phi_est: " << phi_est_ << endl;
           cout << "Adjusted phi_est (degrees):" << phi_est_ * 180.0 / 3.14159265359 << endl;
      } //prev_cells_.size() > 0 check
-     
+
      prev_ndt_img_ = dst.clone();
      prev_img_ = src.clone();
      cells_.swap(prev_cells_);
