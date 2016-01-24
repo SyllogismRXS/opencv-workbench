@@ -14,7 +14,8 @@ using std::endl;
 namespace wb {
 
      Entity::Entity() : id_(-1), name_("unknown:-1"), type_(Unknown), age_(0),
-                        occluded_age_(0), occluded_(false), is_tracked_(false)
+                        occluded_age_(0), occluded_(false), is_tracked_(false), 
+                        visited_(false), cluster_id_(0)
      {
           //KF_ = cv::KalmanFilter(4, 2, 0);          
           //transition_matrix_ = cv::Mat_<float>(4,4);

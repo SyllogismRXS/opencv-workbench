@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-18 00:58:46 syllogismrxs>
+/// Time-stamp: <2016-01-22 17:57:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -48,6 +48,11 @@
 #include <opencv_workbench/wb/Cluster.h>
 
 namespace wb {
+
+     template<typename T> double distance(T p1, T p2)
+     {
+          return sqrt( pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2) );
+     }
 
      void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
                          int thresh, float gate, int min_cluster_size);

@@ -18,7 +18,8 @@
 using std::cout;
 using std::endl;
 
-namespace wb {
+namespace wb {     
+     
      void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
                          int thresh, float gate, int min_cluster_size)
      {             

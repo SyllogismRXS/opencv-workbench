@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-11-02 17:04:14 syllogismrxs>
+/// Time-stamp: <2016-01-23 12:52:04 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -38,6 +38,7 @@
 /// The BoundingBox class ...
 /// 
 /// ---------------------------------------------------------------------------
+#include <iostream>
 #include <math.h>
 
 #include <cv.h>
@@ -46,7 +47,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-//#include <opencv_workbench/utils/Rectangle.h>
+using std::cout;
+using std::endl;
 
 class BoundingBox {
 public:
@@ -137,7 +139,71 @@ BoundingBox(cv::Rect rect) :
           
           return true;
      }
-         
+
+     template<typename T> static double distance_temp(T p1, T p2)
+     {
+          return sqrt( pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2) );
+     }
+     
+     static double distance(const BoundingBox &b1, const BoundingBox &b2)
+     {
+          if (overlap(b1,b2)) {
+               cout << " - overlap - " << endl;
+               return 0;
+          }
+     
+          // b2 is the center of a keypad (#5)
+          // b1 is moved around the keypad
+     
+          // Check #1 quadrant
+          if (b1.xmax_ < b2.xmin_ && b1.ymax_ < b2.ymin_) {
+               // Return the distance between the two corners
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmax_, b1.ymax_),
+                                                 cv::Point2f(b2.xmin_, b2.ymin_));
+          } 
+          // Check #3 quadrant
+          else if (b1.xmin_ > b2.xmax_ && b1.ymax_ < b2.ymin_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmin_, b1.ymax_),
+                                                 cv::Point2f(b2.xmax_, b2.ymin_));
+          }
+          // Check #7 quadrant
+          else if (b1.xmax_ < b2.xmin_ && b1.ymin_ > b2.ymax_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmax_, b1.ymin_),
+                                                 cv::Point2f(b2.xmin_, b2.ymax_));
+          }
+          // Check #9 quadrant
+          else if (b1.xmin_ > b2.xmax_ && b1.ymin_ > b2.ymax_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmin_, b1.ymin_),
+                                                 cv::Point2f(b2.xmax_, b2.ymax_));
+          }
+          // Check #2 quadrant
+          else if (b1.ymax_ < b2.ymin_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(0, b1.ymax_),
+                                                 cv::Point2f(0, b2.ymin_));
+          }
+          // Check #8 quadrant
+          else if (b1.ymin_ > b2.ymax_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(0, b1.ymin_),
+                                                 cv::Point2f(0, b2.ymax_));
+          }
+          // Check #4 quadrant
+          else if (b1.xmax_ < b2.xmin_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmax_, 0),
+                                                 cv::Point2f(b2.xmin_, 0));
+          }
+          // Check #6 quadrant
+          else if (b1.xmin_ > b2.xmax_) {
+               return distance_temp<cv::Point2f>(cv::Point2f(b1.xmin_, 0),
+                                                 cv::Point2f(b2.xmax_, 0));
+          } else {
+               std::cout << "======> WARNING CAN'T FIND RECT DISTANCE" << std::endl;
+               return 1000;
+          }
+     }
+
+     // TODO: Something is strange with this file and Cluster.h/cpp
+     //friend std::ostream& operator<<(std::ostream& os, const BoundingBox& b);
+     
 protected:
      int xmin_;
      int xmax_;
@@ -146,5 +212,12 @@ protected:
 
 private:
 };
+
+//std::ostream& operator<<(std::ostream& os, const BoundingBox& b)
+//{
+//     os << "Box: (" << b.xmin_ << "," << b.ymin_ << ") to (" << b.xmax_ 
+//        << "," << b.ymax_ << ")";
+//     return os;
+//}
 
 #endif

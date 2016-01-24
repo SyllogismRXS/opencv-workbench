@@ -1,6 +1,16 @@
 #include <iostream>
-
 #include <limits.h>
+#include <list>
+
+#include <boost/chrono.hpp>
+#include <boost/foreach.hpp>
+#include <boost/random.hpp>
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+#include <boost/geometry/geometries/linestring.hpp>
 
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/hungarian.h>
@@ -11,6 +21,7 @@
 #include <boost/graph/graphviz.hpp>
 
 #include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/wb/WB.h>
 #include "BlobProcess.h"
 
 using std::cout;
@@ -18,9 +29,18 @@ using std::endl;
 
 using namespace boost; 
 
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+typedef bg::model::point<double, 2, bg::cs::cartesian> point;
+typedef bg::model::box<point> box;
+typedef std::pair<box, wb::Blob*> value;
+typedef bgi::rtree< value, bgi::dynamic_rstar > rtree_t;
+
 BlobProcess::BlobProcess()
 {
-     min_blob_size_ = 30;//15, 20, 30;
+     //min_blob_size_ = 30;//15, 20, 30;
+     min_blob_size_ = 5;//15, 20, 30;
      next_id_ = 0;
 }
 
@@ -65,6 +85,7 @@ uchar BlobProcess::findMin(uchar NE, uchar N, uchar NW, uchar W)
 
      if (minChamp == UCHAR_MAX) {
           cout << "Warning: Couldn't find minimum neighbor value" << endl;
+          minChamp = 0;
      }
      
      return minChamp;
@@ -524,8 +545,11 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      std::vector<wb::Blob> new_blobs;     
      this->find_blobs(input, new_blobs, min_blob_size_);
      
+     cv::Mat out;
+     double eps = 10;
+     this->cluster_blobs(input, out, new_blobs, 3, eps);
+     
      // First match blobs based on overlapping bounding boxes
-
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
      //////////////////////////////////////////////////////////////////////////
@@ -537,7 +561,9 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      }
 
      blobs_.clear();
-     this->assign_hungarian(new_blobs, prev_blobs_, blobs_);
+
+     // This has some bug that crashes with too many blobs
+     //this->assign_hungarian(new_blobs, prev_blobs_, blobs_);
           
      blob_maintenance();
      
@@ -691,6 +717,138 @@ bool BlobProcess::consolidate_tracks(cv::Mat &in, cv::Mat &out)
      this->overlay_tracks(out, out);
      
      return found_overlap;
+}
+
+void region_query(rtree_t &rtree, double eps, wb::Blob *b, 
+                  std::list<wb::Blob*> &neighbors)
+{
+     std::list<value> returned_values;
+#if 0
+     // Find nearest # of rectangles
+     point sought = point(b->centroid().x, b->centroid().y);          
+     rtree.query(bgi::nearest(sought, 20), std::back_inserter(returned_values));     
+#else
+     // Find all elements within the rtree bounds
+     box bounds = rtree.bounds();
+     rtree.query(bgi::intersects(bounds), std::back_inserter(returned_values));
+#endif     
+     cout << "Blob ID: " << b->id() << " has neighbors... (" << returned_values.size() << ")" << endl;
+     for (std::list<value>::iterator it = returned_values.begin(); it != returned_values.end(); it++) {
+          double dist = BoundingBox::distance(b->bbox(), it->second->bbox());
+          cout << "\t" << it->second->id() << " : " << dist;
+          if (dist <= eps) {
+               cout << " - neighbor" << endl;
+               neighbors.push_back(it->second);
+          } else {
+               cout << " - too far" << endl;
+               continue;
+          }      
+     }
+     cout << "Near Neighbors: " << neighbors.size() << endl; 
+}
+
+bool BlobProcess::cluster_blobs(cv::Mat &in, cv::Mat &out, 
+                                std::vector<wb::Blob> &new_blobs, 
+                                unsigned int MinPts,
+                                double eps)
+{
+     out = in.clone();
+     
+     if (new_blobs.size() <= 0) {
+          return false;
+     }
+
+     // Cluster blobs that are within a specified distance
+     
+     // Build the R* Tree and blobs* list
+     std::list<wb::Blob*> blobs;
+     rtree_t rtree(bgi::dynamic_rstar(new_blobs.size()));     
+     for (std::vector<wb::Blob>::iterator it = new_blobs.begin(); it != new_blobs.end();
+          it++ ) {
+          // create a box
+          box b(point(it->bbox().xmin(), it->bbox().ymin()), point(it->bbox().xmax(), it->bbox().ymax()));
+          // insert new value
+          rtree.insert(std::make_pair(b, &(*it)));
+          blobs.push_back(&(*it));
+     }
+
+     // 0 - unset, -1 is noise, 1+ are cluster ids.
+     std::map<int, std::list<wb::Blob*> > clusters_;
+     
+     int UNSET_ID = 0;
+     int NOISE_ID = -1;
+     int cluster_id = 1;
+     // for each point P in dataset D
+     for (std::list<wb::Blob*>::iterator it1 = blobs.begin(); it1 != blobs.end();
+          it1++ ) {          
+                               
+          if ((*it1)->visited()) {
+               continue;
+          }          
+          (*it1)->set_visited(true);          
+
+          std::list<wb::Blob*> neighbors;
+          region_query(rtree,eps,*it1,neighbors);
+          
+          if (neighbors.size() < MinPts) {
+               (*it1)->set_cluster_id(NOISE_ID);
+               clusters_[NOISE_ID].push_back(*it1);
+               cout << "NOISE - Blob ID: " << (*it1)->id() << endl;
+          } else {
+               //add P to cluster C
+               (*it1)->set_cluster_id(cluster_id);
+               clusters_[cluster_id].push_back(*it1);
+               
+               //for each point P' in NeighborPts
+               std::list<wb::Blob*>::iterator it2 = neighbors.begin();
+               while (it2 != neighbors.end()) {                    
+                    //if P' is not visited                    
+                    if (!(*it2)->visited()) {
+                         (*it2)->set_visited(true); //mark P' as visited
+                         
+                         // Get neighbors2
+                         std::list<wb::Blob*> neighbors2;
+                         region_query(rtree,eps,*it2,neighbors2);
+                         if (neighbors2.size() >= MinPts) {
+                              //NeighborPts = NeighborPts joined with NeighborPts'
+                              for (std::list<wb::Blob*>::iterator it_copy = neighbors2.begin();                                    
+                                   it_copy != neighbors2.end(); it_copy++) {
+                                   neighbors.push_back(*it_copy);                                   
+                              }
+                         }
+                    }
+
+                    //if P' is not yet member of any cluster
+                    if ((*it2)->cluster_id() == UNSET_ID) {
+                         (*it2)->set_cluster_id(cluster_id);
+                         clusters_[cluster_id].push_back(*it2);  //add P' to cluster C
+                    }                    
+                    it2++;
+               }
+               cluster_id++; // Next cluster id
+          }                              
+     }
+     
+     // Print out cluster results:
+     for (std::map<int, std::list<wb::Blob*> >::iterator it1 = clusters_.begin();
+          it1 != clusters_.end(); it1++) {
+
+          if (it1->first == NOISE_ID) {
+               cout << "NOISE IDS: " << endl;
+          } else if (it1->first == UNSET_ID) {
+               cout << "WARNING: UNSET_ID FOUND: " << endl;
+          } else {
+               cout << "Cluster: " << it1->first << endl;
+          }          
+               
+          for (std::list<wb::Blob*>::iterator it2 = it1->second.begin(); 
+               it2 != it1->second.end(); it2++) {
+               cout << "\tBlob: " << (*it2)->id() << endl;
+          }
+     }
+     
+     
+     return true;
 }
 
 void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst, 

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-19 01:06:02 syllogismrxs>
+/// Time-stamp: <2016-01-22 14:57:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -73,7 +73,7 @@ namespace wb {
                nt
           }MhtType_t;
 
-          MhtType_t mht_type;
+          MhtType_t mht_type;                    
           
           Entity();
 
@@ -142,6 +142,8 @@ namespace wb {
           Ellipse error_ellipse(int dim0, int dim1, double confidence);
           
           void set_matched(bool matched) { matched_ = matched; }
+          void set_visited(bool visited) { visited_ = visited; }
+          bool visited() { return visited_; }
           bool matched() { return matched_; }
           int matched_id() { return matched_id_; }
           void set_matched_id(int matched_id) { matched_id_ = matched_id; }
@@ -150,6 +152,9 @@ namespace wb {
           int frame() { return frame_; }
           
           int id_;
+
+          void set_cluster_id(int cluster_id) { cluster_id_ = cluster_id; }
+          int cluster_id() { return cluster_id_; }
           
      protected:          
           std::string name_;
@@ -186,7 +191,10 @@ namespace wb {
 
           float distance_;
           bool matched_;
+          bool visited_;
 
+          int cluster_id_;
+          
           void set_distance(float distance) { distance_ = distance; }
           float distance() { return distance_; }          
           

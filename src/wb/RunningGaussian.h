@@ -1,13 +1,13 @@
-#ifndef _WB_CLUSTER_H_
-#define _WB_CLUSTER_H_
+#ifndef RUNNINGGAUSSIAN_H_
+#define RUNNINGGAUSSIAN_H_
 /// ---------------------------------------------------------------------------
-/// @file Cluster.h
+/// @file RunningGaussian.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-22 19:54:48 syllogismrxs>
+/// Time-stamp: <2016-01-21 19:14:49 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 31 Aug 2015
+/// Created: 21 Jan 2016
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,33 +35,19 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The Cluster class ...
+/// The RunningGaussian class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <vector>
 
-#include "Point.h"
-
-#include <opencv_workbench/wb/Entity.h>
-
-namespace wb {
-
-     class Cluster : public Entity {
-     public:
-          //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-          Cluster();                                        
-          
-          void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }
-          
-          void set_match(Cluster * match) { match_ = match; }
-          Cluster * match() { return match_; }
-          
-     protected:
-     private:          
-          Cluster * match_;                   
-     };
-}
+class RunningGaussian {
+public:
+     RunningGaussian();
+     int process(cv::Mat &img1, cv::Mat &dst);
+protected:
+     cv::Mat avg_img_;
+     cv::Mat var_img_;
+private:
+     
+};
 
 #endif

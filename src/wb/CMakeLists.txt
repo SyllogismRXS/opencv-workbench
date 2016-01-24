@@ -13,6 +13,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   Blob.cpp
   Entity.cpp
   OpticalFlow.cpp
+  RunningGaussian.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 

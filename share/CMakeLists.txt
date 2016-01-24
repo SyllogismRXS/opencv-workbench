@@ -1,3 +1,4 @@
+add_subdirectory(dbscan-test)
 add_subdirectory(cell-test)
 add_subdirectory(range-test)
 add_subdirectory(hungarian-test)
@@ -24,4 +25,5 @@ add_subdirectory(camera-test)
 add_subdirectory(sonar-sim)
 add_subdirectory(mht-test)
 add_subdirectory(annotate-metrics)
+add_subdirectory(rtree-test)
 

@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-05 15:40:52 syllogismrxs>
+/// Time-stamp: <2016-01-22 18:41:43 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -116,7 +116,8 @@ public:
 
      bool consolidate_tracks(cv::Mat &in, cv::Mat &out);
      
-     
+     bool cluster_blobs(cv::Mat &in, cv::Mat &out, std::vector<wb::Blob> &new_blobs,
+                        unsigned int MinPts, double eps);
      
 protected:
      
@@ -134,6 +135,9 @@ protected:
      std::vector<wb::Blob> prev_blobs_;
      std::vector<wb::Blob> short_lived_;
      std::vector<wb::Blob> new_tracks_;
+
+     std::vector<wb::Blob> clusters_;
+     std::vector<wb::Blob> prev_clusters_;
 
      Graph graph_;
 

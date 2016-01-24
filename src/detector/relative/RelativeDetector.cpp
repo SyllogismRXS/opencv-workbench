@@ -145,31 +145,31 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::dilate(erode, dilate, dilationConfig_);
      cv::imshow("Dilate", dilate);      
      
-     cv::Mat ndt_img;
-     //ndt_.set_frame(dilate, ndt_img, stream_);
-     ndt_.set_frame(range_image, ndt_img, stream_);
-     cv::imshow("ndt", ndt_img);
-     //  
-     // blob_process_.process_frame(dilate, median, thresh_value_);
-     //  
-     // cv::Mat blob_img;
-     // //blob_process_.overlay_blobs(gray, blob_img);            
-     // //blob_process_.overlay_tracks(blob_img, blob_img);
-     // blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
-     // //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
-     // cv::imshow("Blobs", blob_img);        
-     // 
-     // cv::Mat short_lived;
-     // blob_process_.overlay_short_lived(gray, short_lived);
-     // cv::imshow("Tracking Tracks",short_lived);
-     //  
-     // cv::Mat blob_consolidate;
-     // blob_process_.consolidate_tracks(gray, blob_consolidate);
-     // cv::imshow("Consolidate", blob_consolidate);      
-     // 
-     // cv::Mat original_rects = original.clone();
-     // blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
-     // cv::imshow("Tracks", original_rects);
+     //cv::Mat ndt_img;
+     ////ndt_.set_frame(dilate, ndt_img, stream_);
+     //ndt_.set_frame(range_image, ndt_img, stream_);
+     //cv::imshow("ndt", ndt_img);
+      
+     blob_process_.process_frame(dilate, median, thresh_value_);
+      
+     cv::Mat blob_img;
+     //blob_process_.overlay_blobs(gray, blob_img);            
+     //blob_process_.overlay_tracks(blob_img, blob_img);
+     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
+     cv::imshow("Blobs", blob_img);        
+     
+     cv::Mat short_lived;
+     blob_process_.overlay_short_lived(gray, short_lived);
+     cv::imshow("Tracking Tracks",short_lived);
+      
+     cv::Mat blob_consolidate;
+     blob_process_.consolidate_tracks(gray, blob_consolidate);
+     cv::imshow("Consolidate", blob_consolidate);      
+     
+     cv::Mat original_rects = original.clone();
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
+     cv::imshow("Tracks", original_rects);
      
      //////////////////////////////////////////////////////////////
      /// Tracking     
