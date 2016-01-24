@@ -66,7 +66,7 @@ namespace syllo
           {
                output_ = NULL;
                vcap_ = NULL;
-               curr_frame_number_ = -1;
+               curr_frame_number_ = 0;
                next_frame_number_ = 0;
           }
           

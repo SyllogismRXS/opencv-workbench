@@ -311,7 +311,7 @@ void VideoWindow::before_display(cv::Mat &img)
 // Overriden by subclasses
 void VideoWindow::before_next_frame()
 {
-     //cout << "x_Saving data for frame: " << stream_.frame_number() << endl;
+     cout << "x_Saving data for frame: " << stream_.frame_number() << endl;
 }
 
 void VideoWindow::display_image(const cv::Mat &img)

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-22 14:57:13 syllogismrxs>
+/// Time-stamp: <2016-01-24 18:10:09 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -83,11 +83,14 @@ namespace wb {
           void set_type(EntityType_t type) { type_ = type; }
           EntityType_t type() { return type_; }
           std::string name();
-          void set_name(std::string name) { name_ = name; }
+          void set_name(std::string name);
           
           void compute_metrics();
 
           cv::Point centroid();
+          cv::Point start_centroid();
+          void set_start_centroid(cv::Point start_centroid);
+
           cv::Rect rectangle();
           BoundingBox & bbox() { return bbox_; }
           void set_bbox(BoundingBox bbox) { bbox_ = bbox; }
@@ -139,6 +142,7 @@ namespace wb {
           void predict_tracker();
           void correct_tracker();
           cv::Point estimated_centroid();
+          void set_estimated_centroid(cv::Point p) {est_centroid_ = p;}
           Ellipse error_ellipse(int dim0, int dim1, double confidence);
           
           void set_matched(bool matched) { matched_ = matched; }
@@ -194,6 +198,8 @@ namespace wb {
           bool visited_;
 
           int cluster_id_;
+
+          cv::Point start_centroid_;
           
           void set_distance(float distance) { distance_ = distance; }
           float distance() { return distance_; }          

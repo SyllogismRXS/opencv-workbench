@@ -65,7 +65,7 @@ Annotate::Annotate(VideoWindow *parent)
      edit_pt2_ = false; 
      edit_box_ = false;
      box_present_ = false;
-     point_present_ = false;
+     //point_present_ = false;
      edit_pt_ = false;
 
      edit_enabled_ = false;
@@ -128,7 +128,7 @@ void Annotate::mousePressed(QMouseEvent * event)
      QPoint p = event->pos();
 
      if (event->button()==Qt::RightButton){
-          point_present_ = true;
+          //point_present_ = true;
           pt_ = p;
           edit_pt_ = true;
      } else {      
@@ -199,20 +199,33 @@ void Annotate::before_next_frame()
      int next_frame_number = stream_.next_frame_number();
      // Is this frame annotated already?
      
+     //cout << "Next Frame: " << next_frame_number << endl;
+     
      if (parser_.frames.count(next_frame_number) >= 0) {
           if (parser_.frames[next_frame_number].objects.count("diver:1") > 0) {
                box_present_ = true;
                cv::Rect rect = parser_.frames[next_frame_number].objects["diver:1"].bbox().rectangle();
                pt1_ = QPoint(rect.tl().x, rect.tl().y);
                pt2_ = QPoint(rect.br().x, rect.br().y);
-          }
-
-          if (parser_.frames[next_frame_number].objects.count("point:1") > 0) {
-               point_present_ = true;
-               cv::Rect rect = parser_.frames[next_frame_number].objects["point:1"].bbox().rectangle();
-               pt_ = QPoint( cvRound((rect.tl().x + rect.br().x)/2.0), 
-                             cvRound((rect.tl().y + rect.br().y)/2.0));
-          }
+          } else {
+               if (!edit_enabled_) {
+                    box_present_ = false;
+                    point_present_ = false;
+               }               
+          }      
+          //if (parser_.frames[next_frame_number].objects.count("diver:1") > 0) {
+          //     box_present_ = true;
+          //     cv::Rect rect = parser_.frames[next_frame_number].objects["diver:1"].bbox().rectangle();
+          //     pt1_ = QPoint(rect.tl().x, rect.tl().y);
+          //     pt2_ = QPoint(rect.br().x, rect.br().y);
+          //}
+          //
+          //if (parser_.frames[next_frame_number].objects.count("point:1") > 0) {
+          //     point_present_ = true;
+          //     cv::Rect rect = parser_.frames[next_frame_number].objects["point:1"].bbox().rectangle();
+          //     pt_ = QPoint( cvRound((rect.tl().x + rect.br().x)/2.0), 
+          //                   cvRound((rect.tl().y + rect.br().y)/2.0));
+          //}
           
      } else if (!edit_enabled_) {
           box_present_ = false;  
@@ -223,8 +236,8 @@ void Annotate::before_next_frame()
 void Annotate::save_annotation_data()
 {
      // Save any data from this frame
-     int frame_number = stream_.frame_number();
-          
+     int frame_number = stream_.frame_number();           
+     
      // Ensure that we have a valid frame number and that a box is present
      if (frame_number < 0) {
           return;
@@ -252,18 +265,18 @@ void Annotate::save_annotation_data()
           frame.objects[object.name()] = object;               
      }
 
-     if (point_present_) {
-          //Object object;
-          wb::Entity object;
-          object.set_name("point");
-          object.set_id(1);
-          object.set_type(wb::Entity::APoint);
-          object.set_bbox(BoundingBox(pt_.x()-1, pt_.x()+1,
-                                      pt_.y()-1, pt_.y()+1));
-
-          // Save object to current frame
-          frame.objects[object.name()] = object;               
-     }
+     //if (point_present_) {
+     //     //Object object;
+     //     wb::Entity object;
+     //     object.set_name("point");
+     //     object.set_id(1);
+     //     object.set_type(wb::Entity::APoint);
+     //     object.set_bbox(BoundingBox(pt_.x()-1, pt_.x()+1,
+     //                                 pt_.y()-1, pt_.y()+1));
+     //
+     //     // Save object to current frame
+     //     frame.objects[object.name()] = object;               
+     //}
      
      parser_.frames[frame_number] = frame;
 }
@@ -284,11 +297,11 @@ void Annotate::before_display(cv::Mat &img)
           cv::circle(img, pt2, 1, cv::Scalar(255,255,255), 1, 8, 0);
      }
 
-     if (point_present_) {
-          cv::Point pt(pt_.x(), pt_.y());
-          cv::circle(img, pt, 1, cv::Scalar(0,0,0), 1, 8, 0);
-          cv::circle(img, pt, 5, cv::Scalar(255,255,255), 1, 8, 0);
-     }
+     //if (point_present_) {
+     //     cv::Point pt(pt_.x(), pt_.y());
+     //     cv::circle(img, pt, 1, cv::Scalar(0,0,0), 1, 8, 0);
+     //     cv::circle(img, pt, 5, cv::Scalar(255,255,255), 1, 8, 0);
+     //}
 }
 
 int Annotate::distance(QPoint p1, QPoint p2)

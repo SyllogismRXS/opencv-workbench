@@ -152,9 +152,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
      blob_process_.process_frame(dilate, median, thresh_value_);
       
-     cv::Mat blob_img;
-     //blob_process_.overlay_blobs(gray, blob_img);            
-     //blob_process_.overlay_tracks(blob_img, blob_img);
+     cv::Mat blob_img;     
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
      cv::imshow("Blobs", blob_img);        
@@ -169,13 +167,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat original_rects = original.clone();
      blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
-     cv::imshow("Tracks", original_rects);
-     
-     //////////////////////////////////////////////////////////////
-     /// Tracking     
-     ////////////////////////////////////////////////////
-     tracks_.clear(); // clear out the tracks from previous loop
+     cv::imshow("Tracks", original_rects);          
       
+     // Add undistorted centroids and compute trajectory analysis
      std::map<int, wb::Blob> tracks_frame;
      std::vector<wb::Blob> blobs = blob_process_.blobs();
      std::vector<wb::Blob>::iterator it = blobs.begin();
@@ -200,18 +194,24 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           it->set_frame(frame_number);
            
           tracks_history_[it->id()].push_back(*it);
-          tracks_frame[it->id()] = *it;
-           
-          tracks_.push_back(*it);
-     }
-      
-     // // Calculate Similarity between current tracks
-     // traj_.trajectory_similarity(tracks_history_, frame_number, 
-     //                             blob_consolidate, 0.017);
-     // //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
-     // //                                       blob_consolidate, 0.02);
+          tracks_frame[it->id()] = *it;                     
+     }    
+
+     // Calculate Similarity between current tracks
+     traj_.trajectory_similarity(tracks_history_, frame_number, 
+                                 blob_consolidate, 0.017);
+     //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+     //                                       blob_consolidate, 0.02);     
+     cv::imshow("Traj", blob_consolidate);
      
-     //cv::imshow("Traj", blob_consolidate);
+     //////////////////////////////////////////////////////////////
+     /// Diver Detections / Object Labelling
+     ////////////////////////////////////////////////////
+     blob_process_.displace_detect();
+     
+     // Copy track detections to tracks_ object
+     tracks_.clear(); // clear out the tracks from previous loop      
+     blob_process_.blobs_to_entities(tracks_);
       
      ///////////////////////////////////////////////////
      // Display images

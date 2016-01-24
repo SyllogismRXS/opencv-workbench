@@ -50,6 +50,7 @@ Sonar::Status_t Sonar::init()
 #if ENABLE_SONAR == 1
      logging_ = false;
      cur_ping_ = 0;
+     next_ping_ = 0;
 
      son_ = BVTSonar_Create();
      if (son_ == NULL ) {
@@ -199,6 +200,7 @@ Sonar::Status_t Sonar::init()
      cv::Mat temp;
      this->getNextSonarImage(temp);
      cur_ping_ = 0; // reset back to first frame
+     next_ping_ = 0;
 
      return Sonar::Success;
 #else
@@ -219,12 +221,13 @@ int Sonar::getCurrentPingNum()
 
 void Sonar::setFrameNum(int num)
 {
-     cur_ping_ = num;
+     next_ping_ = num;
 }
 
 int Sonar::reset()
 {
      cur_ping_ = 0;
+     next_ping_ = 0;
      return 0;
 }
 
@@ -276,12 +279,13 @@ Sonar::Status_t Sonar::SonarLogEnable(bool enable)
 }
 
 Sonar::Status_t Sonar::getNextSonarImage(cv::Mat &image)
-{
+{     
      Status_t status = Sonar::Failure;
      if (mode_ == Sonar::net) {
           status = getSonarImage(image, -1);
-     } else if (cur_ping_ < num_pings_) {
-          status = getSonarImage(image, cur_ping_++);          
+     } else if ( (next_ping_) < num_pings_) {
+          cur_ping_ = next_ping_;
+          status = getSonarImage(image, next_ping_++);
      } else {
           status = Sonar::Failure;
      }

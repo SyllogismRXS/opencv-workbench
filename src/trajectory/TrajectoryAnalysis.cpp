@@ -8,6 +8,8 @@
 using std::cout;
 using std::endl;
 
+#define DEBUG 0
+
 TrajectoryAnalysis::TrajectoryAnalysis() : simulated_(false)
 {
 }
@@ -88,7 +90,9 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
                                                           int frame_number, 
                                                           cv::Mat &img, double threshold)
 {
+#if DEBUG
      cout << "==========================================" << endl; 
+#endif
 
      std::map<std::string, struct Avgs> RMSEs;
      // Store RMSE between each trajectory in a map/hash. A string will be used
@@ -150,15 +154,14 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
                                   it_2->second.is_tracked())) {
                     
                     double diff_avg = traj_avgs_[key].diff_sum / (double)traj_avgs_[key].count;
-               
+                    double abs_diff = std::abs(diff-diff_avg);
+#if DEBUG
                     cout << "--------" << endl;
                     cout << key << endl;               
                     cout << "Diff: " << diff << endl;
-                    cout << "Diff Avg: " << diff_avg << endl;                                             
-                              
-                    double abs_diff = std::abs(diff-diff_avg);
+                    cout << "Diff Avg: " << diff_avg << endl;  
                     cout << "Value: " << abs_diff << endl;
-                    
+#endif                                           
                     if (abs_diff < threshold) {
                          cv::Point c1 = it_1->second.centroid();
                          cv::Point c2 = it_2->second.centroid();
@@ -175,7 +178,9 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
 
 void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob> > &tracks_history, int frame_number, cv::Mat &img, double RMSE_threshold)
 {
-     cout << "==========================================" << endl;          
+#if DEBUG
+     cout << "==========================================" << endl; 
+#endif         
      std::map<int, std::list<cv::Point2d> > trajectories;
      for (std::map<int, std::list<wb::Blob> >::iterator 
                it = tracks_history.begin(); it != tracks_history.end(); ) {
@@ -233,7 +238,9 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob>
      // Print out the RMSEs for this frame:
      for(std::map<std::string, struct TrajRMSE>::iterator it = RMSEs.begin();
          it != RMSEs.end(); it++) {
+#if DEBUG
           cout << it->first << ": " << it->second.RMSE << endl;
+#endif
      
           // If the RMSE between two trajectories is less than a threshold,
           // circle the trajectories

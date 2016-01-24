@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-22 18:41:43 syllogismrxs>
+/// Time-stamp: <2016-01-24 12:30:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -116,8 +116,14 @@ public:
 
      bool consolidate_tracks(cv::Mat &in, cv::Mat &out);
      
-     bool cluster_blobs(cv::Mat &in, cv::Mat &out, std::vector<wb::Blob> &new_blobs,
+     bool cluster_blobs(cv::Mat &in, cv::Mat &out, 
+                        std::vector<wb::Blob> &new_blobs,
+                        std::vector<wb::Blob> &clusters,
                         unsigned int MinPts, double eps);
+     
+     bool displace_detect();
+
+     void blobs_to_entities(std::vector<wb::Entity> &ents);
      
 protected:
      

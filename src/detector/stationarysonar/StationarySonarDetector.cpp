@@ -123,9 +123,6 @@ int StationarySonarDetector::set_frame(int frame_number, const cv::Mat &original
      blob_process_.overlay(gray, blob_img, BLOBS);     
      cv::imshow("Blobs", blob_img);        
      
-     //cv::Mat blob_cluster_img;
-     //blob_process_.cluster_blobs(rg_img, blob_cluster_img, 3, 5);
-     
      // TODO: LOOK AT DISPLACE DETECTOR'S SETTINGS.
      // Maybe use clustering?
 
@@ -134,13 +131,13 @@ int StationarySonarDetector::set_frame(int frame_number, const cv::Mat &original
      // blob_process_.overlay_short_lived(gray, short_lived);
      // cv::imshow("Tracking Tracks",short_lived);
      //  
-     // cv::Mat blob_consolidate;
-     // blob_process_.consolidate_tracks(gray, blob_consolidate);
-     // cv::imshow("Consolidate", blob_consolidate);      
-     // 
-     // cv::Mat original_rects = original.clone();
-     // blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
-     // cv::imshow("Tracks", original_rects);
+     cv::Mat blob_consolidate;
+     blob_process_.consolidate_tracks(gray, blob_consolidate);
+     cv::imshow("Consolidate", blob_consolidate);      
+      
+     cv::Mat original_rects = original.clone();
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
+     cv::imshow("Tracks", original_rects);
      
      //////////////////////////////////////////////////////////////
      /// Tracking     

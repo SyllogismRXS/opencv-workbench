@@ -101,6 +101,7 @@ protected:
 
      int cur_head_;
      int cur_ping_;
+     int next_ping_;
 
      double min_range_;
      double max_range_;

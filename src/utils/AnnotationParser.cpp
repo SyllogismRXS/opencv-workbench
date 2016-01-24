@@ -3,6 +3,9 @@
 #include <string>
 #include <algorithm>
 
+#include <boost/filesystem.hpp>
+#include <boost/tokenizer.hpp>
+
 #include <opencv_workbench/syllo/syllo.h>
 
 #include <opencv_workbench/rapidxml/rapidxml.hpp>
@@ -46,12 +49,39 @@ void AnnotationParser::clear()
      frames.clear();
 }
 
+bool AnnotationParser::find_file( const fs::path & dir_path,      // in this directory,
+                                  const std::string & file_name, // search for this name,
+                                  fs::path & path_found )            // placing path here if found
+{
+     if ( !fs::exists( dir_path ) ) return false;
+     fs::directory_iterator end_itr; // default construction yields past-the-end
+     for ( fs::directory_iterator itr( dir_path );
+           itr != end_itr;
+           ++itr )
+     {
+          if ( fs::is_directory(itr->status()) )
+          {
+               if ( find_file( itr->path(), file_name, path_found ) ) return true;
+          }
+          else if ( itr->path().filename() == file_name ) // see below
+          {
+               path_found = itr->path();
+               return true;
+          }
+     }
+     return false;
+}
+
+// Look for .tracks.xml or .truth.xml file in the same directory as the .avi or
+// .son file first. If it's not there, look in the environment variable path
+// recursively.
 int AnnotationParser::CheckForFile(std::string video_file, 
                                     AnnotationParser::AnnotateType_t ann_type)
 {
      video_filename_ = video_file;
      ann_type_ = ann_type;
      
+     // Remove the .son or .avi from the end of the filename
      int lastindex = video_file.find_last_of("."); 
      xml_filename_ = video_file.substr(0, lastindex);
      
@@ -66,7 +96,39 @@ int AnnotationParser::CheckForFile(std::string video_file,
      dir_ = fs::path(video_file).parent_path();
      basename_ = fs::path(video_file).filename();
          
-     if ( !boost::filesystem::exists( xml_filename_ ) ) {
+     // Search for the .truth.xml or .tracks.xml filename
+     if ( !fs::exists( xml_filename_ ) ) {
+
+          // Search for the hand annotated file (truth) using the 
+          // OPENCV_WORKBENCH_ANNOTATED_FILES environment variable
+
+          if (ann_type_ == hand) {
+               // Build the filename to search for.
+               std::string file = fs::path(video_file).stem().string();
+               file += ".truth.xml";
+                              
+               // See if the env var exists
+               char* pPath = std::getenv("OPENCV_WORKBENCH_ANNOTATED_FILES");
+               if (pPath != NULL) {                              
+                    fs::path result_path;
+                    fs::path search_path = std::string(pPath);
+
+                    cout << "Searching for file: " << file << ", under: " << search_path.string() << endl;
+                    
+                    bool path_found = this->find_file(search_path, file, result_path);
+
+                    if (path_found) {
+                         xml_filename_ = result_path.string();
+                         cout << "Found file at: " << xml_filename_ << endl;
+                         return this->ParseFile(xml_filename_);
+                    } else {
+                         cout << "File not found, recursively." << endl;
+                    }
+               } else {
+                    cout << "Env Var Not Set: OPENCV_WORKBENCH_ANNOTATED_FILES" << endl;
+               }
+          }
+
           if (ann_type_ == hand) {
                cout << "Hand ";
           } else if (ann_type_ == track) {
@@ -403,10 +465,8 @@ int AnnotationParser::ParseFile(std::string file)
                     break;
                }               
                
-               std::string object_name = object_node->first_node("name")->value();
+               std::string object_name = object_node->first_node("name")->value();                              
                
-               //Object object;
-               //object.set_name(object_name);               
                wb::Entity object;
                object.set_name(object_name);
                

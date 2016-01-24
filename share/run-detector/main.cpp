@@ -169,6 +169,7 @@ int main(int argc, char *argv[])
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
                cv::Point point = it->centroid();
+               //cv::Point point = it->estimated_centroid();
                
                frame.objects[it->name()] = *it;
 

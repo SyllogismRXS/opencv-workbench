@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-09 17:06:26 syllogismrxs>
+/// Time-stamp: <2016-01-24 15:08:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -90,6 +90,10 @@ public:
      std::map<std::string,int> get_metrics();     
 
      std::vector<wb::Entity> get_tracks(std::string name);
+
+     bool find_file( const fs::path & dir_path,      // in this directory,
+                     const std::string & file_name, // search for this name,
+                     fs::path & path_found );            // placing path here if found
 
 protected:
      std::string xml_filename_;     

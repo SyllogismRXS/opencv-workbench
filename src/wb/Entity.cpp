@@ -1,5 +1,9 @@
 #include <iostream>
 
+#include <boost/tokenizer.hpp>
+
+#include <opencv_workbench/syllo/syllo.h>
+
 #include "Entity.h"
 
 using std::cout;
@@ -83,7 +87,19 @@ namespace wb {
                 0,
                 0;
 
+          start_centroid_ = centroid_;
+
           kf_.init(x0, covar);
+     }
+
+     cv::Point Entity::start_centroid()
+     {
+          return start_centroid_;
+     }
+
+     void Entity::set_start_centroid(cv::Point start_centroid) 
+     { 
+          start_centroid_ = start_centroid; 
      }
           
      cv::Point Entity::estimated_centroid()
@@ -270,7 +286,10 @@ namespace wb {
      {
           this->set_id(other.id());
           this->set_age(other.age());
-          this->set_tracker(other.tracker());
+          //this->set_centroid(other.centroid());
+          //this->set_estimated_centroid(other.estimated_centroid());
+          this->set_start_centroid(other.start_centroid());
+          this->set_tracker(other.tracker());          
      }
 
      void Entity::matched_track(Entity &match)
@@ -325,5 +344,38 @@ namespace wb {
 
           return name_; 
      }
-     
+
+     void Entity::set_name(std::string name)
+     {
+          cout << "Setting name: " << name << endl;
+          
+          boost::char_separator<char> sep(":");
+          boost::tokenizer<boost::char_separator<char> > tokens(name, sep);
+          int iter = 0;
+          std::string type_str = "unknown";
+          id_ = -2;          
+          for (boost::tokenizer<boost::char_separator<char> >::iterator tok_iter = tokens.begin();
+               tok_iter != tokens.end(); ++tok_iter) {
+
+               cout << iter << " - tok_iter: " << *tok_iter << endl;
+               
+               if (iter == 0) {
+                    type_str = *tok_iter;
+               } else if (iter == 1) {
+                    id_  = syllo::str2int(std::string(*tok_iter));
+               }
+               iter++;
+          }
+          
+          if (type_str == "unknown") {
+               type_ = Unknown;
+          } else if (type_str == "diver") {
+               type_ = Diver;
+          } else if (type_str == "clutter") {
+               type_ = Clutter;
+          } else if (type_str == "point") {
+               type_ = APoint;
+          } else 
+               type_ = Unknown;
+     } 
 }
