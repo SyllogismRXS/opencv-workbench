@@ -720,7 +720,7 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
      TPR_ = FPR_ = -1;
 
      // Starting with frame number 0, increment through the truth and detector
-     // frames until both truth a detector frames are all processed.
+     // frames until both truth and detector frames are all processed.
      std::map<int,Frame>::const_iterator it_tru_frame = truth.frames.begin();
      std::map<int,Frame>::iterator it_detect_frame = frames.begin();
      for (int i = 0; it_tru_frame != truth.frames.end() || 

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
      std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
      std::string plugin_name = "relative_detector";
      std::string xml_output_dir = "";
-     int xml_output_dir_flag = 0;
+     //int xml_output_dir_flag = 0;
   
      while ((c = getopt (argc, argv, "abc:f:hp:o:s")) != -1) {
           switch (c) {
@@ -49,10 +49,10 @@ int main(int argc, char *argv[])
           //case 'b':
           //     bflag = 1;
           //     break;
-          case 'o':
-               xml_output_dir_flag = 1;
-               xml_output_dir = std::string(optarg);
-               break;
+          //case 'o':
+          //     xml_output_dir_flag = 1;
+          //     xml_output_dir = std::string(optarg);
+          //     break;
           case 'h':
                hide_window_flag = 1;
                break;
@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
      }
 
      // Setup Hand Annotated Parser (Truth)
-     bool hand_ann_found = true;
+     //bool hand_ann_found = true;
      AnnotationParser parser_truth;
      int retcode = parser_truth.CheckForFile(video_filename, AnnotationParser::hand);
      if (retcode != 0) {
           cout << "Error parsing hand annotated file." << endl;
-          hand_ann_found = false;          
+          //hand_ann_found = false;          
      }
 
      //// Setup Annotation Parser_Tracks
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
      
      cv::Point2f prev_point;
      cv::Mat original;
-     double prev_bearing;
+     double prev_bearing = 0;
      double bearing_total = 0;
      bool start = false;
      int frame_number = 0;
@@ -168,8 +168,9 @@ int main(int argc, char *argv[])
                     cv::circle(img, pt, 1, cv::Scalar(0,0,0), 1, 8, 0);
                     cv::circle(img, pt, 5, cv::Scalar(255,255,255), 1, 8, 0);
                     
-                    double range, bearing;
-                    range = stream.pixel_range(pt.y, pt.x);
+                    //double range, bearing;
+                    double bearing;
+                    //range = stream.pixel_range(pt.y, pt.x);
                     bearing = stream.pixel_bearing(pt.y, pt.x);
                     
                     if (start) {
