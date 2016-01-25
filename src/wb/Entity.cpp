@@ -345,6 +345,41 @@ namespace wb {
           return name_; 
      }
 
+     std::string Entity::type_str()
+     {                    
+          switch (type_) {
+          case Unknown:
+               return "unknown";
+               break;
+          case Diver:
+               return "diver";
+               break;
+          case Clutter:
+               return "clutter";
+               break;
+          case APoint:
+               return "point";
+               break;
+          default:
+               return "unknown";
+          }          
+     }
+
+     wb::Entity::EntityType_t Entity::str_2_type(std::string str)
+     {          
+          if (str == "unknown") {
+               return Unknown;
+          } else if (str == "diver") {
+               return Diver;
+          } else if (str == "clutter") {
+               return Clutter;
+          } else if (str == "point") {
+               return APoint;
+          } else {
+               return Unknown;
+          }
+     }
+
      void Entity::set_name(std::string name)
      {
           boost::char_separator<char> sep(":");
@@ -362,16 +397,7 @@ namespace wb {
                }
                iter++;
           }
-          
-          if (type_str == "unknown") {
-               type_ = Unknown;
-          } else if (type_str == "diver") {
-               type_ = Diver;
-          } else if (type_str == "clutter") {
-               type_ = Clutter;
-          } else if (type_str == "point") {
-               type_ = APoint;
-          } else 
-               type_ = Unknown;
+
+          type_ = Entity::str_2_type(type_str);          
      } 
 }

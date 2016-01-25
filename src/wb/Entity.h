@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-24 18:10:09 syllogismrxs>
+/// Time-stamp: <2016-01-25 13:00:28 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -84,6 +84,9 @@ namespace wb {
           EntityType_t type() { return type_; }
           std::string name();
           void set_name(std::string name);
+
+          static wb::Entity::EntityType_t str_2_type(std::string str);
+          std::string type_str();
           
           void compute_metrics();
 

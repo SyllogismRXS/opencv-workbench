@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-25 10:41:21 syllogismrxs>
+/// Time-stamp: <2016-01-25 13:08:11 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -58,6 +58,18 @@ public:
           } else {
                return false;
           }
+     }
+
+     bool contains_type(wb::Entity::EntityType_t &type, wb::Entity &object)
+     {
+          for (std::map<std::string, wb::Entity>::iterator it = objects.begin();
+               it != objects.end(); it++) {
+               if (it->second.type() == type) {
+                    object = it->second;
+                    return true;
+               }
+          }
+          return false;                    
      }
      
 protected:

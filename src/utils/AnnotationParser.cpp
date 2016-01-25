@@ -283,6 +283,11 @@ void AnnotationParser::write_header()
                xml_node<> *id_node = doc.allocate_node(node_element, "ID", id);
                object_node->append_node(id_node);
 
+               //// "Type" node               
+               //char * type = doc.allocate_string(object_it->second.type_str().c_str());
+               //xml_node<> *type_node = doc.allocate_node(node_element, "type", type);
+               //object_node->append_node(type_node);
+
                // "Age" node               
                char * age = doc.allocate_string(syllo::int2str(object_it->second.age()).c_str());
                xml_node<> *age_node = doc.allocate_node(node_element, "age", age);
@@ -469,6 +474,13 @@ int AnnotationParser::ParseFile(std::string file)
                
                wb::Entity object;
                object.set_name(object_name);
+               
+               //xml_node<> *type = object_node->first_node("type");
+               //if (type == 0) {
+               //     cout << "Missing type information" << endl;
+               //} else {
+               //     object.set_type(wb::Entity::str_2_type(type->value()));
+               //}
                
                xml_node<> *box = object_node->first_node("bndbox");
                if (box == 0) {
@@ -862,6 +874,170 @@ void AnnotationParser::score_detector(AnnotationParser &truth,
      cout << "True Negatives: " << TN_ << endl;
      cout << "False Positives: " << FP_ << endl;
      cout << "False Negatives: " << FN_ << endl;     
+     metrics_present_ = true;
+     syllo::fill_line("+");
+}
+
+void AnnotationParser::score_detector_2(AnnotationParser &truth, 
+                                   std::vector<std::string> &names)
+{
+     TP_ = 0;
+     TN_ = 0;
+     FP_ = 0;
+     FN_ = 0;
+     TPR_ = FPR_ = -1;
+
+     // Starting with frame number 0, increment through the truth and detector
+     // frames until both truth and detector frames are all processed.
+     std::map<int,Frame>::const_iterator it_tru_frame = truth.frames.begin();
+     std::map<int,Frame>::iterator it_detect_frame = frames.begin();
+     for (int i = 0; it_tru_frame != truth.frames.end() || 
+               it_detect_frame != frames.end(); i++) {
+          
+          // Does the truth vector have an entry for this frame?
+          bool tru_frame_exists = false;
+          Frame tru_frame;          
+          if (it_tru_frame != truth.frames.end() && it_tru_frame->first == i) {
+               // Grab the truth frame
+               tru_frame = it_tru_frame->second;
+               tru_frame_exists = true;
+               // Increment the frame pointer
+               it_tru_frame++;
+          }
+
+          // Does the detector have an entry for this frame?
+          bool detect_frame_exists = false;
+          Frame detect_frame;
+          if (it_detect_frame != frames.end() && it_detect_frame->first == i) {
+               // Grab the detector's frame
+               detect_frame = it_detect_frame->second;
+               detect_frame_exists = true;
+               // Increment the frame pointer
+               it_detect_frame++;
+          }
+
+          if (!tru_frame_exists && !detect_frame_exists) {
+               // Neither a true frame or detected frame exists.
+               // Thus, the detector didn't incorrectly detect an object.
+               TN_++;
+          } else if (!tru_frame_exists && detect_frame_exists) {
+               // If a truth frame doesn't exist, but a detected frame exists
+               // determine if the detected frame labelled an object we care
+               // about
+               std::vector<std::string>::iterator it_name = names.begin();
+               for (; it_name != names.end(); it_name++) {
+                    // Does this object exist in the detector frame?
+                    //Object detected_obj;
+                    wb::Entity detected_obj;
+                    bool detect_obj_exists = false;
+                    wb::Entity::EntityType_t type = wb::Entity::str_2_type(*it_name);
+                    detect_obj_exists = detect_frame.contains_type(type, detected_obj);
+                    
+                    if (detect_obj_exists) {
+                         // The detector labelled an object, but it doesn't 
+                         // exist in a truth frame.
+                         FP_++;                         
+                    } else {
+                         // The object doesn't exist in the sequence of truth
+                         // frames. Also, it doesn't exist in the detector
+                         // frame.
+                         TN_++;
+                    }
+               }               
+          } else if (tru_frame_exists && !detect_frame_exists) {
+               // If a truth frame exists, but a detector didn't detect
+               // anything. We need to check to see if the truth frame has an 
+               // object that we care about that the detector missed.
+               std::vector<std::string>::iterator it_name = names.begin();
+               for (; it_name != names.end(); it_name++) {
+                    // Does this object exist in the truth frame?
+                    //Object tru_obj;
+                    wb::Entity tru_obj;
+                    bool tru_obj_exists = false;
+
+                    wb::Entity::EntityType_t type = wb::Entity::str_2_type(*it_name);
+                    tru_obj_exists = tru_frame.contains_type(type, tru_obj);
+                                        
+                    if (tru_obj_exists) {
+                         // The object exists in the truth frame, but doesn't
+                         // exist in the detector frame. False Negative.
+                         FN_++;
+                    } else {
+                         // The object doesn't exist in the truth frame and it
+                         // doesn't exist in the detector frame. True Negative.
+                         TN_++;
+                    }
+               }               
+          } else if (tru_frame_exists && detect_frame_exists) {
+               // Both a truth frame and a detector frame exists. Loop through 
+               // all object names we care about and count stats.
+
+               // Loop through the "names" vector, which contains names of
+               // objects we care about scoring the detector on
+               std::vector<std::string>::iterator it_name = names.begin();
+               for (; it_name != names.end(); it_name++) {
+                    // Search for this named object in ground truth frame
+                    //Object tru_obj;
+                    wb::Entity tru_obj;
+                    bool tru_obj_exists;
+                    //tru_obj_exists = tru_frame.contains_object(it_name->c_str(), 
+                    //                                           tru_obj);
+                    wb::Entity::EntityType_t type = wb::Entity::str_2_type(*it_name);
+                    tru_obj_exists = tru_frame.contains_type(type, tru_obj);
+                    
+                    // Does this object exist in the detector frame?
+                    //Object detected_obj;
+                    wb::Entity detected_obj;
+                    bool obj_exists;
+                    //obj_exists = detect_frame.contains_object(it_name->c_str(), 
+                    //                                   detected_obj);
+                    obj_exists = detect_frame.contains_type(type, detected_obj);
+                    
+                    if (!tru_obj_exists && !obj_exists) {
+                         // If the object name doesn't exist in the truth frame
+                         // or the detector frame, it is a True Negative
+                         TN_++;                         
+                    } else if (!tru_obj_exists && obj_exists) {
+                         // If the object doesn't exist in the truth frame, 
+                         // but exists in the detector frame, it is a false
+                         // positive
+                         FP_++;
+                    } else if (tru_obj_exists && !obj_exists) {
+                         // If the object exists in the truth frame, but it 
+                         // doesn't exist in the detector frame, it is a false
+                         // negative
+                         FN_++;
+                    } else if (tru_obj_exists && obj_exists) {
+                         // If the object exists in both the truth frame and
+                         // the detector frame, we have to determine if the
+                         // detector's placement of the object's centroid is
+                         // within the bounding box of the truth frame.
+                         bool contains;
+                         contains = tru_obj.bbox().contains(detected_obj.bbox().centroid());
+                         if (contains) {
+                              // The detected object's centroid is within the
+                              // bounding box of the truth frame's object.
+                              TP_++;
+                         } else {
+                              // The detected object's centroid is outside of
+                              // the bounding box of the truth frame's object.
+                              FP_++;
+                         }
+                    }
+               }
+          }
+     }
+     
+     TPR_ = (double)TP_ / (double)(TP_ + FN_) ; 
+     FPR_ = (double)FP_ / (double)(FP_ + TN_) ; 
+    
+     syllo::fill_line("+");
+     cout << "True Positives: " << TP_ << endl;
+     cout << "True Negatives: " << TN_ << endl;
+     cout << "False Positives: " << FP_ << endl;
+     cout << "False Negatives: " << FN_ << endl;   
+     cout << "TPR: " << TPR_ << endl;
+     cout << "FPR: " << FPR_ << endl;
      metrics_present_ = true;
      syllo::fill_line("+");
 }

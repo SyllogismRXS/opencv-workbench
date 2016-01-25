@@ -216,8 +216,10 @@ int main(int argc, char *argv[])
      if (hand_ann_found) {
           cout << "Scoring detector..." << endl;     
           std::vector<std::string> names;
-          names.push_back("diver:1");
-          parser_tracks.score_detector(parser_truth, names);          
+          //names.push_back("diver:1");
+          names.push_back("diver");
+          //parser_tracks.score_detector(parser_truth, names);          
+          parser_tracks.score_detector_2(parser_truth, names);          
      } else {
           cout << "WARNING: Can't score detector because hand annotated "
                << "file is missing" << endl;
