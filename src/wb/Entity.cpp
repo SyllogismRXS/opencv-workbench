@@ -347,8 +347,6 @@ namespace wb {
 
      void Entity::set_name(std::string name)
      {
-          cout << "Setting name: " << name << endl;
-          
           boost::char_separator<char> sep(":");
           boost::tokenizer<boost::char_separator<char> > tokens(name, sep);
           int iter = 0;
@@ -357,8 +355,6 @@ namespace wb {
           for (boost::tokenizer<boost::char_separator<char> >::iterator tok_iter = tokens.begin();
                tok_iter != tokens.end(); ++tok_iter) {
 
-               cout << iter << " - tok_iter: " << *tok_iter << endl;
-               
                if (iter == 0) {
                     type_str = *tok_iter;
                } else if (iter == 1) {
