@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
      if (hand_ann_found) {
           cout << "Scoring detector..." << endl;     
           std::vector<std::string> names;
-          names.push_back("diver");
+          names.push_back("diver:1");
           parser_tracks.score_detector(parser_truth, names);          
      } else {
           cout << "WARNING: Can't score detector because hand annotated "
