@@ -1,3 +1,4 @@
+add_subdirectory(misc)
 add_subdirectory(dbscan-test)
 add_subdirectory(cell-test)
 add_subdirectory(range-test)
