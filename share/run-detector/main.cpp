@@ -20,6 +20,7 @@
 
 #include <opencv_workbench/detector/Detector.h>
 #include <opencv_workbench/plugin_manager/PluginManager.h>
+#include <opencv_workbench/wb/Parameters.h>
 
 using std::cout;
 using std::endl;
@@ -39,19 +40,18 @@ int main(int argc, char *argv[])
      std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
      std::string plugin_name = "relative_detector";
      std::string xml_output_dir = "";
+     std::string yaml_file = "";     
      int xml_output_dir_flag = 0;
+     int threshold_sweep_flag = 0;
   
-     while ((c = getopt (argc, argv, "abc:f:hp:o:s")) != -1) {
-          switch (c) {
-          //case 'a':
-          //     aflag = 1;
-          //     break;
-          //case 'b':
-          //     bflag = 1;
-          //     break;
+     while ((c = getopt (argc, argv, "tf:hp:o:sy:")) != -1) {
+          switch (c) {               
           case 'o':
                xml_output_dir_flag = 1;
                xml_output_dir = std::string(optarg);
+               break;
+          case 't':
+               threshold_sweep_flag = 1;
                break;
           case 'h':
                hide_window_flag = 1;
@@ -61,6 +61,9 @@ int main(int argc, char *argv[])
                break;
           case 'f':
                video_filename = std::string(optarg);
+               break;
+          case 'y':
+               yaml_file = std::string(optarg);
                break;
           case 's':
                step_flag = 1;
@@ -74,6 +77,8 @@ int main(int argc, char *argv[])
                     fprintf (stderr, "Option -%c requires an output directory as an argument.\n", optopt);
                } else if (optopt == 'p') {
                     fprintf (stderr, "Option -%c requires a plugin name as an argument.\n", optopt);
+               } else if (optopt == 'y') {
+                    fprintf (stderr, "Option -%c requires a yaml file name as an argument.\n", optopt);
                } else if (isprint (optopt)) {
                     fprintf (stderr, "Unknown option `-%c'.\n", optopt);
                } else {
@@ -110,6 +115,9 @@ int main(int argc, char *argv[])
           hand_ann_found = false;          
      }
 
+     Parameters params;
+     params.set_yaml_file(yaml_file);
+     
      // Setup Annotation Parser_Tracks
      AnnotationParser parser_tracks;
      parser_tracks.CheckForFile(video_filename, AnnotationParser::track);
@@ -120,9 +128,16 @@ int main(int argc, char *argv[])
      parser_tracks.set_type("video");
      parser_tracks.set_number_of_frames(stream.get_frame_count());
      parser_tracks.set_plugin_name(plugin_name);
-
+     parser_tracks.set_params(params);
+     
      if (xml_output_dir_flag == 1) {
           parser_tracks.set_xml_output_dir(xml_output_dir);
+     }
+
+     // If we are doing a threshold sweep, the output file should match the
+     // the input yaml file name.
+     if (threshold_sweep_flag == 1 && yaml_file != "") {          
+          parser_tracks.set_xml_output_filename(yaml_file);
      }
 
      // Load the Bridge shared library (based on yml file)
@@ -139,10 +154,11 @@ int main(int argc, char *argv[])
           return -1;
      } else {
           cout << "Using Bridge Library: " << plugin_name << endl;
-     }
-     
+     }     
+               
      Detector * detector_;     
      detector_ = plugin_manager_.object();
+     detector_->set_params(params);
      detector_->set_stream(&stream);
      detector_->print();       
      

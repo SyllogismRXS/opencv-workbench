@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-25 12:36:15 syllogismrxs>
+/// Time-stamp: <2016-01-26 19:04:31 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -41,6 +41,7 @@
 #include <iostream>
 #include <map>
 #include <opencv_workbench/utils/Frame.h>
+#include <opencv_workbench/wb/Parameters.h>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -88,9 +89,12 @@ public:
                       std::vector<std::string> &names);
 
      void set_xml_output_dir(std::string dir);
+     void set_xml_output_filename(std::string yaml_file);
      void set_plugin_name(std::string name) { plugin_name_ = name; }
 
-     std::map<std::string,int> get_metrics();     
+     void set_params(Parameters &params) { params_ = params; }
+
+     std::map<std::string,double> get_metrics();     
 
      std::vector<wb::Entity> get_tracks(std::string name);
 
@@ -122,6 +126,8 @@ protected:
      int FN_;
      double TPR_;
      double FPR_;
+
+     Parameters params_;
      
 private:
 };

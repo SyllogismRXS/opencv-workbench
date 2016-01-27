@@ -19,6 +19,7 @@ TARGET_LINK_LIBRARIES(${LIBRARY_NAME}
   sonar-sdk  
   ${Boost_LIBRARIES}  
   workbench-utils
+  ${YAMLCPP_LIBRARY}
   )
 
 SET (_soversion ${LIB_MAJOR}.${LIB_MINOR}.${LIB_RELEASE})

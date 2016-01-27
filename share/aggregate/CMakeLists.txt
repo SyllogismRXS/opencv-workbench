@@ -14,4 +14,5 @@ target_link_libraries(${APP_NAME}
   plot
   dl
   wb
+  ${YAMLCPP_LIBRARY}
   )

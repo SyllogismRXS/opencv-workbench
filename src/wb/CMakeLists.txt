@@ -14,6 +14,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   Entity.cpp
   OpticalFlow.cpp
   RunningGaussian.cpp
+  Parameters.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 
@@ -23,6 +24,7 @@ target_link_libraries(${LIBRARY_NAME_1}
   workbench-utils
   syllo  
   sonar-sdk  
+  ${YAMLCPP_LIBRARY}
   )
 
 # Push up the OPENCV_WORKBENCH_LIBS variable

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-25 13:00:28 syllogismrxs>
+/// Time-stamp: <2016-01-26 12:04:06 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -92,7 +92,7 @@ namespace wb {
 
           cv::Point centroid();
           cv::Point start_centroid();
-          void set_start_centroid(cv::Point start_centroid);
+          void set_start_centroid(cv::Point start_centroid);          
 
           cv::Rect rectangle();
           BoundingBox & bbox() { return bbox_; }
@@ -162,6 +162,10 @@ namespace wb {
 
           void set_cluster_id(int cluster_id) { cluster_id_ = cluster_id; }
           int cluster_id() { return cluster_id_; }
+
+          std::list<cv::Point2f> & trail() { return trail_; }
+          cv::Point trail_history(int past);
+          void update_trail();
           
      protected:          
           std::string name_;
@@ -203,6 +207,8 @@ namespace wb {
           int cluster_id_;
 
           cv::Point start_centroid_;
+          
+          std::list<cv::Point2f> trail_;
           
           void set_distance(float distance) { distance_ = distance; }
           float distance() { return distance_; }          

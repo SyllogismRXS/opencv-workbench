@@ -590,15 +590,16 @@ void BlobProcess::blob_maintenance()
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      while(it != blobs_.end()) {
           it->set_matched(false);
-
+          it->update_trail();
+          
           if (it->is_dead()) {
                if (it->age() < 5) {
                     short_lived_.push_back(*it);
                }
                it = blobs_.erase(it);
-          } else {
+          } else {               
                it++;
-          }
+          }          
      }
 }
 
@@ -1042,7 +1043,7 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      }
 }
 
-bool BlobProcess::displace_detect()
+bool BlobProcess::displace_detect(int history, double distance)
 {
      // Find "confirmed" track that has moved more than (X) distance
      // Label them as "divers"     
@@ -1050,7 +1051,7 @@ bool BlobProcess::displace_detect()
      for (std::vector<wb::Blob>::iterator it = blobs_.begin(); 
           it != blobs_.end(); it++) {
           if (it->is_tracked()) {               
-               if (wb::distance(it->centroid(),it->start_centroid()) > 15) {
+               if (wb::distance(it->centroid(),it->trail_history(history)) > distance) { //30, 15
                     it->set_type(wb::Entity::Diver);                    
                } else {
                     it->set_type(wb::Entity::Unknown);

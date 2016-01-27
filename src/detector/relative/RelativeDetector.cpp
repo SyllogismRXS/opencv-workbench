@@ -56,7 +56,7 @@ void RelativeDetector::set_stream(syllo::Stream *stream)
 }
 
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
-{               
+{            
      cv::Mat original_w_tracks, original_copy;          
      original_w_tracks = original;
      original_copy = original;           
@@ -73,16 +73,13 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           Jet2Gray_matlab(original,gray);           
      } else {
           gray = original.clone();
-     }
-     cv::imshow("Gray", gray);  
+     }     
 
      cv::Mat range_image;
-     stream_->range_image(range_image);
-     cv::imshow("Range", range_image);
+     stream_->range_image(range_image);     
 
      cv::Mat blend;
-     cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());
-     cv::imshow("blend", blend);
+     cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());     
      
      //cv::Mat flow_img;
      //flow_.sparse_flow(gray, flow_img);          
@@ -110,8 +107,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
      // Compute median
      cv::Mat median;
-     cv::medianBlur(gray, median,5);
-     cv::imshow("median", median);          
+     cv::medianBlur(gray, median,5);     
       
      // // Compute estimated gradient
      // cv::Mat grad;     
@@ -128,8 +124,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat thresh_amp;      
      wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
-     //cout << "thresh_value: " << thresh_value_ << endl;
-     cv::imshow("thresh amp", thresh_amp);
+     //cout << "thresh_value: " << thresh_value_ << endl;     
      
      //cv::Mat grad_plus_thresh = grad_thresh + thresh_amp;
      //cv::imshow("grad_plus_thresh", grad_plus_thresh);
@@ -138,12 +133,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      /// cv::imshow("thresh and grad", thresh_and_grad);     
      cv::Mat erode;
      cv::erode(thresh_amp, erode, erosionConfig_);
-     //cv::erode(grad_plus_thresh, erode, erosionConfig_);
-     cv::imshow("erode", erode);
+     //cv::erode(grad_plus_thresh, erode, erosionConfig_);     
       
      cv::Mat dilate;
-     cv::dilate(erode, dilate, dilationConfig_);
-     cv::imshow("Dilate", dilate);      
+     cv::dilate(erode, dilate, dilationConfig_);     
      
      //cv::Mat ndt_img;
      ////ndt_.set_frame(dilate, ndt_img, stream_);
@@ -154,27 +147,22 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
       
      cv::Mat blob_img;     
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
-     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);
-     cv::imshow("Blobs", blob_img);        
+     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);     
      
      cv::Mat short_lived;
-     blob_process_.overlay_short_lived(gray, short_lived);
-     cv::imshow("Tracking Tracks",short_lived);
+     blob_process_.overlay_short_lived(gray, short_lived);     
       
      cv::Mat blob_consolidate;
-     blob_process_.consolidate_tracks(gray, blob_consolidate);
-     cv::imshow("Consolidate", blob_consolidate);      
+     blob_process_.consolidate_tracks(gray, blob_consolidate);     
      
      cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
-     cv::imshow("Tracks", original_rects);          
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
       
      // Add undistorted centroids and compute trajectory analysis
      std::map<int, wb::Blob> tracks_frame;
      std::vector<wb::Blob> blobs = blob_process_.blobs();
      std::vector<wb::Blob>::iterator it = blobs.begin();
-     for (; it != blobs.end(); it++) {
-      
+     for (; it != blobs.end(); it++) {      
           // Have to transform tracks from distorted cartesian
           // to polar, then to undistorted cartesian
           cv::Point p = it->estimated_centroid();
@@ -201,13 +189,13 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      traj_.trajectory_similarity(tracks_history_, frame_number, 
                                  blob_consolidate, 0.017);
      //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
-     //                                       blob_consolidate, 0.02);     
-     cv::imshow("Traj", blob_consolidate);
+     //                                       blob_consolidate, 0.02);          
      
      //////////////////////////////////////////////////////////////
      /// Diver Detections / Object Labelling
      ////////////////////////////////////////////////////
-     blob_process_.displace_detect();
+     blob_process_.displace_detect(params_.history_length,
+                                   params_.history_distance);
      
      // Copy track detections to tracks_ object
      tracks_.clear(); // clear out the tracks from previous loop      
@@ -216,7 +204,19 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      ///////////////////////////////////////////////////
      // Display images
      ///////////////////////////////////////////////////
-     if (!hide_windows_) {          
+     if (!hide_windows_) {       
+          cv::imshow("Gray", gray);  
+          cv::imshow("Range", range_image);
+          cv::imshow("blend", blend);
+          cv::imshow("median", median);          
+          cv::imshow("thresh amp", thresh_amp);
+          cv::imshow("erode", erode);
+          cv::imshow("Dilate", dilate);      
+          cv::imshow("Blobs", blob_img);        
+          cv::imshow("Tracking Tracks",short_lived);
+          cv::imshow("Consolidate", blob_consolidate);      
+          cv::imshow("Tracks", original_rects);          
+          cv::imshow("Traj", blob_consolidate);
      }
      
      return 0;

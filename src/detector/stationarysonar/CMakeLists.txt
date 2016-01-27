@@ -21,6 +21,7 @@ TARGET_LINK_LIBRARIES(${LIBRARY_NAME}
   wb
   workbench-utils  
   trajectory
+  ${YAMLCPP_LIBRARY}
   #/home/syllogismrxs/repos/3rd-party/bgslibrary/build/libbgs.so
   )
 

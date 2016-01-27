@@ -164,6 +164,13 @@ void AnnotationParser::set_xml_output_dir(std::string dir)
      xml_filename_ = dir + "/" + filename.c_str();
 }
 
+void AnnotationParser::set_xml_output_filename(std::string yaml_file)
+{
+     fs::path dir = fs::path(xml_filename_).parent_path();
+     std::string yaml_stem = fs::path(yaml_file).stem().string();
+     xml_filename_ = dir.string() + "/" + yaml_stem + ".tracks.xml";
+}
+
 void AnnotationParser::write_annotation()
 {
      this->write_header();
@@ -216,7 +223,18 @@ void AnnotationParser::write_header()
                xml_node<> *FPR_node = doc.allocate_node(node_element, "FPR", FPR);
                metrics_node->append_node(FPR_node);
           }
+
+          // Write parameters for current run
+          xml_node<> *parameters_node = doc.allocate_node(node_element, "parameters");
+          root_node->append_node(parameters_node);
           
+          char * history_length = doc.allocate_string(syllo::int2str(params_.history_length).c_str());
+          xml_node<> *history_length_node = doc.allocate_node(node_element, "history_length", history_length);
+          parameters_node->append_node(history_length_node);
+
+          char * history_distance = doc.allocate_string(syllo::int2str(params_.history_distance).c_str());
+          xml_node<> *history_distance_node = doc.allocate_node(node_element, "history_distance", history_distance);
+          parameters_node->append_node(history_distance_node);          
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -434,6 +452,22 @@ int AnnotationParser::ParseFile(std::string file)
                FN_ = syllo::str2int(FN_node->value());               
           } else { 
                cout << xml_filename_ << ": Missing FN node" << endl;
+          }
+
+          // TPR
+          xml_node<> * TPR_node = metrics_node->first_node("TPR");
+          if (TPR_node != 0) {
+               TPR_ = syllo::str2double(TPR_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing TPR node" << endl;
+          }
+
+          // FPR
+          xml_node<> * FPR_node = metrics_node->first_node("FPR");
+          if (FPR_node != 0) {
+               FPR_ = syllo::str2double(FPR_node->value());               
+          } else { 
+               cout << xml_filename_ << ": Missing FPR node" << endl;
           }
      }     
      
@@ -712,13 +746,15 @@ void AnnotationParser::write_gnuplot_data()
      //TODO, future work, maybe.
 }
 
-std::map<std::string,int> AnnotationParser::get_metrics()
-{     
-     std::map<std::string,int> metrics;
+std::map<std::string,double> AnnotationParser::get_metrics()
+{          
+     std::map<std::string,double> metrics;
      metrics["TP"] = TP_;
      metrics["TN"] = TN_;
      metrics["FP"] = FP_;
      metrics["FN"] = FN_;
+     metrics["TPR"] = TPR_;
+     metrics["FPR"] = FPR_;
      return metrics;
 }
 

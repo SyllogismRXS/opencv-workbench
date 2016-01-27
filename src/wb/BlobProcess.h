@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-24 12:30:56 syllogismrxs>
+/// Time-stamp: <2016-01-26 11:40:33 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -121,7 +121,7 @@ public:
                         std::vector<wb::Blob> &clusters,
                         unsigned int MinPts, double eps);
      
-     bool displace_detect();
+     bool displace_detect(int history, double distance);
 
      void blobs_to_entities(std::vector<wb::Entity> &ents);
      

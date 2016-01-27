@@ -175,7 +175,7 @@ endif()
 if (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" 
                                 OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
                                 OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
+    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" OFF)
     option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)
     option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  OFF)
     if(USE_AVX_INSTRUCTIONS)
@@ -190,7 +190,7 @@ if (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
     endif()
 elseif (MSVC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") # else if using Visual Studio 
     # Use SSE2 by default when using Visual Studio.
-    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
+    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" OFF)
     # Visual Studio 2005 didn't support SSE4 
     if (NOT MSVC80)
         option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)

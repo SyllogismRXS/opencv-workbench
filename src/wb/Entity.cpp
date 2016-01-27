@@ -89,9 +89,24 @@ namespace wb {
 
           start_centroid_ = centroid_;
 
-          kf_.init(x0, covar);
+          kf_.init(x0, covar);          
+     }     
+     
+     cv::Point Entity::trail_history(int past)
+     {
+          cv::Point result;
+          int count = 0;
+          for (std::list<cv::Point2f>::reverse_iterator rit = trail_.rbegin(); 
+               rit != trail_.rend(); ++rit) {
+               result = *rit;
+               if (count >= past) {
+                    return result;
+               }
+               count++;
+          }
+          return result;
      }
-
+     
      cv::Point Entity::start_centroid()
      {
           return start_centroid_;
@@ -126,7 +141,7 @@ namespace wb {
           u << 0,0;
           kf_.predict(u);
           state = kf_.state();          
-          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));
+          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));                    
      }
 
      void Entity::correct_tracker()
@@ -142,8 +157,13 @@ namespace wb {
           kf_.update(z);
           state = kf_.state();          
           //est_centroid_ = cv::Point(estimated.at<float>(0),estimated.at<float>(1));
-          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));          
+          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));              
      }          
+
+     void Entity::update_trail()
+     {          
+          trail_.push_back(estimated_centroid());
+     }
 
      void Entity::compute_metrics()
      {
@@ -162,7 +182,7 @@ namespace wb {
                
                sum_x += x * value;
                sum_y += y * value;
-
+               
                if (x < xmin) {
                     xmin = x;
                }
@@ -272,7 +292,7 @@ namespace wb {
           this->set_occluded(false);
 
           // Update the Kalman Filter Tracker
-          this->correct_tracker();
+          this->correct_tracker();          
      }
 
      void Entity::new_track(int id)
@@ -290,6 +310,7 @@ namespace wb {
           //this->set_estimated_centroid(other.estimated_centroid());
           this->set_start_centroid(other.start_centroid());
           this->set_tracker(other.tracker());          
+          this->trail_ = other.trail_;
      }
 
      void Entity::matched_track(Entity &match)

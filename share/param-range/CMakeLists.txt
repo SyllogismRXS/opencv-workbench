@@ -1,4 +1,4 @@
-set( APP_NAME run-detector)
+set( APP_NAME param-range)
 
 add_executable(${APP_NAME} 
   main.cpp

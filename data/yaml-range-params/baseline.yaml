@@ -1,0 +1,3 @@
+history_distance: [0, 1, 2]  # 0,1,2
+history_length: [0, 1, 1]    # 0,1
+kevin: [0, 1, 1]             # 0,1

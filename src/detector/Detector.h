@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-10-14 15:03:04 syllogismrxs>
+/// Time-stamp: <2016-01-26 18:20:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -39,6 +39,7 @@
 ///
 /// ---------------------------------------------------------------------------
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <opencv_workbench/plugin_manager/PluginManager.h>
@@ -51,7 +52,23 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <opencv_workbench/wb/Entity.h>
+#include <opencv_workbench/wb/Parameters.h>
 #include <opencv_workbench/utils/Stream.h>
+
+//struct Params {
+//     int history_length;
+//     double history_distance;
+//};
+//
+//void operator >> (const YAML::Node& node, Params& params)
+//{
+//     if(const YAML::Node *p = node.FindValue("history_length")) {
+//          *p >> params.history_length;
+//     }
+//     if(const YAML::Node *p = node.FindValue("history_distance")) {
+//          *p >> params.history_distance;
+//     }
+//}
 
 class Detector {
 public:
@@ -73,6 +90,8 @@ public:
 
      std::vector<wb::Entity> & tracks() { return tracks_; }
      void hide_windows(bool hide) { hide_windows_ = hide; }
+          
+     void set_params(Parameters &params) { params_ = params; }
      
      //virtual Status_t set_own_pose(const AVIA::Pose &pose)=0;
      //virtual Status_t set_command(const Command &command) {return Success;}
@@ -88,9 +107,13 @@ protected:
      std::vector<wb::Entity> tracks_;
      bool hide_windows_;
 
-     std::map<std::string,double> params_;
+//std::map<std::string,double> params_;
 
      syllo::Stream *stream_;
+
+// std::string yaml_file_;  
+//Params params_;     
+     Parameters params_;
      
 private:
 };
