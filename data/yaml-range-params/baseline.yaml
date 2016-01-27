@@ -1,3 +1,8 @@
-history_distance: [0, 1, 2]  # 0,1,2
-history_length: [0, 1, 1]    # 0,1
-kevin: [0, 1, 1]             # 0,1
+history_distance: [0,1,50]
+history_length: 25
+
+#history_distance: 15
+#history_length: [0 , 1 , 50]
+
+#history_distance: [0,1,50]
+#history_length: 10

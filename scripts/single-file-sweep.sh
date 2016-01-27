@@ -75,9 +75,7 @@ RANGES_FILES=$(find ${RANGES_OUT_DIR} -name "*.yaml")
 
 for f in $RANGES_FILES
 do
-
     ~/repos/opencv-workbench/bin/run-detector -f ${VIDEO_FILE} -p relative_detector -y $f -h -o ${TRACKS_OUT_DIR} -t
-    
     ## Get the 
     ##filename=$(basename "$f")
     ##no_ext="${filename%.truth.*}"

@@ -70,7 +70,7 @@ Annotate::Annotate(VideoWindow *parent)
 
      edit_enabled_ = false;
 
-     near_thresh = 25;     
+     near_thresh = 10;     
      
      connect(ui.image_frame, SIGNAL(mousePressed(QMouseEvent*)), this, SLOT(mousePressed(QMouseEvent*)));
      connect(ui.image_frame, SIGNAL(mouseReleased(QMouseEvent*)), this, SLOT(mouseReleased(QMouseEvent*)));       

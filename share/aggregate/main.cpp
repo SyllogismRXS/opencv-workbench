@@ -32,8 +32,12 @@ using std::endl;
 PluginManager<Detector, Detector_maker_t> plugin_manager_;
 
 bool myfunction (std::map<std::string,double> i, std::map<std::string,double> j) 
-{ 
-     return (i["FPR"] < j["FPR"]);     
+{
+     if (i["FPR"] == j["FPR"]) {
+          return (i["TPR"] < j["TPR"]);     
+     } else {
+          return (i["FPR"] < j["FPR"]);     
+     }
 }
 
 int main(int argc, char *argv[])
@@ -131,7 +135,7 @@ int main(int argc, char *argv[])
      std::ofstream roc_stream;
      if (create_roc_file) {
           cout << "ROC Output file: " << roc_fn << endl;
-          roc_stream.open (roc_fn.c_str(), std::ofstream::out | std::ofstream::app);
+          roc_stream.open (roc_fn.c_str(), std::ofstream::out);
           roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
      }
 
