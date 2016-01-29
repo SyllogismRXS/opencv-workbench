@@ -17,7 +17,8 @@ RelativeDetector::RelativeDetector()
 {
      cout << "RelativeDetector Constructor" << endl;
      thresh_value_ = 150;
-     thresh_value_ = 255;
+     //thresh_value_ = 255;
+     thresh_value_ = 50;
      //grad_thresh_value_ = 255;
 
      cluster_process_.set_threshold(0);
@@ -87,8 +88,17 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat mask;
      wb::get_sonar_mask(original, mask);
-     //cv::imshow("Sonar Mask", mask*255);     
-     //wb::showHistogram(gray, mask);               
+     cv::imshow("Sonar Mask", mask*255);     
+     //wb::showHistogram(gray, mask);         
+     //wb::opencv_histogram(original_copy);
+
+     //cv::Mat mean_mat, stddev_mat;
+     //double mean, stddev;
+     //cv::meanStdDev(gray, mean_mat, stddev_mat, mask);
+     //mean = mean_mat.at<double>(0,0);
+     //stddev = stddev_mat.at<double>(0,0);
+     //cout << "Mean: " << mean << endl;
+     //cout << "StdDev: " << stddev << endl;
      
      //std::vector<cv::KeyPoint> keypoints_1;
      //int fast_threshold = 40;
@@ -109,10 +119,16 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat median;
      cv::medianBlur(gray, median,5);     
       
-     // // Compute estimated gradient
-     // cv::Mat grad;     
-     // wb::gradient_sobel(median, grad);
-     // cv::imshow("gradient", grad);
+     //// Compute estimated gradient
+     //cv::Mat grad;     
+     //wb::gradient_sobel(median, grad);
+     //cv::imshow("gradient", grad);
+     //
+     //cv::Mat first_level;
+     //cv::Mat grad_thresh;
+     //wb::multi_otsu(grad, grad_thresh, mask, first_level);     
+     //cv::imshow("grad_thresh", grad_thresh);
+     
      // 
      // cv::Mat grad_thresh;
      // cv::threshold(grad, grad_thresh, 100, 255, cv::THRESH_TOZERO);
@@ -123,7 +139,23 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      /// cv::imshow("grad thresh", thresh_grad);        
      
      cv::Mat thresh_amp;      
-     wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
+     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
+     wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 5, mask);      
+     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 0.004, 1, 5, mask);
+     
+     //cv::adaptiveThreshold(median, thresh_amp, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 31, 20);
+     //cv::threshold(median, thresh_amp, 0, 255, cv::THRESH_TOZERO | cv::THRESH_OTSU);     
+
+     //double val = wb::getThreshVal_Otsu_8u(median, mask);
+     //cv::threshold(median, thresh_amp, val, 255, cv::THRESH_TOZERO);
+
+     //cv::Mat first_level;
+     //wb::multi_otsu(median, thresh_amp, mask, first_level);     
+     //cv::imshow("First", first_level);
+     
+     /// wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 5, mask);
+
+
      //cout << "thresh_value: " << thresh_value_ << endl;     
      
      //cv::Mat grad_plus_thresh = grad_thresh + thresh_amp;
@@ -138,12 +170,14 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat dilate;
      cv::dilate(erode, dilate, dilationConfig_);     
      
-     //cv::Mat ndt_img;
-     ////ndt_.set_frame(dilate, ndt_img, stream_);
+     cv::Mat ndt_img;
+     //ndt_.set_frame(dilate, ndt_img, stream_);
      //ndt_.set_frame(range_image, ndt_img, stream_);
      //cv::imshow("ndt", ndt_img);
       
+     blob_process_.set_mask(mask);
      blob_process_.process_frame(dilate, median, thresh_value_);
+     //blob_process_.process_frame(ndt_img, median, thresh_value_);
       
      cv::Mat blob_img;     
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
@@ -184,7 +218,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           tracks_history_[it->id()].push_back(*it);
           tracks_frame[it->id()] = *it;                     
      }    
-
+     
      // Calculate Similarity between current tracks
      traj_.trajectory_similarity(tracks_history_, frame_number, 
                                  blob_consolidate, 0.017);

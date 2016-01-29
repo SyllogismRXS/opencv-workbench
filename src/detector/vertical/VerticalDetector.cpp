@@ -245,13 +245,17 @@ int VerticalDetector::set_frame(int frame_number, const cv::Mat &original)
       //cv::cvtColor(original, bad_gray, CV_BGR2GRAY);
       //cv::imshow("bad", bad_gray);
       
+      cv::Mat mask;
+      wb::get_sonar_mask(original, mask);
+      cv::imshow("Sonar Mask", mask*255);
+      
       cv::Mat gray;
       if (original.channels() != 1) {           
            Jet2Gray_matlab(original,gray);           
       } else {
            gray = original.clone();
       }
-      cv::imshow("Gray", gray);
+      cv::imshow("Gray", gray);      
       
       //cv::Mat ndt_img;
       //ndt_.set_frame(gray, ndt_img);
@@ -274,8 +278,7 @@ int VerticalDetector::set_frame(int frame_number, const cv::Mat &original)
       cv::Mat thresh_amp;      
 #if 1    
       wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 10, 5);
-      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.002, 0.004, 10, 5);
-      
+      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.004, 5, mask);      
 #else
       // TODO: For some reason, using this static threshold kills regular sonar
       // images, (vs. simulated sonar images), it might have to do with the

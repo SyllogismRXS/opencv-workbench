@@ -258,11 +258,9 @@ void BlobProcess::find_blobs(cv::Mat &input,
           }
      }
 
-#if 1
      cv::Mat temp_img = input.clone();
      this->overlay_blobs(temp_img, temp_img, blobs);
      cv::imshow("Frame Blobs", temp_img);
-#endif
 
 }
 
@@ -541,7 +539,7 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
 }
 
 int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
-{
+{    
      std::vector<wb::Blob> new_blobs;
      this->find_blobs(input, new_blobs, min_blob_size_);
 

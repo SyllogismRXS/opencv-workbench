@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-22 17:57:42 syllogismrxs>
+/// Time-stamp: <2016-01-28 17:45:44 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -71,6 +71,12 @@ namespace wb {
      void opencv_histogram(cv::Mat &src);
 
      void get_sonar_mask(const cv::Mat &jet, cv::Mat &mask);
+
+     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
+                             double desired_ratio, int max_iter, cv::Mat &mask);
+
+     double getThreshVal_Otsu_8u(cv::Mat& _src , cv::Mat &mask );
+     void multi_otsu(cv::Mat &_src, cv::Mat &_dst, cv::Mat &_mask, cv::Mat &_first);
 }
 
 #endif

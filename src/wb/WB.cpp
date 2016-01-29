@@ -540,6 +540,247 @@ namespace wb {
           //cv::Rect rect = cv::Rect(ksize/2, ksize/2, src.rows, src.cols);
           //dst = cv::Mat(dst, rect);          
      }
+
+
+     double nonzero_ratio(cv::Mat &img, cv::Mat &mask)
+     {
+          int nRows = img.rows;
+          int nCols = img.cols;
+
+          // Compute Ratio
+          int count = 0;
+          int count_in_mask = 0;
+          int i,j;
+          uchar *p, *m;               
+          for( i = 0; i < nRows; ++i) {
+               p = img.ptr<uchar>(i);
+               m = mask.ptr<uchar>(i);                    
+               for ( j = 0; j < nCols; ++j) {
+                    if (p[j] > 0 && m[j] > 0) {
+                         count++;
+                    }
+                    if (m[j] > 0) {
+                         count_in_mask++;
+                    }
+               }
+          }
+
+          double ratio = 0;
+          if (count != 0) {
+               ratio = (double)count / (double)count_in_mask;
+          }
+          return ratio;
+     }
+
+     void mean_stddev(cv::Mat &img, cv::Mat &mask, double &mean, double &std)
+     {
+          cv::Mat mean_mat, stddev_mat;          
+          cv::meanStdDev(img, mean_mat, stddev_mat, mask);
+          mean = mean_mat.at<double>(0,0);
+          std = stddev_mat.at<double>(0,0);
+     }
+     
+     // Second version
+     void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
+                             double desired_ratio, int max_iter, cv::Mat &mask)
+     {
+          cout << "==============================" << endl;
+
+          // accept only char type matrices
+          CV_Assert(src.depth() != sizeof(uchar));          
+
+          bool ratio_achieved = false;     
+          int iter_count = 0;
+          cv::Mat src_copy = src.clone();
+          
+          // First compute the image properties          
+          // Compute mean and stdev before threshold
+          double prev_mean, prev_std, prev_ratio;
+          
+          mean_stddev(src_copy,mask,prev_mean,prev_std);          
+          prev_ratio = nonzero_ratio(src_copy,mask);
+          cout << "Mean: " << prev_mean << endl;
+          cout << "StdDev: " << prev_std << endl;   
+          cout << "Ratio: " << prev_ratio << endl;                    
+          
+          do {                                             
+               cout << "-----------------" << endl;
+               cout << "Thresh: " << thresh << endl;
+               src_copy = src.clone();              
+
+               // Apply threshold
+               cv::threshold(src_copy, src_copy, thresh, 255, cv::THRESH_TOZERO);
+
+               // First compute the image properties          
+               // Compute mean and stdev before threshold
+               double mean, std, ratio;          
+               mean_stddev(src_copy,mask,mean,std);          
+               ratio = nonzero_ratio(src_copy,mask);
+               cout << "Mean: " << mean << endl;
+               cout << "StdDev: " << std << endl;   
+               cout << "Ratio: " << ratio << endl;
+               
+               cout << "Change Mean: " << mean-prev_mean << endl;
+               cout << "Change Std: " << std-prev_std << endl;               
+               cout << "Change Ratio: " << ratio-prev_ratio << endl;
+               
+               double ratio_error = ratio - desired_ratio;
+               if (std::abs(ratio_error) < 0.00001) { 
+                    ratio_achieved = true;                    
+               }
+               cout << "Ratio Error: " << ratio_error << endl;
+
+               thresh += ratio_error * 1e3;
+
+               if (thresh < 0) {
+                    thresh = 0;                    
+               } else if (thresh > 255) {                    
+                    thresh = 255;
+               }
+
+               cv::imshow("Src Copy", src_copy);
+               //cv::waitKey(0);
+
+               prev_mean = mean;
+               prev_std = std;
+               prev_ratio = ratio;
+               
+               iter_count++;                                        
+          }while(!ratio_achieved && iter_count < max_iter);         
+          dst = src_copy;
+     }
+
+     using namespace cv;
+     
+     double getThreshVal_Otsu_8u( Mat& _src , cv::Mat &_mask )
+     {
+          Size size = _src.size();
+          int step = (int) _src.step;
+          
+          const int N = 256;
+          int i, j, h[N] = {0};
+          int in_mask_count = 0;
+          for( i = 0; i < size.height; i++ )
+          {
+               const uchar* src = _src.ptr() + step*i;
+               const uchar* mask = _mask.ptr() + step*i;
+               j = 0;
+               for( ; j < size.width; j++ ) {
+                    if (mask[j] > 0) {
+                         h[src[j]]++;
+                         in_mask_count++;
+                    }
+               }
+          }
+
+          //double mu = 0, scale = 1./(size.width*size.height);
+          double mu = 0, scale = 1./(double)in_mask_count;
+          for( i = 0; i < N; i++ ) {
+               mu += i*(double)h[i];
+          }
+
+          mu *= scale;
+          double mu1 = 0, q1 = 0;
+          double max_sigma = 0, max_val = 0;
+
+          for( i = 0; i < N; i++ )
+          {
+               double p_i, q2, mu2, sigma;
+
+               p_i = h[i]*scale;
+               mu1 *= q1;
+               q1 += p_i;
+               q2 = 1. - q1;
+
+               if( std::min(q1,q2) < FLT_EPSILON || std::max(q1,q2) > 1. - FLT_EPSILON )
+                    continue;
+
+               mu1 = (mu1 + i*p_i)/q1;
+               mu2 = (mu - q1*mu1)/q2;
+               sigma = q1*q2*(mu1 - mu2)*(mu1 - mu2);
+               if( sigma > max_sigma )
+               {
+                    max_sigma = sigma;
+                    max_val = i;
+               }
+          }
+
+          return max_val;
+     }
+
+     void multi_otsu(cv::Mat &_src, cv::Mat &_dst, cv::Mat &_mask, cv::Mat &_first)
+     {
+          // Compute first level of OTSU's method
+          double val = wb::getThreshVal_Otsu_8u(_src, _mask);
+          cv::Mat thresh_img1;
+          cv::threshold(_src, thresh_img1, val, 255, cv::THRESH_TOZERO);
+
+          //cv::threshold(_src, _first, val, 255, THRESH_TOZERO_INV);          
+          _first = thresh_img1;
+
+          //cv::imshow("First OTSU", thresh_img1);
+          //cv::waitKey(0);
+
+          // Get New Mask
+          int nRows = _mask.rows;
+          int nCols = _mask.cols;
+          
+          cv::Mat mask_2 = cv::Mat(_mask.size(), CV_8UC1);
+          int i,j;
+          uchar *p, *m;
+          for (i = 0; i < nRows; ++i) {
+               p = thresh_img1.ptr<uchar>(i);
+               m = mask_2.ptr<uchar>(i);
+               for (j = 0; j < nCols; ++j) {
+                    if (p[j] == 0) {
+                         m[j] = 0;
+                    } else {
+                         m[j] = 1;
+                    }                                        
+               }
+          }
+
+          //cv::imshow("Second mask", mask_2*255);
+          //cv::waitKey(0);
+          
+          // Second OTSU Level
+          cv::Mat second_otsu;
+          val = wb::getThreshVal_Otsu_8u(thresh_img1, mask_2);
+          cv::threshold(thresh_img1, second_otsu, val, 255, cv::THRESH_TOZERO);
+
+          _dst = second_otsu.clone();
+
+          ///////////
+          // AGAIN
+          // Get New Mask                    
+          mask_2 = cv::Mat(_mask.size(), CV_8UC1);
+          //int i,j;
+          //uchar *p, *m;
+          for (i = 0; i < nRows; ++i) {
+               p = second_otsu.ptr<uchar>(i);
+               m = mask_2.ptr<uchar>(i);
+               for (j = 0; j < nCols; ++j) {
+                    if (p[j] == 0) {
+                         m[j] = 0;
+                    } else {
+                         m[j] = 1;
+                    }                                        
+               }
+          }
+
+          //cv::imshow("Second mask", mask_2*255);
+          //cv::waitKey(0);
+          
+          // Second OTSU Level
+          cv::Mat third_otsu;
+          val = wb::getThreshVal_Otsu_8u(second_otsu, mask_2);
+          cv::threshold(second_otsu, third_otsu, val, 255, cv::THRESH_TOZERO);
+
+          _dst = third_otsu.clone();
+          
+          //cv::imshow("Second OTSU", _dst);
+          //cv::waitKey(0);
+     }
 }
 
 // KMEAN OPENCV Clustering
