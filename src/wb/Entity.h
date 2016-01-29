@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-26 12:04:06 syllogismrxs>
+/// Time-stamp: <2016-01-29 12:24:48 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -166,7 +166,7 @@ namespace wb {
           std::list<cv::Point2f> & trail() { return trail_; }
           cv::Point trail_history(int past);
           void update_trail();
-          
+
      protected:          
           std::string name_;
           EntityType_t type_;
@@ -211,8 +211,7 @@ namespace wb {
           std::list<cv::Point2f> trail_;
           
           void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }          
-          
+          float distance() { return distance_; }            
      private:
      };
 

@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-24 11:11:17 syllogismrxs>
+/// Time-stamp: <2016-01-29 13:53:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -143,6 +143,12 @@ BoundingBox(cv::Rect rect) :
      template<typename T> static double distance_temp(T p1, T p2)
      {
           return sqrt( pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2) );
+     }
+
+     void print()
+     {
+          std::cout << "Box: (" << xmin_ << "," << ymin_ << ") to (" 
+                    << xmax_ << "," << ymax_ << ")" << endl;
      }
      
      static double distance(const BoundingBox &b1, const BoundingBox &b2)

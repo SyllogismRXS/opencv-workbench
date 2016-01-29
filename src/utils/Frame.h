@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-25 13:08:11 syllogismrxs>
+/// Time-stamp: <2016-01-29 12:00:40 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -49,6 +49,11 @@ public:
      void set_frame_number(int frame_number) {frame_number_ = frame_number;}
      int frame_number() { return frame_number_; }
      std::map<std::string, wb::Entity> objects;
+     
+     void erase(std::string str) 
+     {
+          objects.erase(str);
+     }
      
      bool contains_object(const std::string &name, wb::Entity &object) 
      {

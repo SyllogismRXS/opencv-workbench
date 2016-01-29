@@ -184,7 +184,7 @@ void VideoWindow::divide_frame_rate()
 }
 
 void VideoWindow::closeEvent(QCloseEvent *event)
-{
+{     
      this->writeSettings();
 }
 

@@ -72,6 +72,7 @@ target_link_libraries(${APP_NAME}lib
   clickablelabel
   ${OpenCV_LIBS}
   cut_widgetlib
+  object_namelib
   scuba_face_labellib
   video_object_labellib
   opencv-built-in
@@ -96,6 +97,7 @@ target_link_libraries(${APP_NAME}
   clickablelabel
   ${OpenCV_LIBS}
   cut_widgetlib
+  object_namelib
   scuba_face_labellib
   video_object_labellib
   opencv-built-in

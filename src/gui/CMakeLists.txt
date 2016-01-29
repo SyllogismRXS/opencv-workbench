@@ -1,3 +1,4 @@
+add_subdirectory(object_name)
 add_subdirectory(hellowindow)
 add_subdirectory(calculator)
 add_subdirectory(imageview)

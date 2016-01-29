@@ -38,9 +38,13 @@
  **
  ****************************************************************************/
 
-#ifndef ANNOTATE_H
-#define ANNOTATE_H
+#ifndef OBJECT_NAME_H
+#define OBJECT_NAME_H
 
+#include <QStringListModel>
+
+#include <iostream>
+#include <vector>
 // OpenCV headers
 #include <cv.h>
 //#include <highgui.h>
@@ -50,81 +54,38 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <video_window/ui_VideoWindow.h>
+#include <object_name/ui_ObjectName.h>
 
-#include <opencv_workbench/utils/Stream.h>
-#include <opencv_workbench/utils/Frame.h>
-#include <opencv_workbench/wb/Entity.h>
-#include <opencv_workbench/utils/AnnotationParser.h>
-#include <opencv_workbench/gui/cut/cut.h>
-#include <opencv_workbench/gui/video_window/VideoWindow.h>
-#include <opencv_workbench/gui/object_name/ObjectName.h>
-
-#include <QTextStream>
-
-class Annotate : public VideoWindow
+class ObjectName : public QWidget
 {
      Q_OBJECT
 
-     public:
-     
-     Annotate(VideoWindow *parent = 0);
-     void export_roi();
-     QString str2qstr(std::string str);
-          
-protected:     
-     
-     virtual void before_next_frame();
-     virtual void before_display(cv::Mat &img);
-     virtual void on_open();     
-     virtual void on_mouseMoved(QMouseEvent * event);
+public:
 
-     QMutex mutex_;
+     ObjectName(QWidget *parent = 0);
+ 
+     QString selected_name();
+     void add_name(QString str);
+     void set_selected_name(QString str);
 
-     std::map<std::string, wb::Entity> *objects_;
-     int current_frame_;
-     
-     QDialog * object_name_dialog_;
-     ObjectName *object_name_;
+signals:     
 
-     int distance(QPoint p1, QPoint p2);
-     bool nearby(QPoint p1, QPoint p2, int threshold);
-     bool inside(QPoint p, QPoint p1, QPoint p2);
-     
-     bool point_present_;
-     QPoint pt_;
-     bool edit_pt_;
-     
-     bool box_present_;
-     
-     QPoint pt1_;
-     QPoint pt2_;
+private slots:    
+     void add_name();
+     void delete_name();
 
-     QPoint curr_pos_;
-
-     bool box_selected_;
-     std::map<std::string, wb::Entity>::iterator it_selected_;
-     
-     int near_thresh;
-     bool edit_pt1_;
-     bool edit_pt2_;
-     bool edit_box_;
-
-     QPoint pt1_drag_offset_;
-     QPoint pt2_drag_offset_;             
-
-     AnnotationParser parser_;
-
-     bool edit_enabled_;          
-     
 private:
+     Ui::ObjectName ui;
      
-private slots:
-     void mousePressed(QMouseEvent * event);
-     void mouseReleased(QMouseEvent * event);     
-     void save_annotation();
-     void erase_box();
-     void edit_enabled();     
+     QStringListModel *model;
+     QStringList list_; 
+
+     void readSettings();
+     void writeSettings();
+
+     QString m_sSettingsFile;
+     
+     
 };
 
 #endif
