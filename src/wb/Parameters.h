@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-26 18:09:10 syllogismrxs>
+/// Time-stamp: <2016-01-31 12:53:48 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -46,6 +46,8 @@ public:
 
      int history_length;
      double history_distance;
+     double ratio_threshold;
+     double static_threshold;
      
 protected:
 

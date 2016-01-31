@@ -178,6 +178,16 @@ int main(int argc, char *argv[])
           // Get track list from detector
           std::vector<wb::Entity> tracks = detector_->tracks();
           
+          if (hand_ann_found) {
+               // Score preprocessing, if available
+               cv::Mat thresh_img = detector_->thresh_img();
+               parser_tracks.score_preprocessing(frame_number, parser_truth, 
+                                                 thresh_img);
+
+               std::vector<wb::Entity> frame_ents;
+               detector_->frame_ents(frame_ents);
+          }
+          
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
           Frame frame;
@@ -236,6 +246,7 @@ int main(int argc, char *argv[])
           names.push_back("diver");
           //parser_tracks.score_detector(parser_truth, names);          
           parser_tracks.score_detector_2(parser_truth, names);          
+          parser_tracks.score_preprocessing_final(parser_truth);
      } else {
           cout << "WARNING: Can't score detector because hand annotated "
                << "file is missing" << endl;

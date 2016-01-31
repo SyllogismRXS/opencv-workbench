@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-26 19:04:31 syllogismrxs>
+/// Time-stamp: <2016-01-31 13:02:06 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -88,6 +88,11 @@ public:
      void score_detector_2(AnnotationParser &truth, 
                       std::vector<std::string> &names);
 
+     void score_preprocessing(int frame, AnnotationParser &truth, 
+                              cv::Mat &img);
+
+     void score_preprocessing_final(AnnotationParser &truth);
+     
      void set_xml_output_dir(std::string dir);
      void set_xml_output_filename(std::string yaml_file);
      void set_plugin_name(std::string name) { plugin_name_ = name; }
@@ -127,7 +132,14 @@ protected:
      double TPR_;
      double FPR_;
 
+     double Pd_;
+     double Pfa_;
+
      Parameters params_;
+
+     int inside_count_total_;
+     int outside_count_total_;
+     int count_total_;
      
 private:
 };

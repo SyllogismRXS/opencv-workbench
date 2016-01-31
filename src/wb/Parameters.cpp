@@ -12,6 +12,8 @@ Parameters::Parameters()
 {
      history_length = 10;
      history_distance = 15;
+     ratio_threshold = 0.003;
+     static_threshold = 150;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -24,12 +26,20 @@ void Parameters::set_yaml_file(std::string yaml_file)
           YAML::Node doc;
           parser.GetNextDocument(doc);
           
+          if(const YAML::Node *p = doc.FindValue("ratio_threshold")) {
+               *p >> ratio_threshold;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("static_threshold")) {
+               *p >> static_threshold;
+          }
+
           if(const YAML::Node *p = doc.FindValue("history_length")) {
                *p >> history_length;
           }
           
           if(const YAML::Node *p = doc.FindValue("history_distance")) {
                *p >> history_distance;
-          }
+          }          
      }
 }

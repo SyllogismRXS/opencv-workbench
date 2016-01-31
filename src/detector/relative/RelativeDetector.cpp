@@ -140,8 +140,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      
      cv::Mat thresh_amp;      
      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
-     wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 5, mask);      
+     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 5, mask);      
+     wb::adaptive_threshold(median, thresh_amp, thresh_value_, params_.ratio_threshold, 5, mask);      
      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 0.004, 1, 5, mask);
+     
+     thresh_img_ = thresh_amp.clone();
      
      //cv::adaptiveThreshold(median, thresh_amp, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 31, 20);
      //cv::threshold(median, thresh_amp, 0, 255, cv::THRESH_TOZERO | cv::THRESH_OTSU);     
@@ -178,7 +181,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.set_mask(mask);
      blob_process_.process_frame(dilate, median, thresh_value_);
      //blob_process_.process_frame(ndt_img, median, thresh_value_);
-      
+          
+     // Get the current frame's blobs and save to frame's entities
+     blob_process_.frame_ents(frame_ents_);
+     
      cv::Mat blob_img;     
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);     

@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-26 18:20:56 syllogismrxs>
+/// Time-stamp: <2016-01-30 18:14:21 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -53,6 +53,7 @@
 
 #include <opencv_workbench/wb/Entity.h>
 #include <opencv_workbench/wb/Parameters.h>
+#include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/utils/Stream.h>
 
 //struct Params {
@@ -101,11 +102,20 @@ public:
      //virtual bool autonomy_ready() {return false;}
      //
      //virtual vec2f desired_trajectory()=0;
+     cv::Mat thresh_img() { return thresh_img_; }
 
+     void frame_ents(std::vector<wb::Entity> &frame_ents) 
+     {
+          frame_ents = frame_ents_;
+     } 
+     
 protected:
      //unsigned int own_id_;
      std::vector<wb::Entity> tracks_;
      bool hide_windows_;
+
+     cv::Mat thresh_img_;     
+     std::vector<wb::Entity> frame_ents_;
 
 //std::map<std::string,double> params_;
 

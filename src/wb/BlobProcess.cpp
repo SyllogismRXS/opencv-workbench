@@ -540,8 +540,9 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
 
 int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 {    
-     std::vector<wb::Blob> new_blobs;
-     this->find_blobs(input, new_blobs, min_blob_size_);
+     //std::vector<wb::Blob> new_blobs;
+     frame_blobs_.clear();     
+     this->find_blobs(input, frame_blobs_, min_blob_size_);     
 
      //cv::Mat out;
      //double eps = 10;
@@ -569,7 +570,7 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      blobs_.clear();
 
      // This has some bug that crashes with too many blobs
-     this->assign_hungarian(new_blobs, prev_blobs_, blobs_);
+     this->assign_hungarian(frame_blobs_, prev_blobs_, blobs_);
      
      blob_maintenance();
 
@@ -1061,8 +1062,14 @@ bool BlobProcess::displace_detect(int history, double distance)
 
 void BlobProcess::blobs_to_entities(std::vector<wb::Entity> &ents)
 {     
-     for (std::vector<wb::Blob>::iterator it = blobs_.begin(); 
-          it != blobs_.end(); it++) {
+     BlobProcess::blobs_to_entities(blobs_,ents);
+}
+
+void BlobProcess::blobs_to_entities(std::vector<wb::Blob> &blobs,
+                                    std::vector<wb::Entity> &ents)
+{     
+     for (std::vector<wb::Blob>::iterator it = blobs.begin(); 
+          it != blobs.end(); it++) {
           wb::Entity track;
           track.set_bbox(it->bbox());
           track.copy_track_info(*it);          

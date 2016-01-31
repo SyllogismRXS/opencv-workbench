@@ -40,6 +40,12 @@ void AnnotationParser::reset()
      FP_ = 0;
      FN_ = 0;
      TPR_ = FPR_ = -1;
+
+     Pd_ = Pfa_ = -1;
+
+     inside_count_total_ = 0;
+     outside_count_total_ = 0;
+     count_total_ = 0;
      
      frames.clear();
 }
@@ -199,6 +205,19 @@ void AnnotationParser::write_header()
                xml_node<> *metrics_node = doc.allocate_node(node_element, "metrics");
                root_node->append_node(metrics_node);
                
+               // "Pre"processing metrics               
+               xml_node<> *pre_node = doc.allocate_node(node_element, "pre");
+               metrics_node->append_node(pre_node);
+
+               char * Pd = doc.allocate_string(syllo::double2str(Pd_).c_str());
+               xml_node<> *Pd_node = doc.allocate_node(node_element, "Pd", Pd);
+               pre_node->append_node(Pd_node);
+
+               char * Pfa = doc.allocate_string(syllo::double2str(Pfa_).c_str());
+               xml_node<> *Pfa_node = doc.allocate_node(node_element, "Pfa", Pfa);
+               pre_node->append_node(Pfa_node);
+               
+               // For the higher level metrics...
                char * TP = doc.allocate_string(syllo::int2str(TP_).c_str());
                xml_node<> *TP_node = doc.allocate_node(node_element, "TP", TP);
                metrics_node->append_node(TP_node);
@@ -221,12 +240,20 @@ void AnnotationParser::write_header()
 
                char * FPR = doc.allocate_string(syllo::double2str(FPR_).c_str());
                xml_node<> *FPR_node = doc.allocate_node(node_element, "FPR", FPR);
-               metrics_node->append_node(FPR_node);
+               metrics_node->append_node(FPR_node);               
           }
 
           // Write parameters for current run
           xml_node<> *parameters_node = doc.allocate_node(node_element, "parameters");
           root_node->append_node(parameters_node);
+
+          char * ratio_threshold = doc.allocate_string(syllo::double2str(params_.ratio_threshold).c_str());
+          xml_node<> *ratio_threshold_node = doc.allocate_node(node_element, "ratio_threshold", ratio_threshold);
+          parameters_node->append_node(ratio_threshold_node);          
+          
+          char * static_threshold = doc.allocate_string(syllo::double2str(params_.static_threshold).c_str());
+          xml_node<> *static_threshold_node = doc.allocate_node(node_element, "static_threshold", static_threshold);
+          parameters_node->append_node(static_threshold_node);          
           
           char * history_length = doc.allocate_string(syllo::int2str(params_.history_length).c_str());
           xml_node<> *history_length_node = doc.allocate_node(node_element, "history_length", history_length);
@@ -235,6 +262,7 @@ void AnnotationParser::write_header()
           char * history_distance = doc.allocate_string(syllo::int2str(params_.history_distance).c_str());
           xml_node<> *history_distance_node = doc.allocate_node(node_element, "history_distance", history_distance);
           parameters_node->append_node(history_distance_node);          
+
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -422,6 +450,26 @@ int AnnotationParser::ParseFile(std::string file)
      // Find <metrics>
      xml_node<> * metrics_node = doc.first_node()->first_node("metrics");
      if (metrics_node != 0) {
+
+          xml_node<> * pre_node = metrics_node->first_node("pre");
+          if (pre_node != 0) {
+               // Pd
+               xml_node<> * Pd_node = pre_node->first_node("Pd");
+               if (Pd_node != 0) {
+                    Pd_ = syllo::str2int(Pd_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing Pd node" << endl;
+               }
+
+               // Pfa
+               xml_node<> * Pfa_node = pre_node->first_node("Pfa");
+               if (Pfa_node != 0) {
+                    Pfa_ = syllo::str2int(Pfa_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing Pfa node" << endl;
+               }          
+          }                   
+          
           // TP
           xml_node<> * TP_node = metrics_node->first_node("TP");
           if (TP_node != 0) {
@@ -1076,4 +1124,55 @@ void AnnotationParser::score_detector_2(AnnotationParser &truth,
      cout << "FPR: " << FPR_ << endl;
      metrics_present_ = true;
      syllo::fill_line("+");
+}
+
+void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
+                                           cv::Mat &img)
+{
+     cv::Mat img_clone = img.clone();
+     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
+     
+     int inside_count = 0;
+     int outside_count = 0;
+     if (truth.frames.count(frame) > 0) {
+          // Search for non-zero pixels in img
+          for(int r = 0; r < img.rows; r++) {
+               for(int c = 0; c < img.cols; c++) {
+                    if (img.at<uchar>(r,c) != 0) {
+                         cv::Point p(c,r);
+                         // Is the point inside one of the objects?
+                         std::map<std::string, wb::Entity>::iterator it;
+                         for (it = truth.frames[frame].objects.begin(); 
+                              it != truth.frames[frame].objects.end();
+                              it++) {
+                              
+                              cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
+                              
+                              if (it->second.bbox().contains(p)) {
+                                   // Point inside of one of the "truth" boxes
+                                   inside_count++;
+                              } else {
+                                   outside_count++;
+                              }
+                         }
+                    }
+               }
+          }
+     } 
+     inside_count_total_ += inside_count;
+     outside_count_total_ += outside_count;
+     count_total_ += inside_count + outside_count;     
+     
+     //cout << "Inside count: " << inside_count << endl;
+     //cout << "Outside count: " << outside_count << endl;
+     cv::imshow("POD Rects", img_clone);
+}
+
+void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
+{
+     Pd_ = (double)inside_count_total_ / (double)count_total_;     
+     Pfa_ = (double)outside_count_total_ / (double)count_total_;
+
+     cout << "Pd: " << Pd_ << endl;
+     cout << "Pfa: " << Pfa_ << endl;
 }

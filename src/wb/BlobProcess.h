@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-28 12:35:26 syllogismrxs>
+/// Time-stamp: <2016-01-30 18:16:39 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -124,8 +124,16 @@ public:
      bool displace_detect(int history, double distance);
 
      void blobs_to_entities(std::vector<wb::Entity> &ents);
+     
+     static void blobs_to_entities(std::vector<wb::Blob> &blobs,
+                                   std::vector<wb::Entity> &ents);
 
      void set_mask(cv::Mat &mask) { mask_ = mask; }
+
+     void frame_ents(std::vector<wb::Entity> frame_ents) 
+     { 
+          BlobProcess::blobs_to_entities(frame_blobs_, frame_ents);
+     }
      
 protected:
      
@@ -150,6 +158,8 @@ protected:
      cv::Mat mask_;
 
      Graph graph_;
+
+     std::vector<wb::Blob> frame_blobs_;
 
 private:
      int count_;

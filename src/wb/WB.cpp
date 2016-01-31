@@ -464,8 +464,7 @@ namespace wb {
                }
 
                //cout << "Trying: Thresh: " << thresh << endl;
-               cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);
-              
+               cv::threshold(src, dst, thresh, 255, cv::THRESH_TOZERO);              
                
                iter_count++;          
 
@@ -584,7 +583,7 @@ namespace wb {
      void adaptive_threshold(cv::Mat &src, cv::Mat& dst, int &thresh, 
                              double desired_ratio, int max_iter, cv::Mat &mask)
      {
-          cout << "==============================" << endl;
+          //cout << "==============================" << endl;
 
           // accept only char type matrices
           CV_Assert(src.depth() != sizeof(uchar));          
@@ -593,19 +592,19 @@ namespace wb {
           int iter_count = 0;
           cv::Mat src_copy = src.clone();
           
-          // First compute the image properties          
-          // Compute mean and stdev before threshold
-          double prev_mean, prev_std, prev_ratio;
-          
-          mean_stddev(src_copy,mask,prev_mean,prev_std);          
-          prev_ratio = nonzero_ratio(src_copy,mask);
-          cout << "Mean: " << prev_mean << endl;
-          cout << "StdDev: " << prev_std << endl;   
-          cout << "Ratio: " << prev_ratio << endl;                    
+          // // First compute the image properties          
+          // // Compute mean and stdev before threshold
+          // double prev_mean, prev_std, prev_ratio;
+          // 
+          // mean_stddev(src_copy,mask,prev_mean,prev_std);          
+          // prev_ratio = nonzero_ratio(src_copy,mask);
+          // cout << "Mean: " << prev_mean << endl;
+          // cout << "StdDev: " << prev_std << endl;   
+          // cout << "Ratio: " << prev_ratio << endl;                    
           
           do {                                             
-               cout << "-----------------" << endl;
-               cout << "Thresh: " << thresh << endl;
+               //cout << "-----------------" << endl;
+               //cout << "Thresh: " << thresh << endl;
                src_copy = src.clone();              
 
                // Apply threshold
@@ -613,22 +612,23 @@ namespace wb {
 
                // First compute the image properties          
                // Compute mean and stdev before threshold
-               double mean, std, ratio;          
-               mean_stddev(src_copy,mask,mean,std);          
+               //double mean, std;
+               double ratio;          
+               //mean_stddev(src_copy,mask,mean,std);          
                ratio = nonzero_ratio(src_copy,mask);
-               cout << "Mean: " << mean << endl;
-               cout << "StdDev: " << std << endl;   
-               cout << "Ratio: " << ratio << endl;
-               
-               cout << "Change Mean: " << mean-prev_mean << endl;
-               cout << "Change Std: " << std-prev_std << endl;               
-               cout << "Change Ratio: " << ratio-prev_ratio << endl;
+               //cout << "Mean: " << mean << endl;
+               //cout << "StdDev: " << std << endl;   
+               //cout << "Ratio: " << ratio << endl;
+               //
+               //cout << "Change Mean: " << mean-prev_mean << endl;
+               //cout << "Change Std: " << std-prev_std << endl;               
+               //cout << "Change Ratio: " << ratio-prev_ratio << endl;
                
                double ratio_error = ratio - desired_ratio;
                if (std::abs(ratio_error) < 0.00001) { 
                     ratio_achieved = true;                    
                }
-               cout << "Ratio Error: " << ratio_error << endl;
+               //cout << "Ratio Error: " << ratio_error << endl;
 
                thresh += ratio_error * 1e3;
 
@@ -638,12 +638,12 @@ namespace wb {
                     thresh = 255;
                }
 
-               cv::imshow("Src Copy", src_copy);
+               //cv::imshow("Src Copy", src_copy);
                //cv::waitKey(0);
 
-               prev_mean = mean;
-               prev_std = std;
-               prev_ratio = ratio;
+               //prev_mean = mean;
+               //prev_std = std;
+               //prev_ratio = ratio;
                
                iter_count++;                                        
           }while(!ratio_achieved && iter_count < max_iter);         
