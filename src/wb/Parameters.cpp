@@ -13,7 +13,9 @@ Parameters::Parameters()
      history_length = 10;
      history_distance = 15;
      ratio_threshold = 0.003;
-     static_threshold = 150;
+     //static_threshold = 150;
+     //static_threshold = 50;
+     static_threshold = 200;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)

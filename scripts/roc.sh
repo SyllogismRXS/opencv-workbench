@@ -39,11 +39,11 @@ set style line 5 lt rgb "blue" lw 3 pt 6
 set arrow from 0,0 to 1,1 nohead lc rgb 'black'
 
 set datafile separator ","
-plot "${STEM}.csv" using 6:5 title '${TITLE}' with linespoints ls 5
+plot "${STEM}.csv" using 2:1 title '${TITLE}' with linespoints ls 5
 
 set terminal epslatex size 3.5,2.62 standalone color colortext 10
 set output "${STEM}-sa.tex"
-plot "${STEM}.csv" using 6:5 title '${TITLE}' with linespoints ls 5
+plot "${STEM}.csv" using 2:1 title '${TITLE}' with linespoints ls 5
 
 quit
 PLOT

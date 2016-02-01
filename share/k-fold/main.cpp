@@ -128,8 +128,11 @@ int main(int argc, char *argv[])
      }
 
      if ( !fs::exists( fs::path(output_dir) ) ) {
-          cout << "Output directory doesn't exist" << endl;
-          return -1;
+          if(!fs::create_directories(fs::path(output_dir))) {
+               cout << "ERROR: Unable to create output directory: "
+                    << output_dir << endl;
+               return -1;
+          }          
      }
 
      std::ifstream fin(yaml_file.c_str());
@@ -137,19 +140,25 @@ int main(int argc, char *argv[])
      YAML::Node doc;
      parser.GetNextDocument(doc);
 
+     // Write the full filenames to a simple text file for bash to handle
+     std::ofstream filenames_output;
+     std::string filenames_output_str = output_dir + "/" + "files.txt";
+     filenames_output.open(filenames_output_str.c_str(), std::ofstream::out);
+     
      std::vector<DataSet> datasets;
-
      // Check for "data" map
      if(const YAML::Node *data = doc.FindValue("data")) {
           for(unsigned i=0; i < data->size();i++) {
                DataSet d;
                (*data)[i] >> d;
                datasets.push_back(d);
+               filenames_output << d.filename << endl;
           }
      } else {
           cout << "Invalid format. Missing data" << endl;
           return -1;
      }
+     filenames_output.close();
 
      // Fill up the frames map with the frame counts of all the data
      // sets. Later, we will randomly sample from this frames map to select the

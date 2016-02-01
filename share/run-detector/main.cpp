@@ -39,7 +39,8 @@ PluginManager<Detector, Detector_maker_t> plugin_manager_;
 // 3. Aggregate track files, compute average/std threshold
 // 4. Use avg thresh on validation set, record TPR/FPR
 // 
-// ====> Second Possibility
+// ====> Second Possibility (training, validation, final test set
+// 1. Using K-folds, generate ROC plots by sweeping threshold across each training set
 // 1. Compute ROC plots for training data by sweeping thresholds
 // 2. Choose point on ROC plot by minimizing dist between upper left corner and curve
 // 3. Evaluate on validation/test set
@@ -184,16 +185,16 @@ int main(int argc, char *argv[])
      parser_tracks.set_type("video");
      parser_tracks.set_number_of_frames(stream.get_frame_count());
      parser_tracks.set_plugin_name(plugin_name);
-     parser_tracks.set_params(&params);
+     parser_tracks.set_params(params);
      
      if (xml_output_dir_flag == 1) {
           parser_tracks.set_xml_output_dir(xml_output_dir);
      }
 
-     // If we are doing a threshold sweep, the output file should match the
-     // the input yaml file name.
+     // If we are doing a threshold sweep, the output file name should include
+     // the original video file name and the range filename
      if (threshold_sweep_flag == 1 && yaml_file != "") {          
-          parser_tracks.set_xml_output_filename(yaml_file);
+          parser_tracks.prepend_xml_output_filename(yaml_file);
      }
 
      // Load the Bridge shared library (based on yml file)

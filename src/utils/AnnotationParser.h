@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-01 00:30:05 syllogismrxs>
+/// Time-stamp: <2016-02-01 15:10:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -94,12 +94,13 @@ public:
      void score_preprocessing_final(AnnotationParser &truth);
      
      void set_xml_output_dir(std::string dir);
-     void set_xml_output_filename(std::string yaml_file);
+     void prepend_xml_output_filename(std::string yaml_file);
      void set_plugin_name(std::string name) { plugin_name_ = name; }
 
-     void set_params(Parameters *params) { params_ = params; }
+     void set_params(Parameters params) { params_ = params; }
 
      std::map<std::string,double> get_metrics();     
+     std::map<std::string,double> get_params();
 
      std::vector<wb::Entity> get_tracks(std::string name);
 
@@ -109,6 +110,7 @@ public:
 
 protected:
      std::string xml_filename_;     
+     std::string video_file_stem_;
      AnnotateType_t ann_type_;
      
      std::string folder_;
@@ -132,10 +134,16 @@ protected:
      double TPR_;
      double FPR_;
 
+     int PRE_TP_;
+     int PRE_TN_;
+     int PRE_FP_;
+     int PRE_FN_;
+     double PRE_TPR_;
+     double PRE_FPR_;
      double Pd_;
      double Pfa_;
 
-     Parameters *params_;
+     Parameters params_;
 
      int inside_count_total_;
      int outside_count_total_;

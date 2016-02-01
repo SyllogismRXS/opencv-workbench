@@ -42,6 +42,10 @@ void AnnotationParser::reset()
      TPR_ = FPR_ = -1;
 
      Pd_ = Pfa_ = -1;
+     PRE_TP_ = 0;
+     PRE_TN_ = 0;
+     PRE_FP_ = 0;
+     PRE_FN_ = 0;     
 
      inside_count_total_ = 0;
      outside_count_total_ = 0;
@@ -85,11 +89,13 @@ int AnnotationParser::CheckForFile(std::string video_file,
                                     AnnotationParser::AnnotateType_t ann_type)
 {
      video_filename_ = video_file;
+     video_file_stem_ = fs::path(video_filename_).stem().string();
+
      ann_type_ = ann_type;
      
      // Remove the .son or .avi from the end of the filename
      int lastindex = video_file.find_last_of("."); 
-     xml_filename_ = video_file.substr(0, lastindex);
+     xml_filename_ = video_file.substr(0, lastindex);          
      
      if (ann_type_ == hand) {
           xml_filename_ += ".truth.xml";
@@ -170,11 +176,11 @@ void AnnotationParser::set_xml_output_dir(std::string dir)
      xml_filename_ = dir + "/" + filename.c_str();
 }
 
-void AnnotationParser::set_xml_output_filename(std::string yaml_file)
-{
-     fs::path dir = fs::path(xml_filename_).parent_path();
+void AnnotationParser::prepend_xml_output_filename(std::string yaml_file)
+{          
      std::string yaml_stem = fs::path(yaml_file).stem().string();
-     xml_filename_ = dir.string() + "/" + yaml_stem + ".tracks.xml";
+     fs::path dir = fs::path(xml_filename_).parent_path();
+     xml_filename_ = dir.string() + "/" + yaml_stem + "_" + video_file_stem_ + ".tracks.xml";
 }
 
 void AnnotationParser::write_annotation()
@@ -209,13 +215,37 @@ void AnnotationParser::write_header()
                xml_node<> *pre_node = doc.allocate_node(node_element, "pre");
                metrics_node->append_node(pre_node);
 
+               char * PRE_TP = doc.allocate_string(syllo::int2str(PRE_TP_).c_str());
+               xml_node<> *PRE_TP_node = doc.allocate_node(node_element, "PRE_TP", PRE_TP);
+               pre_node->append_node(PRE_TP_node);
+
+               char * PRE_TN = doc.allocate_string(syllo::int2str(PRE_TN_).c_str());
+               xml_node<> *PRE_TN_node = doc.allocate_node(node_element, "PRE_TN", PRE_TN);
+               pre_node->append_node(PRE_TN_node);
+
+               char * PRE_FP = doc.allocate_string(syllo::int2str(PRE_FP_).c_str());
+               xml_node<> *PRE_FP_node = doc.allocate_node(node_element, "PRE_FP", PRE_FP);
+               pre_node->append_node(PRE_FP_node);
+
+               char * PRE_FN = doc.allocate_string(syllo::int2str(PRE_FN_).c_str());
+               xml_node<> *PRE_FN_node = doc.allocate_node(node_element, "PRE_FN", PRE_FN);
+               pre_node->append_node(PRE_FN_node);               
+
+               char * PRE_TPR = doc.allocate_string(syllo::double2str(PRE_TPR_).c_str());
+               xml_node<> *PRE_TPR_node = doc.allocate_node(node_element, "PRE_TPR", PRE_TPR);
+               pre_node->append_node(PRE_TPR_node);               
+
+               char * PRE_FPR = doc.allocate_string(syllo::double2str(PRE_FPR_).c_str());
+               xml_node<> *PRE_FPR_node = doc.allocate_node(node_element, "PRE_FPR", PRE_FPR);
+               pre_node->append_node(PRE_FPR_node);               
+               
                char * Pd = doc.allocate_string(syllo::double2str(Pd_).c_str());
                xml_node<> *Pd_node = doc.allocate_node(node_element, "Pd", Pd);
                pre_node->append_node(Pd_node);
 
                char * Pfa = doc.allocate_string(syllo::double2str(Pfa_).c_str());
                xml_node<> *Pfa_node = doc.allocate_node(node_element, "Pfa", Pfa);
-               pre_node->append_node(Pfa_node);
+               pre_node->append_node(Pfa_node);               
                
                // For the higher level metrics...
                char * TP = doc.allocate_string(syllo::int2str(TP_).c_str());
@@ -247,19 +277,19 @@ void AnnotationParser::write_header()
           xml_node<> *parameters_node = doc.allocate_node(node_element, "parameters");
           root_node->append_node(parameters_node);
 
-          char * ratio_threshold = doc.allocate_string(syllo::double2str(params_->ratio_threshold).c_str());
+          char * ratio_threshold = doc.allocate_string(syllo::double2str(params_.ratio_threshold).c_str());
           xml_node<> *ratio_threshold_node = doc.allocate_node(node_element, "ratio_threshold", ratio_threshold);
           parameters_node->append_node(ratio_threshold_node);          
           
-          char * static_threshold = doc.allocate_string(syllo::double2str(params_->static_threshold).c_str());
+          char * static_threshold = doc.allocate_string(syllo::double2str(params_.static_threshold).c_str());
           xml_node<> *static_threshold_node = doc.allocate_node(node_element, "static_threshold", static_threshold);
           parameters_node->append_node(static_threshold_node);          
           
-          char * history_length = doc.allocate_string(syllo::int2str(params_->history_length).c_str());
+          char * history_length = doc.allocate_string(syllo::int2str(params_.history_length).c_str());
           xml_node<> *history_length_node = doc.allocate_node(node_element, "history_length", history_length);
           parameters_node->append_node(history_length_node);
 
-          char * history_distance = doc.allocate_string(syllo::int2str(params_->history_distance).c_str());
+          char * history_distance = doc.allocate_string(syllo::int2str(params_.history_distance).c_str());
           xml_node<> *history_distance_node = doc.allocate_node(node_element, "history_distance", history_distance);
           parameters_node->append_node(history_distance_node);          
 
@@ -453,6 +483,54 @@ int AnnotationParser::ParseFile(std::string file)
 
           xml_node<> * pre_node = metrics_node->first_node("pre");
           if (pre_node != 0) {
+               // PRE_TP
+               xml_node<> * PRE_TP_node = pre_node->first_node("PRE_TP");
+               if (PRE_TP_node != 0) {
+                    PRE_TP_ = syllo::str2int(PRE_TP_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_TP node" << endl;
+               }
+
+               // PRE_TN
+               xml_node<> * PRE_TN_node = pre_node->first_node("PRE_TN");
+               if (PRE_TN_node != 0) {
+                    PRE_TN_ = syllo::str2int(PRE_TN_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_TN node" << endl;
+               }
+
+               // PRE_FP
+               xml_node<> * PRE_FP_node = pre_node->first_node("PRE_FP");
+               if (PRE_FP_node != 0) {
+                    PRE_FP_ = syllo::str2int(PRE_FP_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_FP node" << endl;
+               }
+
+               // PRE_FN
+               xml_node<> * PRE_FN_node = pre_node->first_node("PRE_FN");
+               if (PRE_FN_node != 0) {
+                    PRE_FN_ = syllo::str2int(PRE_FN_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_FN node" << endl;
+               }
+
+               // PRE_TPR
+               xml_node<> * PRE_TPR_node = pre_node->first_node("PRE_TPR");
+               if (PRE_TPR_node != 0) {
+                    PRE_TPR_ = syllo::str2double(PRE_TPR_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_TPR node" << endl;
+               }
+
+               // PRE_FPR
+               xml_node<> * PRE_FPR_node = pre_node->first_node("PRE_FPR");
+               if (PRE_FPR_node != 0) {
+                    PRE_FPR_ = syllo::str2double(PRE_FPR_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing PRE_FPR node" << endl;
+               }
+                              
                // Pd
                xml_node<> * Pd_node = pre_node->first_node("Pd");
                if (Pd_node != 0) {
@@ -517,7 +595,43 @@ int AnnotationParser::ParseFile(std::string file)
           } else { 
                cout << xml_filename_ << ": Missing FPR node" << endl;
           }
-     }     
+     }
+
+     // Does the parameters block exist?
+     // Find <parameters>
+     xml_node<> * parameters_node = doc.first_node()->first_node("parameters");
+     if (parameters_node != 0) {
+          
+          xml_node<> * ratio_threshold_node = parameters_node->first_node("ratio_threshold");
+          if (ratio_threshold_node != 0) {
+               params_.ratio_threshold = syllo::str2double(ratio_threshold_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing ratio_threshold node" << endl;
+          }
+
+          xml_node<> * static_threshold_node = parameters_node->first_node("static_threshold");
+          if (static_threshold_node != 0) {
+               params_.static_threshold = syllo::str2double(static_threshold_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing static_threshold node" << endl;
+          }
+
+          xml_node<> * history_length_node = parameters_node->first_node("history_length");
+          if (history_length_node != 0) {
+               params_.history_length = syllo::str2double(history_length_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing history_length node" << endl;
+          }
+
+          xml_node<> * history_distance_node = parameters_node->first_node("history_distance");
+          if (history_distance_node != 0) {
+               params_.history_distance = syllo::str2double(history_distance_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing history_distance node" << endl;
+          }
+
+
+     }
      
      // Find <frames>
      xml_node<> * frames_node = doc.first_node()->first_node("frames");
@@ -794,6 +908,15 @@ void AnnotationParser::write_gnuplot_data()
      //TODO, future work, maybe.
 }
 
+std::map<std::string,double> AnnotationParser::get_params()
+{          
+     std::map<std::string,double> params;
+     params["ratio_threshold"] = params_.ratio_threshold;
+     params["static_threshold"] = params_.static_threshold;
+     params["history_length"] = params_.history_length;
+     params["history_distance"] = params_.history_distance;
+     return params;
+}
 std::map<std::string,double> AnnotationParser::get_metrics()
 {          
      std::map<std::string,double> metrics;
@@ -803,6 +926,14 @@ std::map<std::string,double> AnnotationParser::get_metrics()
      metrics["FN"] = FN_;
      metrics["TPR"] = TPR_;
      metrics["FPR"] = FPR_;
+     
+     metrics["PRE_TP"] = PRE_TP_;
+     metrics["PRE_TN"] = PRE_TN_;
+     metrics["PRE_FP"] = PRE_FP_;
+     metrics["PRE_FN"] = PRE_FN_;
+     metrics["PRE_TPR"] = PRE_TPR_;
+     metrics["PRE_FPR"] = PRE_FPR_;
+     
      return metrics;
 }
 
@@ -1126,51 +1257,51 @@ void AnnotationParser::score_detector_2(AnnotationParser &truth,
      syllo::fill_line("+");
 }
 
-void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
-                                           cv::Mat &img)
-{
-     if (img.empty()) {
-          return;
-     }
-     
-     cv::Mat img_clone = img.clone();
-     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
-     
-     int inside_count = 0;
-     int outside_count = 0;
-     if (truth.frames.count(frame) > 0) {
-          // Search for non-zero pixels in img
-          for(int r = 0; r < img.rows; r++) {
-               for(int c = 0; c < img.cols; c++) {
-                    if (img.at<uchar>(r,c) != 0) {
-                         cv::Point p(c,r);
-                         // Is the point inside one of the objects?
-                         std::map<std::string, wb::Entity>::iterator it;
-                         for (it = truth.frames[frame].objects.begin(); 
-                              it != truth.frames[frame].objects.end();
-                              it++) {
-                              
-                              cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
-                              
-                              if (it->second.bbox().contains(p)) {
-                                   // Point inside of one of the "truth" boxes
-                                   inside_count++;
-                              } else {
-                                   outside_count++;
-                              }
-                         }
-                    }
-               }
-          }
-     } 
-     inside_count_total_ += inside_count;
-     outside_count_total_ += outside_count;
-     count_total_ += inside_count + outside_count;     
-     
-     //cout << "Inside count: " << inside_count << endl;
-     //cout << "Outside count: " << outside_count << endl;
-     cv::imshow("POD Rects", img_clone);
-}
+//void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
+//                                           cv::Mat &img)
+//{
+//     if (img.empty()) {
+//          return;
+//     }
+//          
+//     cv::Mat img_clone = img.clone();
+//     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
+//     
+//     int inside_count = 0;
+//     int outside_count = 0;
+//     if (truth.frames.count(frame) > 0) {
+//          // Search for non-zero pixels in img
+//          for(int r = 0; r < img.rows; r++) {
+//               for(int c = 0; c < img.cols; c++) {
+//                    if (img.at<uchar>(r,c) != 0) {
+//                         cv::Point p(c,r);
+//                         // Is the point inside one of the objects?
+//                         std::map<std::string, wb::Entity>::iterator it;
+//                         for (it = truth.frames[frame].objects.begin(); 
+//                              it != truth.frames[frame].objects.end();
+//                              it++) {
+//                              
+//                              cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
+//                              
+//                              if (it->second.bbox().contains(p)) {
+//                                   // Point inside of one of the "truth" boxes
+//                                   inside_count++;
+//                              } else {
+//                                   outside_count++;
+//                              }
+//                         }
+//                    }
+//               }
+//          }
+//     } 
+//     inside_count_total_ += inside_count;
+//     outside_count_total_ += outside_count;
+//     count_total_ += inside_count + outside_count;     
+//     
+//     //cout << "Inside count: " << inside_count << endl;
+//     //cout << "Outside count: " << outside_count << endl;
+//     cv::imshow("POD Rects", img_clone);
+//}
 
 void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
 {
@@ -1179,4 +1310,144 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
 
      cout << "Pd: " << Pd_ << endl;
      cout << "Pfa: " << Pfa_ << endl;
+
+     PRE_TPR_ = (double)PRE_TP_ / (double)(PRE_TP_ + PRE_FN_); 
+     PRE_FPR_ = (double)PRE_FP_ / (double)(PRE_FP_ + PRE_TN_); 
+
+     syllo::fill_line("+");
+     cout << "Pre True Positives: " << PRE_TP_ << endl;
+     cout << "Pre True Negatives: " << PRE_TN_ << endl;
+     cout << "Pre False Positives: " << PRE_FP_ << endl;
+     cout << "Pre False Negatives: " << PRE_FN_ << endl;   
+     cout << "PRE TPR: " << PRE_TPR_ << endl;
+     cout << "PRE FPR: " << PRE_FPR_ << endl;     
+}
+
+#define SINGLE_TP 0
+void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
+                                           cv::Mat &img)
+{
+     if (img.empty()) {
+          return;
+     }
+          
+     cv::Mat img_clone = img.clone();
+     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
+     
+     int TP = 0, TN = 0, FP = 0, FN = 0;
+     
+     if (truth.frames.count(frame) > 0) {
+          // There is an annotated frame.          
+          std::map<std::string, wb::Entity>::iterator it;
+          for (it = truth.frames[frame].objects.begin(); 
+               it != truth.frames[frame].objects.end();
+               it++) {
+
+               // Draw the object's bounding box
+               cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
+               
+               // Does this object contain any non-zero pixels?
+#if SINGLE_TP
+               bool object_contains_pixel = false;
+#endif
+               BoundingBox b = it->second.bbox();
+               for(int r = b.ymin(); r < b.ymax(); r++) {
+                    for(int c = b.xmin(); c < b.xmax(); c++) {
+                         if (img.at<uchar>(r,c) != 0) {
+#if SINGLE_TP
+                              object_contains_pixel = true;
+#else
+                              TP++;
+#endif
+                         }
+#if !SINGLE_TP
+                         else {
+                              FN++;
+                         }
+#endif
+                    }
+               }
+
+#if SINGLE_TP
+               if (object_contains_pixel) {
+                    // At least one non-zero pixel was found in the object's
+                    // bounding box, this is a single true positive
+                    TP++;
+               } else {
+                    // There weren't any non-zero pixels found in the object's
+                    // bounding box, this is a single false negative.
+                    FN++;
+               }                              
+#endif
+          }
+          // Are there any non-zero pixels outside of the object's bounding
+          // boxes? (Counting false positives and true negatives
+          for(int r = 0; r < img.rows; r++) {
+               for(int c = 0; c < img.cols; c++) {
+                    cv::Point p(c,r);
+                    
+                    // Does this point exist in an object's bounding box?
+                    bool object_contains_pixel = false;
+                    std::map<std::string, wb::Entity>::iterator it;
+                    for (it = truth.frames[frame].objects.begin(); 
+                         it != truth.frames[frame].objects.end();
+                         it++) {
+                         if (it->second.bbox().contains(p)) {
+                              // The point exists inside of an object's
+                              // bounding box.
+                              object_contains_pixel = true;
+                         }
+                    }
+                    
+                    if (!object_contains_pixel) {
+                         // The point is NOT contained by an object
+                         if (img.at<uchar>(r,c) != 0) {
+                              // The pixel has non-zero value, but it isn't
+                              // contained by any of the objects. This is a
+                              // false positive.
+                              FP++;            
+                         } else {
+                              // The pixel has zero value and it isn't
+                              // contained by any of the objects. This is a
+                              // true negative.
+                              TN++;
+                         }             
+                    } else {
+                         // The pixel is contained by an object. We previously
+                         // accounted for true positives above.
+                    }
+               }
+          }
+          
+     } else {
+          // There isn't an annotated frame, did we detect any non-zero pixels?
+          // At this point we could have false positives or true negatives
+          for(int r = 0; r < img.rows; r++) {
+               for(int c = 0; c < img.cols; c++) {
+                    if (img.at<uchar>(r,c) != 0) {
+                         // We found a non-zero pixel, but there wasn't an
+                         // annotated frame. This is a false positive.
+                         FP++;                         
+                    } else {
+                         TN++;                         
+                    }
+               }
+          }          
+     }        
+
+     PRE_TP_ += TP;
+     PRE_TN_ += TN;
+     PRE_FP_ += FP;
+     PRE_FN_ += FN;
+
+     metrics_present_ = true;
+
+#if 0
+     cout << "==========" << endl;
+     cout << "TP: " << TP << endl;
+     cout << "TN: " << TN << endl;
+     cout << "FP: " << FP << endl;
+     cout << "FN: " << FN << endl;
+     cv::imshow("POD Rects", img_clone);
+#endif
 }

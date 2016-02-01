@@ -67,7 +67,8 @@ void RelativeDetector::color_conversion(const cv::Mat &src, cv::Mat &dst)
 
 void RelativeDetector::thresholding(cv::Mat &src, cv::Mat &dst)
 {
-     wb::adaptive_threshold(src, dst, thresh_value_, params_->ratio_threshold, 5, mask_);
+     //wb::adaptive_threshold(src, dst, thresh_value_, params_->ratio_threshold, 5, mask_);
+     cv::threshold(src, dst, params_->static_threshold, 255, cv::THRESH_TOZERO);
      thresh_img_ = dst.clone();
 }
 

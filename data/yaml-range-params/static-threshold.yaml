@@ -1,0 +1,14 @@
+static_threshold: [0,25,255]
+
+#static_threshold: [0,1,255]
+
+#ratio_threshold: 0.003
+
+#history_distance: [0,1,50]
+#history_length: 25
+
+#history_distance: 15
+#history_length: [0 , 1 , 50]
+
+#history_distance: [0,1,50]
+#history_length: 10

@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
           
      std::vector< std::map<std::string,double> > metrics_vector;
      
-     int TP = 0, TN = 0, FP = 0, FN = 0;     
+     int TP = 0, TN = 0, FP = 0, FN = 0;        
      for (std::vector<fs::path>::iterator it = file_paths.begin(); 
           it != file_paths.end(); it++) {
           cout << "File: " << it->string() << endl;          
@@ -136,15 +136,18 @@ int main(int argc, char *argv[])
      if (create_roc_file) {
           cout << "ROC Output file: " << roc_fn << endl;
           roc_stream.open (roc_fn.c_str(), std::ofstream::out);
-          roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
+          //roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
+          roc_stream << "# TPR,FPR,thresh,FP,FN,TP,TN," << endl;
      }
 
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
          it != metrics_vector.end(); it++) {          
           
-          roc_stream << (*it)["FP"] <<","<< (*it)["FN"] <<","
+          // 0 for threshold place holder for now: TODO
+          roc_stream << (*it)["TPR"] <<","<< (*it)["FPR"] << ",0,"
+                     << (*it)["FP"] <<","<< (*it)["FN"] <<","
                      << (*it)["TP"] <<","<< (*it)["TN"] <<","
-                     << (*it)["TPR"] <<","<< (*it)["FPR"] << endl;
+                     << endl;
           
           TP += (*it)["TP"];
           TN += (*it)["TN"];
