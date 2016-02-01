@@ -22,6 +22,8 @@
 #include <opencv_workbench/plugin_manager/PluginManager.h>
 #include <opencv_workbench/wb/Parameters.h>
 
+#include <yaml-cpp/yaml.h>
+
 using std::cout;
 using std::endl;
 
@@ -41,11 +43,15 @@ int main(int argc, char *argv[])
      std::string plugin_name = "relative_detector";
      std::string xml_output_dir = "";
      std::string yaml_file = "";     
+     std::string k_folds_file = "";
      int xml_output_dir_flag = 0;
      int threshold_sweep_flag = 0;
   
-     while ((c = getopt (argc, argv, "tf:hp:o:sy:")) != -1) {
+     while ((c = getopt (argc, argv, "k:tf:hp:o:sy:")) != -1) {
           switch (c) {               
+          case 'k':
+               k_folds_file = std::string(optarg);
+               break;
           case 'o':
                xml_output_dir_flag = 1;
                xml_output_dir = std::string(optarg);
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
      syllo::Status status = stream.open(video_filename);
      //stream.set_sonar_data_mode(syllo::image);
      //stream.set_sonar_data_mode(syllo::range);
-
+     
      if (status != syllo::Success) {
           cout << "Failed to open: " << video_filename << endl;
           return -1;
@@ -155,6 +161,17 @@ int main(int argc, char *argv[])
      } else {
           cout << "Using Bridge Library: " << plugin_name << endl;
      }     
+
+     // Parse the k-folds file, if it exists
+     std::map<unsigned int,Frame> frame_types;
+     if (k_folds_file != "") {
+          std::ifstream fin(k_folds_file.c_str());
+          YAML::Parser parser(fin);
+          YAML::Node doc;
+          parser.GetNextDocument(doc);
+
+          //TODO HERE
+     }
                
      Detector * detector_;     
      detector_ = plugin_manager_.object();
@@ -171,6 +188,9 @@ int main(int argc, char *argv[])
      cv::Mat original;
      int frame_number = 0;
      while (stream.read(original)) {
+          
+          // Is this frame part of the final test set?
+          // Is this frame part of the validation set?
           
           // Pass the frame to the detector plugin
           detector_->set_frame(frame_number, original);

@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-29 12:00:40 syllogismrxs>
+/// Time-stamp: <2016-01-31 19:24:33 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -44,8 +44,18 @@
 
 class Frame {
 public:
-     Frame() : frame_number_(0) {}
 
+     typedef enum FrameType {
+          train = 0,
+          validate,
+          test
+     }FrameType_t;
+     
+     Frame() : frame_number_(0), frame_type_(train)  {}
+     
+     void set_frame_type(FrameType_t type) { frame_type_ = type; }
+     FrameType_t frame_type() { return frame_type_; }
+     
      void set_frame_number(int frame_number) {frame_number_ = frame_number;}
      int frame_number() { return frame_number_; }
      std::map<std::string, wb::Entity> objects;
@@ -79,6 +89,7 @@ public:
      
 protected:
      int frame_number_;
+     FrameType_t frame_type_;
 private:
 };
 

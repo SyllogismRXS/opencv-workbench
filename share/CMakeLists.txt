@@ -1,3 +1,4 @@
+add_subdirectory(k-fold)
 add_subdirectory(param-range)
 add_subdirectory(misc)
 add_subdirectory(dbscan-test)
