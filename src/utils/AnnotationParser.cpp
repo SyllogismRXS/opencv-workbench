@@ -1323,7 +1323,7 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
      cout << "PRE FPR: " << PRE_FPR_ << endl;     
 }
 
-#define SINGLE_TP 0
+#define SINGLE_TP 1
 void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
                                            cv::Mat &img)
 {
