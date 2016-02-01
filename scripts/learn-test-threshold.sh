@@ -2,7 +2,7 @@
 
 #
 # Example usage:
-# ./scripts/learn-test-threshold.sh -y ./data/yaml-range-params/baseline.yaml -f ~/repos/opencv-workbench/data/scenarios/threshold-train-test.yaml
+# ./scripts/learn-test-threshold.sh -y ./data/yaml-range-params/static-threshold.yaml -f ./data/scenarios/threshold-train-test.yaml
 #
 
 OUT_DIR_NAME=$(date +"%Y-%m-%d_%H-%M-%S")
