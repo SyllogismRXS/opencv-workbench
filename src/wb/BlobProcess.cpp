@@ -258,9 +258,11 @@ void BlobProcess::find_blobs(cv::Mat &input,
           }
      }
 
+#if 0
      cv::Mat temp_img = input.clone();
      this->overlay_blobs(temp_img, temp_img, blobs);
      cv::imshow("Frame Blobs", temp_img);
+#endif
 
 }
 

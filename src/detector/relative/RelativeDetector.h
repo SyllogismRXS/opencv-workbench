@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-17 15:49:28 syllogismrxs>
+/// Time-stamp: <2016-01-31 23:41:44 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -59,6 +59,9 @@ public:
 
      int set_frame(int frame_number, const cv::Mat &original);  
      void set_stream(syllo::Stream *stream);
+
+     void color_conversion(const cv::Mat &src, cv::Mat &dst);
+     void thresholding(cv::Mat &src, cv::Mat &dst);
      
 protected:     
      int thresh_value_;

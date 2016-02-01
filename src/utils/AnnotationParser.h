@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-31 13:02:06 syllogismrxs>
+/// Time-stamp: <2016-02-01 00:30:05 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -97,7 +97,7 @@ public:
      void set_xml_output_filename(std::string yaml_file);
      void set_plugin_name(std::string name) { plugin_name_ = name; }
 
-     void set_params(Parameters &params) { params_ = params; }
+     void set_params(Parameters *params) { params_ = params; }
 
      std::map<std::string,double> get_metrics();     
 
@@ -135,7 +135,7 @@ protected:
      double Pd_;
      double Pfa_;
 
-     Parameters params_;
+     Parameters *params_;
 
      int inside_count_total_;
      int outside_count_total_;

@@ -76,9 +76,13 @@ int main(int argc, char *argv[])
      std::string seed_str;
      int seed_flag = 0;
      int k_folds = 3;
+     double test_ratio = 0.10;
 
-     while ((c = getopt (argc, argv, "k:s:o:y:")) != -1) {
+     while ((c = getopt (argc, argv, "r:k:s:o:y:")) != -1) {
           switch (c) {
+          case 'r':
+               test_ratio = syllo::str2double(std::string(optarg));
+               break;
           case 'k':
                k_folds = syllo::str2int(std::string(optarg));
                break;
@@ -162,8 +166,7 @@ int main(int argc, char *argv[])
                f++;
           }
      }
-
-     double test_ratio = 0.10;
+     
      int test_count = test_ratio * frames.size();
 
      boost::mt19937 gener;

@@ -16,6 +16,7 @@
 #include <opencv_workbench/syllo/syllo.h>
 
 #include <opencv_workbench/utils/AnnotationParser.h>
+#include <opencv_workbench/utils/Frame.h>
 #include <opencv_workbench/plot/Plot.h>
 
 #include <opencv_workbench/detector/Detector.h>
@@ -28,6 +29,35 @@ using std::cout;
 using std::endl;
 
 PluginManager<Detector, Detector_maker_t> plugin_manager_;
+
+
+// TODO:
+// 
+// Using K-Folds: (using training / validation set, no final test set)
+// 1. "Learning Algorithm" : drop threshold from 255 down, until TP
+// 2. record threshold in tracks file
+// 3. Aggregate track files, compute average/std threshold
+// 4. Use avg thresh on validation set, record TPR/FPR
+// 
+// ====> Second Possibility
+// 1. Compute ROC plots for training data by sweeping thresholds
+// 2. Choose point on ROC plot by minimizing dist between upper left corner and curve
+// 3. Evaluate on validation/test set
+// 
+// 
+// =====> Probably not...
+// Final: Test on final test set
+// 1.) Write PRE_TP, PRE_TN, PRE_FP, PRE_FN to tracks files
+// 2.) Aggregate metrics
+// 3.) Use validation set with current params
+// 4.) Adjust params yaml file for next run
+// 
+
+typedef enum MLStageType {     
+     learning,
+     validating,
+     testing
+}MLStageType_t;
 
 int main(int argc, char *argv[])
 {    
@@ -45,10 +75,19 @@ int main(int argc, char *argv[])
      std::string yaml_file = "";     
      std::string k_folds_file = "";
      int xml_output_dir_flag = 0;
-     int threshold_sweep_flag = 0;
-  
-     while ((c = getopt (argc, argv, "k:tf:hp:o:sy:")) != -1) {
+     int threshold_sweep_flag = 0; 
+     std::string ml_stage_str = "learning";
+     MLStageType_t ml_stage = learning;     
+     std::string last_stage_str = "detection";
+     
+     while ((c = getopt (argc, argv, "g:m:k:tf:hp:o:sy:")) != -1) {
           switch (c) {               
+          case 'g':
+               last_stage_str = std::string(optarg);
+               break;
+          case 'm':
+               ml_stage_str = std::string(optarg);
+               break;
           case 'k':
                k_folds_file = std::string(optarg);
                break;
@@ -102,6 +141,17 @@ int main(int argc, char *argv[])
      cout << "Running Detector" << endl;
      syllo::fill_line("=");
      
+     if (ml_stage_str == "learning") {
+          ml_stage = learning;
+     } else if(ml_stage_str == "validating") {
+          ml_stage = validating;
+     } else if(ml_stage_str == "testing") {
+          ml_stage = testing;
+     } else {
+          cout << "Error with ml_stage_str: " << ml_stage_str << endl;
+          return -1;
+     }
+     
      syllo::Stream stream;
      syllo::Status status = stream.open(video_filename);
      //stream.set_sonar_data_mode(syllo::image);
@@ -134,7 +184,7 @@ int main(int argc, char *argv[])
      parser_tracks.set_type("video");
      parser_tracks.set_number_of_frames(stream.get_frame_count());
      parser_tracks.set_plugin_name(plugin_name);
-     parser_tracks.set_params(params);
+     parser_tracks.set_params(&params);
      
      if (xml_output_dir_flag == 1) {
           parser_tracks.set_xml_output_dir(xml_output_dir);
@@ -170,14 +220,45 @@ int main(int argc, char *argv[])
           YAML::Node doc;
           parser.GetNextDocument(doc);
 
-          //TODO HERE
+          for(unsigned int i = 0; i < doc.size(); i++) {
+               int frame_type_int;
+               Frame::FrameType_t frame_type;
+               doc[i]["frame_type"] >> frame_type_int;
+               frame_type = (Frame::FrameType_t)frame_type_int;              
+
+               unsigned int frame_number;
+               doc[i]["frame"] >> frame_number;
+               
+               if (i != frame_number) {
+                    cout << "Frame numbers don't match in : " << k_folds_file << endl;
+               }
+               
+               Frame frame;
+               frame.set_frame_type(frame_type);
+               frame_types[i] = frame;
+          }          
      }
                
      Detector * detector_;     
      detector_ = plugin_manager_.object();
-     detector_->set_params(params);
+     detector_->set_params(&params);
      detector_->set_stream(&stream);
-     detector_->print();       
+     detector_->print();
+
+     if (last_stage_str == "color") {
+          detector_->set_last_stage(Detector::color);
+     } else if (last_stage_str == "thresh") {
+          detector_->set_last_stage(Detector::thresh);
+     } else if (last_stage_str == "cluster") {
+          detector_->set_last_stage(Detector::cluster);
+     } else if (last_stage_str == "data_association") {
+          detector_->set_last_stage(Detector::data_association);
+     } else if (last_stage_str == "detection") {
+          detector_->set_last_stage(Detector::detection);
+     } else {
+          cout << "Error with last stage string: " << last_stage_str << endl;
+          return -1;
+     }
      
      if (hide_window_flag) {
           detector_->hide_windows(true);
@@ -186,18 +267,38 @@ int main(int argc, char *argv[])
      }
      
      cv::Mat original;
-     int frame_number = 0;
      while (stream.read(original)) {
+          int frame_number = stream.frame_number();          
           
-          // Is this frame part of the final test set?
-          // Is this frame part of the validation set?
+          // Was a frame_types yaml file passed?
+          if (frame_types.size() > 0) { 
+               // Skip the frame if it's not labeled with the proper stage
+               if (frame_types[frame_number].frame_type() == Frame::test &&
+                   ml_stage != testing) {
+                    continue;
+               }
+
+               // Skip this frame if it's part of validation, but we are not in
+               // the validating phase
+               if (frame_types[frame_number].frame_type() == Frame::validate &&
+                   ml_stage != validating) {
+                    continue;
+               }
+
+               // Skip this frame if it's part of learning, but we not are in
+               // the learning phase
+               if (frame_types[frame_number].frame_type() == Frame::train &&
+                   ml_stage != learning) {
+                    continue;
+               }
+          }
           
           // Pass the frame to the detector plugin
           detector_->set_frame(frame_number, original);
 
           // Get track list from detector
           std::vector<wb::Entity> tracks = detector_->tracks();
-          
+               
           if (hand_ann_found) {
                // Score preprocessing, if available
                cv::Mat thresh_img = detector_->thresh_img();
@@ -207,7 +308,7 @@ int main(int argc, char *argv[])
                std::vector<wb::Entity> frame_ents;
                detector_->frame_ents(frame_ents);
           }
-          
+                    
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
           Frame frame;
@@ -250,8 +351,7 @@ int main(int argc, char *argv[])
                     } 
                }
 
-          }                    
-          frame_number++;
+          }
      }
      
      // Which track exhibited the most displacement?

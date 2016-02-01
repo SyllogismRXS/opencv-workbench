@@ -56,6 +56,21 @@ void RelativeDetector::set_stream(syllo::Stream *stream)
      stream_ = stream;
 }
 
+void RelativeDetector::color_conversion(const cv::Mat &src, cv::Mat &dst)
+{
+     if (src.channels() != 1) {           
+          Jet2Gray_matlab(src,dst);           
+     } else {
+          dst = src.clone();
+     }
+}
+
+void RelativeDetector::thresholding(cv::Mat &src, cv::Mat &dst)
+{
+     wb::adaptive_threshold(src, dst, thresh_value_, params_->ratio_threshold, 5, mask_);
+     thresh_img_ = dst.clone();
+}
+
 int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
 {            
      cv::Mat original_w_tracks, original_copy;          
@@ -70,25 +85,26 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      // //cv::imshow("bad", bad_gray);         
      // 
      cv::Mat gray;
-     if (original.channels() != 1) {           
-          Jet2Gray_matlab(original,gray);           
-     } else {
-          gray = original.clone();
+     color_conversion(original, gray);
+     wb::get_sonar_mask(original, mask_);
+
+     if (!hide_windows_) {       
+          cv::imshow("Gray", gray);  
      }     
-
-     cv::Mat range_image;
-     stream_->range_image(range_image);     
-
-     cv::Mat blend;
-     cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());     
+     if (last_stage_ < thresh) {
+          return 0;
+     }
+     
+     //cv::Mat range_image;
+     //stream_->range_image(range_image);     
+     //cv::Mat blend;
+     //cv::addWeighted(gray, 0.5, range_image, 0.5, 0, blend, gray.depth());     
      
      //cv::Mat flow_img;
      //flow_.sparse_flow(gray, flow_img);          
-     //cv::imshow("Flow", flow_img);     
+     //cv::imshow("Flow", flow_img);          
      
-     cv::Mat mask;
-     wb::get_sonar_mask(original, mask);
-     cv::imshow("Sonar Mask", mask*255);     
+     //cv::imshow("Sonar Mask", mask*255);     
      //wb::showHistogram(gray, mask);         
      //wb::opencv_histogram(original_copy);
 
@@ -139,12 +155,21 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      /// cv::imshow("grad thresh", thresh_grad);        
      
      cv::Mat thresh_amp;      
+     thresholding(median, thresh_amp);
+
+     if (!hide_windows_) {       
+          cv::imshow("Median", median);
+          cv::imshow("Thresh", thresh_amp);
+     }     
+     if (last_stage_ < cluster) {
+          return 0;
+     }
+     
      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.001, 0.002, 1, 5);
      //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 5, mask);      
-     wb::adaptive_threshold(median, thresh_amp, thresh_value_, params_.ratio_threshold, 5, mask);      
-     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 0.004, 1, 5, mask);
-     
-     thresh_img_ = thresh_amp.clone();
+     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, params_->ratio_threshold, 5, mask);      
+     //wb::adaptive_threshold(median, thresh_amp, thresh_value_, 0.003, 0.004, 1, 5, mask);     
+     //thresh_img_ = thresh_amp.clone();
      
      //cv::adaptiveThreshold(median, thresh_amp, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 31, 20);
      //cv::threshold(median, thresh_amp, 0, 255, cv::THRESH_TOZERO | cv::THRESH_OTSU);     
@@ -178,7 +203,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //ndt_.set_frame(range_image, ndt_img, stream_);
      //cv::imshow("ndt", ndt_img);
       
-     blob_process_.set_mask(mask);
+     blob_process_.set_mask(mask_);
      blob_process_.process_frame(dilate, median, thresh_value_);
      //blob_process_.process_frame(ndt_img, median, thresh_value_);
           
@@ -234,8 +259,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //////////////////////////////////////////////////////////////
      /// Diver Detections / Object Labelling
      ////////////////////////////////////////////////////
-     blob_process_.displace_detect(params_.history_length,
-                                   params_.history_distance);
+     blob_process_.displace_detect(params_->history_length,
+                                   params_->history_distance);
      
      // Copy track detections to tracks_ object
      tracks_.clear(); // clear out the tracks from previous loop      
@@ -245,11 +270,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      // Display images
      ///////////////////////////////////////////////////
      if (!hide_windows_) {       
-          cv::imshow("Gray", gray);  
-          cv::imshow("Range", range_image);
-          cv::imshow("blend", blend);
-          cv::imshow("median", median);          
-          cv::imshow("thresh amp", thresh_amp);
+          //cv::imshow("Range", range_image);
+          //cv::imshow("blend", blend);
           cv::imshow("erode", erode);
           cv::imshow("Dilate", dilate);      
           cv::imshow("Blobs", blob_img);        

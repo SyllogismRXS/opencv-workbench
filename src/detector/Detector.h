@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-30 18:14:21 syllogismrxs>
+/// Time-stamp: <2016-02-01 00:30:58 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -79,6 +79,19 @@ public:
           Failure = -1
      }Status_t;
 
+     typedef enum StageType{
+          color = 0,
+          thresh,
+          cluster,
+          data_association,
+          detection
+     }StageType_t;
+
+
+     Detector() : last_stage_(detection)
+     {
+     }
+     
      virtual void print()=0;
      virtual ~Detector()
      {
@@ -92,7 +105,7 @@ public:
      std::vector<wb::Entity> & tracks() { return tracks_; }
      void hide_windows(bool hide) { hide_windows_ = hide; }
           
-     void set_params(Parameters &params) { params_ = params; }
+     void set_params(Parameters *params) { params_ = params; }
      
      //virtual Status_t set_own_pose(const AVIA::Pose &pose)=0;
      //virtual Status_t set_command(const Command &command) {return Success;}
@@ -108,6 +121,12 @@ public:
      {
           frame_ents = frame_ents_;
      } 
+
+     virtual void color_conversion(const cv::Mat &src, cv::Mat &dst) {}
+     virtual void thresholding(cv::Mat &src, cv::Mat &dst) {}
+
+     void set_last_stage(StageType_t last_stage) { last_stage_ = last_stage; }
+     StageType_t last_stage() { return last_stage_; }
      
 protected:
      //unsigned int own_id_;
@@ -117,13 +136,13 @@ protected:
      cv::Mat thresh_img_;     
      std::vector<wb::Entity> frame_ents_;
 
-//std::map<std::string,double> params_;
-
      syllo::Stream *stream_;
+     
+     Parameters *params_;
 
-// std::string yaml_file_;  
-//Params params_;     
-     Parameters params_;
+     StageType_t last_stage_;
+
+     cv::Mat mask_;
      
 private:
 };

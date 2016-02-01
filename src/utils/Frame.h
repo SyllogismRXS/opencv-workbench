@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-31 19:24:33 syllogismrxs>
+/// Time-stamp: <2016-01-31 23:38:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015

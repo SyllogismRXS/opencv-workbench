@@ -247,19 +247,19 @@ void AnnotationParser::write_header()
           xml_node<> *parameters_node = doc.allocate_node(node_element, "parameters");
           root_node->append_node(parameters_node);
 
-          char * ratio_threshold = doc.allocate_string(syllo::double2str(params_.ratio_threshold).c_str());
+          char * ratio_threshold = doc.allocate_string(syllo::double2str(params_->ratio_threshold).c_str());
           xml_node<> *ratio_threshold_node = doc.allocate_node(node_element, "ratio_threshold", ratio_threshold);
           parameters_node->append_node(ratio_threshold_node);          
           
-          char * static_threshold = doc.allocate_string(syllo::double2str(params_.static_threshold).c_str());
+          char * static_threshold = doc.allocate_string(syllo::double2str(params_->static_threshold).c_str());
           xml_node<> *static_threshold_node = doc.allocate_node(node_element, "static_threshold", static_threshold);
           parameters_node->append_node(static_threshold_node);          
           
-          char * history_length = doc.allocate_string(syllo::int2str(params_.history_length).c_str());
+          char * history_length = doc.allocate_string(syllo::int2str(params_->history_length).c_str());
           xml_node<> *history_length_node = doc.allocate_node(node_element, "history_length", history_length);
           parameters_node->append_node(history_length_node);
 
-          char * history_distance = doc.allocate_string(syllo::int2str(params_.history_distance).c_str());
+          char * history_distance = doc.allocate_string(syllo::int2str(params_->history_distance).c_str());
           xml_node<> *history_distance_node = doc.allocate_node(node_element, "history_distance", history_distance);
           parameters_node->append_node(history_distance_node);          
 
@@ -1129,6 +1129,10 @@ void AnnotationParser::score_detector_2(AnnotationParser &truth,
 void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
                                            cv::Mat &img)
 {
+     if (img.empty()) {
+          return;
+     }
+     
      cv::Mat img_clone = img.clone();
      cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
      
