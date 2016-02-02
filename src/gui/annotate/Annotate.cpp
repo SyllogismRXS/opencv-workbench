@@ -258,8 +258,8 @@ QString Annotate::str2qstr(std::string str)
 void Annotate::before_next_frame()
 {     
      // Get the next objects
-     int next_frame_number = stream_.next_frame_number();
-     if (parser_.frames.count(next_frame_number) >= 0) {
+     int next_frame_number = stream_.next_frame_number();     
+     if (parser_.frames.count(next_frame_number) > 0) {          
           objects_ = &(parser_.frames[next_frame_number].objects);
 
           // Make sure all object names in this frame are displayed
@@ -272,7 +272,8 @@ void Annotate::before_next_frame()
           // The frame doesn't exist yet, create it.
           Frame frame;
           frame.set_frame_number(next_frame_number);
-          parser_.frames[next_frame_number] = frame;
+          parser_.frames[next_frame_number] = frame;      
+          objects_ = &(parser_.frames[next_frame_number].objects);          
      }
 
      if (edit_enabled_) {
@@ -296,31 +297,7 @@ void Annotate::before_next_frame()
                
      }
      
-     current_frame_ = next_frame_number;
-
-     //// Does the next frame have annotation data?
-     //int next_frame_number = stream_.next_frame_number();
-     //// Is this frame annotated already?
-     //
-     //if (!edit_enabled_) {
-     //     box_present_ = false;
-     //     point_present_ = false;
-     //}
-     //
-     //if (parser_.frames.count(next_frame_number) >= 0) {
-     //     // Find all objects in the next frame and get the box:
-     //     for (std::map<std::string, wb::Entity>::iterator it = parser_.frames[next_frame_number].objects.begin();
-     //          it != parser_.frames[next_frame_number].objects.end(); it++) {
-     //
-     //          QString qstr = QString::fromUtf8(it->second.name().c_str());
-     //          object_name_->set_selected_name(qstr);
-     //
-     //          box_present_ = true;
-     //          cv::Rect rect = it->second.bbox().rectangle();
-     //          pt1_ = QPoint(rect.tl().x, rect.tl().y);
-     //          pt2_ = QPoint(rect.br().x, rect.br().y);
-     //     }
-     //}
+     current_frame_ = next_frame_number;    
 }
 
 void Annotate::before_display(cv::Mat &img)

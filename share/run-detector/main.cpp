@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
      if (retcode != 0) {
           cout << "Error parsing hand annotated file." << endl;
           hand_ann_found = false;          
-     }
+     }     
 
      Parameters params;
      params.set_yaml_file(yaml_file);

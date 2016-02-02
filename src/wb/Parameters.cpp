@@ -15,7 +15,7 @@ Parameters::Parameters()
      ratio_threshold = 0.003;
      //static_threshold = 150;
      //static_threshold = 50;
-     static_threshold = 200;
+     static_threshold = 150;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)

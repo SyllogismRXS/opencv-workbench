@@ -8,7 +8,7 @@
 		<depth>3</depth>
 	</size>
 	<number_of_frames>443</number_of_frames>
-	<number_of_annotated_frames>440</number_of_annotated_frames>
+	<number_of_annotated_frames>443</number_of_annotated_frames>
 	<frames>
 		<frame>
 			<frame_number>0</frame_number>
@@ -8027,10 +8027,19 @@
 			<frame_number>385</frame_number>
 		</frame>
 		<frame>
+			<frame_number>386</frame_number>
+		</frame>
+		<frame>
+			<frame_number>387</frame_number>
+		</frame>
+		<frame>
 			<frame_number>388</frame_number>
 		</frame>
 		<frame>
 			<frame_number>389</frame_number>
+		</frame>
+		<frame>
+			<frame_number>390</frame_number>
 		</frame>
 		<frame>
 			<frame_number>391</frame_number>

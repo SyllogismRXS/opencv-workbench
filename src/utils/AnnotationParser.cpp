@@ -33,29 +33,15 @@ void AnnotationParser::reset()
      xml_filename_ = "";
      dir_ = "";
      basename_ = "";
-     metrics_present_ = false;
+     metrics_present_ = false;         
 
-     TP_ = 0;
-     TN_ = 0;
-     FP_ = 0;
-     FN_ = 0;
-     TPR_ = FPR_ = -1;
-
-     Pd_ = Pfa_ = -1;
-     PRE_TP_ = 0;
-     PRE_TN_ = 0;
-     PRE_FP_ = 0;
-     PRE_FN_ = 0;     
-
-     inside_count_total_ = 0;
-     outside_count_total_ = 0;
-     count_total_ = 0;
-     
+     reset_metrics();
      frames.clear();
 }
 
 void AnnotationParser::clear()
 {
+     reset_metrics();
      frames.clear();
 }
 
@@ -917,6 +903,30 @@ std::map<std::string,double> AnnotationParser::get_params()
      params["history_distance"] = params_.history_distance;
      return params;
 }
+
+void AnnotationParser::reset_metrics()
+{
+     TP_ = 0;
+     TN_ = 0;
+     FP_ = 0;
+     FN_ = 0;
+     TPR_ = -1;
+     FPR_ = -1;
+     
+     PRE_TP_ = 0;
+     PRE_TN_ = 0;
+     PRE_FP_ = 0;
+     PRE_FN_ = 0;
+     PRE_TPR_ = -1;
+     PRE_FPR_ = -1;
+     Pd_ = -1;
+     Pfa_ = -1;
+
+     inside_count_total_ = 0;
+     outside_count_total_ = 0;
+     count_total_ = 0;
+}
+
 std::map<std::string,double> AnnotationParser::get_metrics()
 {          
      std::map<std::string,double> metrics;
@@ -1323,7 +1333,6 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
      cout << "PRE FPR: " << PRE_FPR_ << endl;     
 }
 
-#define SINGLE_TP 1
 void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
                                            cv::Mat &img)
 {
@@ -1347,28 +1356,20 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
                cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
                
                // Does this object contain any non-zero pixels?
-#if SINGLE_TP
                bool object_contains_pixel = false;
-#endif
                BoundingBox b = it->second.bbox();
                for(int r = b.ymin(); r < b.ymax(); r++) {
                     for(int c = b.xmin(); c < b.xmax(); c++) {
                          if (img.at<uchar>(r,c) != 0) {
-#if SINGLE_TP
                               object_contains_pixel = true;
-#else
-                              TP++;
-#endif
+                              //TP++;
                          }
-#if !SINGLE_TP
-                         else {
-                              FN++;
-                         }
-#endif
+                         //else {
+                         //     FN++;
+                         //}
                     }
                }
 
-#if SINGLE_TP
                if (object_contains_pixel) {
                     // At least one non-zero pixel was found in the object's
                     // bounding box, this is a single true positive
@@ -1378,10 +1379,11 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
                     // bounding box, this is a single false negative.
                     FN++;
                }                              
-#endif
           }
           // Are there any non-zero pixels outside of the object's bounding
           // boxes? (Counting false positives and true negatives
+          bool contains_FP = false;
+          bool contains_TN = false;
           for(int r = 0; r < img.rows; r++) {
                for(int c = 0; c < img.cols; c++) {
                     cv::Point p(c,r);
@@ -1405,12 +1407,14 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
                               // The pixel has non-zero value, but it isn't
                               // contained by any of the objects. This is a
                               // false positive.
-                              FP++;            
+                              //FP++;            
+                              contains_FP = true;
                          } else {
                               // The pixel has zero value and it isn't
                               // contained by any of the objects. This is a
                               // true negative.
-                              TN++;
+                              //TN++;
+                              contains_TN = true;
                          }             
                     } else {
                          // The pixel is contained by an object. We previously
@@ -1418,21 +1422,25 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
                     }
                }
           }
+
+          if (contains_FP) FP++;
+          if (contains_TN) TN++;
           
      } else {
-          // There isn't an annotated frame, did we detect any non-zero pixels?
-          // At this point we could have false positives or true negatives
-          for(int r = 0; r < img.rows; r++) {
-               for(int c = 0; c < img.cols; c++) {
-                    if (img.at<uchar>(r,c) != 0) {
-                         // We found a non-zero pixel, but there wasn't an
-                         // annotated frame. This is a false positive.
-                         FP++;                         
-                    } else {
-                         TN++;                         
-                    }
-               }
-          }          
+          cout << "=========> Missing annotated frame: " << xml_filename_  << " frame: " << frame << endl;
+          //// There isn't an annotated frame, did we detect any non-zero pixels?
+          //// At this point we could have false positives or true negatives
+          //for(int r = 0; r < img.rows; r++) {
+          //     for(int c = 0; c < img.cols; c++) {
+          //          if (img.at<uchar>(r,c) != 0) {
+          //               // We found a non-zero pixel, but there wasn't an
+          //               // annotated frame. This is a false positive.
+          //               FP++;                         
+          //          } else {
+          //               TN++;                         
+          //          }
+          //     }
+          //}          
      }        
 
      PRE_TP_ += TP;
@@ -1448,6 +1456,7 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
      cout << "TN: " << TN << endl;
      cout << "FP: " << FP << endl;
      cout << "FN: " << FN << endl;
+     cout << "PRE_FN: " << PRE_FN_ << endl;     
      cv::imshow("POD Rects", img_clone);
 #endif
 }

@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-01 15:10:16 syllogismrxs>
+/// Time-stamp: <2016-02-01 17:10:29 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -101,6 +101,8 @@ public:
 
      std::map<std::string,double> get_metrics();     
      std::map<std::string,double> get_params();
+
+     void reset_metrics();
 
      std::vector<wb::Entity> get_tracks(std::string name);
 

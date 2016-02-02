@@ -1,4 +1,4 @@
-static_threshold: [0,25,255]
+static_threshold: [0,50,255]
 
 #static_threshold: [0,1,255]
 

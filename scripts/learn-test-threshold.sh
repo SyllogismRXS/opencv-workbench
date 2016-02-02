@@ -55,15 +55,15 @@ if [ ! -f ${YAML_PARAMS_FILE} ]; then
     exit -1;
 fi
 
-mkdir -p ${OUT_DIR}
-
-# Copy yaml file to results directory
-cp ${YAML_PARAMS_FILE} ${OUT_DIR}
-
 if [ ! -f ${YAML_VIDEO_FILES} ]; then
     echo "YAML Sonar/Video file list doesn't exist: ${YAML_VIDEO_FILES}. Use -f"
     exit -1;
 fi
+
+mkdir -p ${OUT_DIR}
+
+# Copy yaml file to results directory
+cp ${YAML_PARAMS_FILE} ${OUT_DIR}
 
 # Generate the k-folds scenarios
 ~/repos/opencv-workbench/bin/k-fold -y ${YAML_VIDEO_FILES} -o ${OUT_DIR} -s 100 -k ${K_FOLDS}
