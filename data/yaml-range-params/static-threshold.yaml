@@ -1,4 +1,5 @@
 static_threshold: [0,1,255]
+threshold_type: static  # static, ratio, gradient
 #static_threshold: [0,50,255]
 
 #static_threshold: [0,1,255]

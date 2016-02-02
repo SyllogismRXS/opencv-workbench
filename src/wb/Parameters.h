@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-31 12:53:48 syllogismrxs>
+/// Time-stamp: <2016-02-02 16:21:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -41,6 +41,13 @@
 
 class Parameters {
 public:
+
+     typedef enum ThresholdType {
+          static_type = 0,
+          ratio_type = 1,
+          gradient_type = 2
+     }ThresholdType_t;
+     
      Parameters();
      void set_yaml_file(std::string yaml_file);
 
@@ -48,6 +55,8 @@ public:
      double history_distance;
      double ratio_threshold;
      double static_threshold;
+     
+     ThresholdType_t threshold_type;
      
 protected:
 

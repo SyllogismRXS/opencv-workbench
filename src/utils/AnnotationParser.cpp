@@ -279,6 +279,10 @@ void AnnotationParser::write_header()
           xml_node<> *history_distance_node = doc.allocate_node(node_element, "history_distance", history_distance);
           parameters_node->append_node(history_distance_node);          
 
+          char * threshold_type = doc.allocate_string(syllo::int2str((int)(params_.threshold_type)).c_str());
+          xml_node<> *threshold_type_node = doc.allocate_node(node_element, "threshold_type", threshold_type);
+          parameters_node->append_node(threshold_type_node);          
+
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -616,7 +620,12 @@ int AnnotationParser::ParseFile(std::string file)
                cout << xml_filename_ << ": Missing history_distance node" << endl;
           }
 
-
+          xml_node<> * threshold_type_node = parameters_node->first_node("threshold_type");
+          if (threshold_type_node != 0) {
+               params_.threshold_type = (Parameters::ThresholdType_t)syllo::str2int(threshold_type_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing threshold_type node" << endl;
+          }
      }
      
      // Find <frames>
@@ -901,6 +910,7 @@ std::map<std::string,double> AnnotationParser::get_params()
      params["static_threshold"] = params_.static_threshold;
      params["history_length"] = params_.history_length;
      params["history_distance"] = params_.history_distance;
+     params["threshold_type"] = params_.threshold_type;
      return params;
 }
 

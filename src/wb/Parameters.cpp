@@ -16,6 +16,8 @@ Parameters::Parameters()
      //static_threshold = 150;
      //static_threshold = 50;
      static_threshold = 150;
+
+     threshold_type = static_type;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -42,6 +44,20 @@ void Parameters::set_yaml_file(std::string yaml_file)
           
           if(const YAML::Node *p = doc.FindValue("history_distance")) {
                *p >> history_distance;
-          }          
+          }
+
+          if(const YAML::Node *p = doc.FindValue("threshold_type")) {
+               std::string str;
+               *p >> str;
+               if (str == "static") {
+                    threshold_type = static_type;
+               } else if (str == "ratio") {
+                    threshold_type = ratio_type;
+               } else if (str == "gradient") {
+                    threshold_type = gradient_type;
+               } else {
+                    cout << "ERROR: Invalid threshold_type: " << str << endl;
+               }
+          }
      }
 }
