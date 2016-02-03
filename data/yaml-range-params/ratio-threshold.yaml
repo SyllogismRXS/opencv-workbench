@@ -1,2 +1,2 @@
 ratio_threshold: [0.001 , 0.001 , 0.003]
-threshold_type: ratio # static, ratio, gradient
+threshold_type: 1 # 0=static, 1=ratio, 2=gradient

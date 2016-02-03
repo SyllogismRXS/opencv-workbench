@@ -47,16 +47,22 @@ void Parameters::set_yaml_file(std::string yaml_file)
           }
 
           if(const YAML::Node *p = doc.FindValue("threshold_type")) {
-               std::string str;
-               *p >> str;
-               if (str == "static") {
+               int type;
+               *p >> type;
+
+               switch ((ThresholdType_t)type) {
+               case static_type:
                     threshold_type = static_type;
-               } else if (str == "ratio") {
+                    break;
+               case ratio_type:
                     threshold_type = ratio_type;
-               } else if (str == "gradient") {
+                    break;
+               case gradient_type:
                     threshold_type = gradient_type;
-               } else {
-                    cout << "ERROR: Invalid threshold_type: " << str << endl;
+                    break;
+               default:                    
+                    cout << "ERROR: Invalid threshold_type: " << type << endl;
+                    break;
                }
           }
      }

@@ -103,17 +103,18 @@ int main(int argc, char *argv[])
 
      // Parse the YAML File.
      // Store lists of the ranges
-     std::map<std::string, std::list<double> > params;
+     std::map<std::string, std::list<double> > params;     
      for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
           std::string key;
           double value;
+          std::string str_value;
           it.first() >> key;
 
           std::list<double> nums;
           if (it.second().Type() == YAML::NodeType::Scalar) {
-               // Simple static parameter
+               // Simple static parameter               
                it.second() >> value;
-               nums.push_back(value);
+               nums.push_back(value);          
           } else {
                // A range of parameters
                Range3_Yaml range;
