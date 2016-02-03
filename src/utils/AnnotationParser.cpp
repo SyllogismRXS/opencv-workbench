@@ -266,6 +266,10 @@ void AnnotationParser::write_header()
           char * ratio_threshold = doc.allocate_string(syllo::double2str(params_.ratio_threshold).c_str());
           xml_node<> *ratio_threshold_node = doc.allocate_node(node_element, "ratio_threshold", ratio_threshold);
           parameters_node->append_node(ratio_threshold_node);          
+
+          char * gradient_threshold = doc.allocate_string(syllo::double2str(params_.gradient_threshold).c_str());
+          xml_node<> *gradient_threshold_node = doc.allocate_node(node_element, "gradient_threshold", gradient_threshold);
+          parameters_node->append_node(gradient_threshold_node);          
           
           char * static_threshold = doc.allocate_string(syllo::double2str(params_.static_threshold).c_str());
           xml_node<> *static_threshold_node = doc.allocate_node(node_element, "static_threshold", static_threshold);
@@ -599,6 +603,13 @@ int AnnotationParser::ParseFile(std::string file)
                cout << xml_filename_ << ": Missing ratio_threshold node" << endl;
           }
 
+          xml_node<> * gradient_threshold_node = parameters_node->first_node("gradient_threshold");
+          if (gradient_threshold_node != 0) {
+               params_.gradient_threshold = syllo::str2double(gradient_threshold_node->value());
+          } else { 
+               cout << xml_filename_ << ": Missing gradient_threshold node" << endl;
+          }
+
           xml_node<> * static_threshold_node = parameters_node->first_node("static_threshold");
           if (static_threshold_node != 0) {
                params_.static_threshold = syllo::str2double(static_threshold_node->value());
@@ -906,8 +917,9 @@ void AnnotationParser::write_gnuplot_data()
 std::map<std::string,double> AnnotationParser::get_params()
 {          
      std::map<std::string,double> params;
-     params["ratio_threshold"] = params_.ratio_threshold;
+     params["ratio_threshold"] = params_.ratio_threshold;     
      params["static_threshold"] = params_.static_threshold;
+     params["gradient_threshold"] = params_.gradient_threshold;
      params["history_length"] = params_.history_length;
      params["history_distance"] = params_.history_distance;
      params["threshold_type"] = params_.threshold_type;
