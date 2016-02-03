@@ -1,2 +1,4 @@
+ratio_threshold: 0.003
+threshold_type: ratio  # static, ratio, gradient
 history_length: 30
 history_distance: 18
