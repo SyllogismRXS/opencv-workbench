@@ -1,0 +1,2 @@
+ratio_threshold: [0, 50, 255]
+threshold_type: 2 # 0=static, 1=ratio, 2=gradient

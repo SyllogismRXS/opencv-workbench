@@ -16,7 +16,7 @@ Parameters::Parameters()
      //static_threshold = 150;
      //static_threshold = 50;
      static_threshold = 150;
-
+     gradient_threshold = 150;
      threshold_type = static_type;
 }
 
@@ -36,6 +36,10 @@ void Parameters::set_yaml_file(std::string yaml_file)
 
           if(const YAML::Node *p = doc.FindValue("static_threshold")) {
                *p >> static_threshold;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("gradient_threshold")) {
+               *p >> gradient_threshold;
           }
 
           if(const YAML::Node *p = doc.FindValue("history_length")) {

@@ -478,6 +478,7 @@ namespace wb {
 #endif
      }
 
+#define USE_SCHARR 1
      void gradient_sobel(cv::Mat &src, cv::Mat &dst)
      {
           cv::Mat grad_x, grad_y;
@@ -488,11 +489,13 @@ namespace wb {
           int delta = 0;
           int ddepth = CV_16S;
      
-          /// Gradient X
-          cv::Sobel( src, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT );
-          /// Gradient Y
-          cv::Sobel( src, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT );
-     
+#if USE_SCHARR
+          cv::Scharr(src, grad_x, ddepth, 1, 0, scale, delta, cv::BORDER_DEFAULT);
+          cv::Scharr(src, grad_y, ddepth, 0, 1, scale, delta, cv::BORDER_DEFAULT);
+#else
+          cv::Sobel(src, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT);
+          cv::Sobel(src, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT);
+#endif                         
           cv::convertScaleAbs( grad_x, abs_grad_x );
           cv::convertScaleAbs( grad_y, abs_grad_y );
      

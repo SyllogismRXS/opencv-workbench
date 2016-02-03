@@ -11,6 +11,7 @@ OUT_DIR="/home/syllogismrxs/Documents/Thesis/results/${OUT_DIR_NAME}"
 YAML_PARAMS_FILE="empty"
 YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
+SWEEP_PARAM="empty"
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).
@@ -24,6 +25,10 @@ do
     key="$1"
 
     case $key in
+        -s|--sweep)
+            SWEEP_PARAM="$2"
+            shift # past argument
+            ;;
         -k|--kfolds)
             K_FOLDS="$2"
             shift # past argument
@@ -57,6 +62,11 @@ fi
 
 if [ ! -f ${YAML_VIDEO_FILES} ]; then
     echo "YAML Sonar/Video file list doesn't exist: ${YAML_VIDEO_FILES}. Use -f"
+    exit -1;
+fi
+
+if [ "$SWEEP_PARAM" == "empty" ] ;then
+    echo "Specify parameter to sweep for ROC plots with -s"
     exit -1;
 fi
 
@@ -124,7 +134,7 @@ do
     
     # Aggregate data and compute ROC curve
     # Compute "optimal" threshold
-    /home/syllogismrxs/repos/opencv-workbench/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -f roc.csv -p static_threshold
+    /home/syllogismrxs/repos/opencv-workbench/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -f roc.csv -p ${SWEEP_PARAM}
     
     # Compute ROC curve, Determine "optimal" threshold
     /home/syllogismrxs/repos/opencv-workbench/scripts/roc.sh ${TRACKS_OUT_DIR}/roc.csv

@@ -75,7 +75,11 @@ void RelativeDetector::thresholding(cv::Mat &src, cv::Mat &dst)
           wb::adaptive_threshold(src, dst, thresh_value_, params_->ratio_threshold, 5, mask_);
           break;
      case Parameters::gradient_type:
-          cout << "ERROR: GRADIENT THRESHOLD NOT DEFINED YET" << endl;
+          //// Compute estimated gradient
+          wb::gradient_sobel(src, dst);
+          cv::imshow("gradient", dst);                    
+          cv::threshold(dst, dst, params_->gradient_threshold, 255, cv::THRESH_TOZERO);
+          cv::imshow("grad_thresh", dst);     
           break;
      default:
           break;

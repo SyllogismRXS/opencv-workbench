@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-02 16:21:13 syllogismrxs>
+/// Time-stamp: <2016-02-03 16:30:28 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -55,6 +55,7 @@ public:
      double history_distance;
      double ratio_threshold;
      double static_threshold;
+     double gradient_threshold;
      
      ThresholdType_t threshold_type;
      
