@@ -65,8 +65,13 @@ if [ ! -f ${YAML_VIDEO_FILES} ]; then
     exit -1;
 fi
 
-if [ "$SWEEP_PARAM" == "empty" ] ;then
+if [ "$SWEEP_PARAM" == "empty" ]; then
     echo "Specify parameter to sweep for ROC plots with -s"
+    exit -1;
+fi
+
+if [[ "$SWEEP_PARAM" != "static_threshold" && "$SWEEP_PARAM" != "ratio_threshold" && "$SWEEP_PARAM" != "gradient_threshold" ]]; then
+    echo "Probably not a valid SWEEP_PARAM. Try again or add it here. -s"
     exit -1;
 fi
 
