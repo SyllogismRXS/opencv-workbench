@@ -136,15 +136,14 @@ int main(int argc, char *argv[])
      if (create_roc_file) {
           cout << "ROC Output file: " << roc_fn << endl;
           roc_stream.open (roc_fn.c_str(), std::ofstream::out);
-          //roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
-          roc_stream << "# TPR,FPR,thresh,FP,FN,TP,TN," << endl;
+          roc_stream << "# FPR,TPR,thresh,FP,FN,TP,TN," << endl;
      }
 
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
          it != metrics_vector.end(); it++) {          
           
           // 0 for threshold place holder for now: TODO
-          roc_stream << (*it)["TPR"] <<","<< (*it)["FPR"] << ",0,"
+          roc_stream << (*it)["FPR"] <<","<< (*it)["TPR"] << ",0,"
                      << (*it)["FP"] <<","<< (*it)["FN"] <<","
                      << (*it)["TP"] <<","<< (*it)["TN"] <<","
                      << endl;

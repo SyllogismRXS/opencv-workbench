@@ -7,6 +7,12 @@
 
 #FILENAMES=("larks-roc" "method0" "method1" "method2" "method3" "method4" "method5")
 #TITLES=("LARKS" "Squared Difference" "Normalized Squared Difference" "Cross Correlation" "Normalized Cross Correlation" "Cross Corr Coefficient" "Normalized Cross Corr Coefficient")
+
+if [ $# -lt 1 ]; then
+    echo "Missing csv file"
+    exit;
+fi
+
 FILENAMES=($1)
 TITLES=("Baseline")
 
@@ -17,18 +23,27 @@ do
     echo "Next: ${i}"    
 
     # Strip path and extension
-    STEM=${i%.*}
+    IN_STEM=${i%.*}
+
+    DEC=""
+    if [ $# -eq 2 ]; then
+        DEC="every $2"
+        OUT_STEM="$IN_STEM-dec-$2"
+    else
+        OUT_STEM="${IN_STEM}"
+    fi
+    
     DIR=$(dirname "${i}")
 
     pushd $DIR >& /dev/null
-
-    PLOT_CMD="plot '${STEM}.csv' using 1:2 title '${TITLE}' with linespoints ls 5"
     
+    PLOT_CMD="plot '${IN_STEM}.csv' ${DEC} using 1:2:3:4:5:6 with xyerrorbars ls 5 title '${TITLE}'"
+
     # Start gnuplot
     gnuplot -persist <<PLOT
 
 set terminal epslatex size 3.5,2.62 color colortext
-set output "${STEM}.tex"
+set output "${OUT_STEM}.tex"
 
 set title "${TITLES[count]} ROC"
 set xlabel "False Positive Rate"
@@ -36,7 +51,7 @@ set ylabel "True Positive Rate"
 set xrange [0:1]
 set yrange [0:1]
 
-set style line 5 lt rgb "blue" lw 3 pt 6
+set style line 5 lt rgb "blue" lw 1 pt 7 ps 0.5
 
 set arrow from 0,0 to 1,1 nohead lc rgb 'black'
 
@@ -44,29 +59,29 @@ set datafile separator ","
 ${PLOT_CMD}
 
 set terminal epslatex size 3.5,2.62 standalone color colortext 10
-set output "${STEM}-sa.tex"
+set output "${OUT_STEM}-sa.tex"
 ${PLOT_CMD}
 
-save "${STEM}.gnu"
+save "${OUT_STEM}.gnu"
 
 quit
 PLOT
 
     # Since most IEEE papers can't include eps file types, we have to convert the
     # generated eps file into a PDF
-    epstopdf ${STEM}.eps
+    epstopdf ${OUT_STEM}.eps
 
     # Generate standalone postscript plot
-    latex ${STEM}-sa.tex
-    dvips -o ${STEM}-sa.ps ${STEM}-sa.dvi
+    latex ${OUT_STEM}-sa.tex
+    dvips -o ${OUT_STEM}-sa.ps ${OUT_STEM}-sa.dvi
 
     # Convert ps file to pdf
-    ps2pdf ${STEM}-sa.ps
+    ps2pdf ${OUT_STEM}-sa.ps
 
     # Clean up intermediate files
-    rm -rf ${STEM}-sa.tex
-    rm -rf ${STEM}-sa.dvi
-    rm -rf ${STEM}-sa.ps
+    rm -rf ${OUT_STEM}-sa.tex
+    rm -rf ${OUT_STEM}-sa.dvi
+    rm -rf ${OUT_STEM}-sa.ps
     rm -rf *.eps
     rm -rf *.aux
     rm -rf *.dvi

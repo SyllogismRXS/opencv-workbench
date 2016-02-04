@@ -102,16 +102,6 @@ mkdir -p ${RANGES_OUT_DIR}
 # Get list of files that were created
 RANGES_FILES=$(find ${RANGES_OUT_DIR} -name "*.yaml")
 
-# for each fold:
-# Sweep across all video frames designated for training
-# Compute ROC curve
-# Determine "optimal" threshold
-# Try threshold on validation set
-#end fold
-
-# Try threshold on final test set (one time)
-
-#RUN_DETECTOR_EXEC=$(readlink -f ./bin/run-detector)
 RUN_DETECTOR_EXEC="/home/syllogismrxs/repos/opencv-workbench/bin/run-detector"
 
 # For each fold
@@ -133,15 +123,15 @@ do
 
             CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE -h -o ${TRACKS_OUT_DIR} -t -g thresh -m learning -k ${K_FOLDS_FILE}"
             echo $CMD
-            ${CMD}
+            ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
         done
     done
     
     # Aggregate data and compute ROC curve
     # Compute "optimal" threshold
-    /home/syllogismrxs/repos/opencv-workbench/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -f roc.csv -p ${SWEEP_PARAM}
+    /home/syllogismrxs/repos/opencv-workbench/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -f roc.csv -s ${SWEEP_PARAM}
     
-    # Compute ROC curve, Determine "optimal" threshold
+    # Draw ROC Curve
     /home/syllogismrxs/repos/opencv-workbench/scripts/roc.sh ${TRACKS_OUT_DIR}/roc.csv
     
     for VIDEO_FILE in "${VIDEO_FILES_ARRAY[@]}"
@@ -156,28 +146,33 @@ do
         echo "Validating"
         CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml -h -o ${FOLD_DIR} -t -g thresh -m validating -k ${K_FOLDS_FILE}"
         echo $CMD
-        ${CMD}
+        ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
     done        
 done
 
-# Try "optimal" threshold on final test set
-# Compute average of all winning thresholds
-# write to yaml file
+# Compute Average ROC Curve From K-Folds (output test.yaml file)
+/home/syllogismrxs/repos/opencv-workbench/bin/roc-average -s ${SWEEP_PARAM} -d ${OUT_DIR} -o ${OUT_DIR}
 
-# for VIDEO_FILE in "${VIDEO_FILES_ARRAY[@]}"
-# do
-#     # Get the K-folds file for this video file (any one of the folds works,
-#     # since they all have the same final "test set" 
-#     filename=$(basename "$VIDEO_FILE")
-#     base_no_ext="${filename%.*}"
-# 
-#     FOLD_DIR=$(find ${OUT_DIR} -name "fold-0")
-#     K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"    
-#     
-#     # Try threshold on validation set
-#     echo "============="
-#     echo "Testing"
-#     CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE}"
-#     echo $CMD
-#     ${CMD}
-# done        
+# Plot the Average ROC Curve (Full Points)
+/home/syllogismrxs/repos/opencv-workbench/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 
+
+# Plot the Average ROC Curve (Decimated by 10)
+/home/syllogismrxs/repos/opencv-workbench/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 10
+
+for VIDEO_FILE in "${VIDEO_FILES_ARRAY[@]}"
+do
+    # Get the K-folds file for this video file (any one of the folds works,
+    # since they all have the same final "test set" 
+    filename=$(basename "$VIDEO_FILE")
+    base_no_ext="${filename%.*}"
+
+    FOLD_DIR=$(find ${OUT_DIR} -name "fold-0")
+    K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"    
+    
+    # Try threshold on validation set
+    echo "============="
+    echo "Testing"
+    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE}"
+    echo $CMD
+    ${CMD}
+done        

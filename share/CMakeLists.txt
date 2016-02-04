@@ -1,3 +1,4 @@
+add_subdirectory(roc-average)
 add_subdirectory(fold-aggregate)
 add_subdirectory(k-fold)
 add_subdirectory(param-range)

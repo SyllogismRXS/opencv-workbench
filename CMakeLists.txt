@@ -62,7 +62,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 ########################################################
 # Find Boost
 ########################################################
-find_package(Boost COMPONENTS thread date_time iostreams program_options 
+find_package(Boost COMPONENTS thread date_time iostreams program_options regex
   filesystem system REQUIRED)
 
 if(Boost_FOUND)

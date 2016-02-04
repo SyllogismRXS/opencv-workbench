@@ -25,6 +25,7 @@
 #include <opencv_workbench/plugin_manager/PluginManager.h>
 
 #include <opencv_workbench/syllo/syllo.h>
+#include <opencv_workbench/wb/ROC.h>
 #include <yaml-cpp/yaml.h>
 
 using std::cout;
@@ -60,15 +61,9 @@ int main(int argc, char *argv[])
      std::string output_file = "";
      std::string output_dir = "./";
      std::string param_sweep = "";
-     while ((c = getopt (argc, argv, "p:f:o:d:")) != -1) {
-          switch (c) {
-          //case 'a':
-          //     aflag = 1;
-          //     break;
-          //case 'b':
-          //     bflag = 1;
-          //     break;
-          case 'p':
+     while ((c = getopt (argc, argv, "s:f:o:d:")) != -1) {
+          switch (c) {               
+          case 's':
                param_sweep = std::string(optarg);
                break;
           case 'o':
@@ -99,7 +94,7 @@ int main(int argc, char *argv[])
      }
 
      if (param_sweep == "") {
-          cout << "Error: Specify a parameter to sweep with -p" << endl;
+          cout << "Error: Specify a parameter to sweep with -s" << endl;
           return -1;
      }
 
@@ -117,13 +112,15 @@ int main(int argc, char *argv[])
           
      //std::vector< std::map<std::string,double> > metrics_vector;
      
+     int threshold_type = -1;
+     
      // Loop through all files.  use a map based on the current threshold
      // parameter to index the TP,TN,FP,FN count
      std::map<std::string, std::map<std::string,double> > metrics_counts;
 
      for (std::vector<fs::path>::iterator it = file_paths.begin(); 
           it != file_paths.end(); it++) {
-          cout << "File: " << it->string() << endl;          
+          //cout << "File: " << it->string() << endl;          
           
           AnnotationParser parser;
           int retcode = parser.ParseFile(it->string());
@@ -134,14 +131,12 @@ int main(int argc, char *argv[])
           
           std::map<std::string,double> params = parser.get_params();
 
+          threshold_type = (int)(params["threshold_type"]);
+
           if (params.count(param_sweep) > 0) {
                double param_value = params[param_sweep];
-               cout << "param_value: " << param_value << endl;
                std::string param_value_str = syllo::double2str(param_value);
-               
                std::map<std::string,double> metrics = parser.get_metrics();
-               
-               cout << "param_value_str: " << param_value_str << endl;
                
                metrics_counts[param_value_str]["PRE_TP"] += metrics["PRE_TP"];
                metrics_counts[param_value_str]["PRE_TN"] += metrics["PRE_TN"];
@@ -191,41 +186,31 @@ int main(int argc, char *argv[])
           cout << "ROC Output file: " << roc_fn << endl;
           roc_stream.open (roc_fn.c_str(), std::ofstream::out);
           //roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
-          roc_stream << "# TPR,FPR,thresh,FP,FN,TP,TN," << endl;
+          roc_stream << "# TPR,FPR,thresh,FP,FN,TP,TN,thresh_type" << endl;
      }
      
-     // Create a file that gnuplot that use
-     // Also, find the point closest to (0,1)
-     cv::Point2f goal(0,1);
-     double dist_champ = 1e9;
-     std::vector< std::map<std::string,double> >::iterator it_champ;
-     
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
-         it != metrics_vector.end(); it++) {          
-          
-          cv::Point2f p((*it)["PRE_FPR"],(*it)["PRE_TPR"]);
-          double dist = sqrt( pow(goal.x-p.x,2) + pow(goal.y-p.y,2) );
-                    
-          if (dist < dist_champ) {
-               dist_champ = dist;
-               it_champ = it;
-          }
-          
+         it != metrics_vector.end(); it++) {                              
           roc_stream << (*it)["PRE_TPR"] <<","<< (*it)["PRE_FPR"] <<","
                      << (*it)["thresh_value"] <<"," << (*it)["PRE_FP"] <<","
                      << (*it)["PRE_FN"] <<","
-                     << (*it)["PRE_TP"] <<","<< (*it)["PRE_TN"] << endl;
+                     << (*it)["PRE_TP"] <<","<< (*it)["PRE_TN"] << ","
+                     << syllo::int2str(threshold_type) << endl;
      }     
      roc_stream.close();
 
-
-     //cout << "Champ Threshold: " << (*it_champ)["thresh_value"] << endl;     
+     // Get the "optimal" operating point
+     std::vector< std::map<std::string,double> >::iterator it_oppt;
+     ROC::OperatingPoint(metrics_vector, it_oppt);
+     
      // Write out the threshold to a yaml param file for the last validation
      // fold
      YAML::Emitter out;
      out << YAML::BeginMap;
      out << YAML::Key << param_sweep;
-     out << YAML::Value << syllo::double2str((*it_champ)["thresh_value"]);
+     out << YAML::Value << syllo::double2str((*it_oppt)["thresh_value"]);
+     out << YAML::Key << "threshold_type";
+     out << YAML::Value << syllo::int2str(threshold_type);     
      out << YAML::EndMap;
 
      std::string out_filename = output_dir + "/validate.yaml";
