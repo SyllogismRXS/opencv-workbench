@@ -478,7 +478,7 @@ namespace wb {
 #endif
      }
 
-#define USE_SCHARR 1
+#define USE_SCHARR 0
      void gradient_sobel(cv::Mat &src, cv::Mat &dst)
      {
           cv::Mat grad_x, grad_y;
