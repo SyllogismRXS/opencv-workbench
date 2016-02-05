@@ -186,12 +186,12 @@ int main(int argc, char *argv[])
           cout << "ROC Output file: " << roc_fn << endl;
           roc_stream.open (roc_fn.c_str(), std::ofstream::out);
           //roc_stream << "# FP,FN,TP,TN,TPR,FPR" << endl;
-          roc_stream << "# TPR,FPR,thresh,FP,FN,TP,TN,thresh_type" << endl;
+          roc_stream << "# FPR,TPR,thresh,FP,FN,TP,TN,thresh_type" << endl;
      }
      
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
          it != metrics_vector.end(); it++) {                              
-          roc_stream << (*it)["PRE_TPR"] <<","<< (*it)["PRE_FPR"] <<","
+          roc_stream << (*it)["PRE_FPR"] <<","<< (*it)["PRE_TPR"] <<","
                      << (*it)["thresh_value"] <<"," << (*it)["PRE_FP"] <<","
                      << (*it)["PRE_FN"] <<","
                      << (*it)["PRE_TP"] <<","<< (*it)["PRE_TN"] << ","
