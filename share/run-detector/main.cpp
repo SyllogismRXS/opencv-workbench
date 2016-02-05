@@ -138,9 +138,9 @@ int main(int argc, char *argv[])
           }
      }
           
-     syllo::fill_line("=");
-     cout << "Running Detector" << endl;
-     syllo::fill_line("=");
+     //syllo::fill_line("=");
+     //cout << "Running Detector" << endl;
+     //syllo::fill_line("=");
      
      if (ml_stage_str == "learning") {
           ml_stage = learning;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
      AnnotationParser parser_truth;
      int retcode = parser_truth.CheckForFile(video_filename, AnnotationParser::hand);
      if (retcode != 0) {
-          cout << "Error parsing hand annotated file." << endl;
+          //cout << "Error parsing hand annotated file." << endl;
           hand_ann_found = false;          
      }     
 
@@ -206,11 +206,10 @@ int main(int argc, char *argv[])
 
      retcode = plugin_manager_.open_library(plugin_name);
      if (retcode != 0) {
-          cout << "Unable to open library: " << plugin_name << endl;
-          
+          cout << "Unable to open library: " << plugin_name << endl;          
           return -1;
      } else {
-          cout << "Using Bridge Library: " << plugin_name << endl;
+          //cout << "Using Bridge Library: " << plugin_name << endl;
      }     
 
      // Parse the k-folds file, if it exists
@@ -244,7 +243,7 @@ int main(int argc, char *argv[])
      detector_ = plugin_manager_.object();
      detector_->set_params(&params);
      detector_->set_stream(&stream);
-     detector_->print();
+     //detector_->print();
 
      if (last_stage_str == "color") {
           detector_->set_last_stage(Detector::color);
@@ -337,7 +336,7 @@ int main(int argc, char *argv[])
                if (step_flag) {
                     int key = cv::waitKey(0);    
                     if (key == 'q' || key == 1048689) { // 'q' key
-                         cout << "Ending early." << endl;
+                         //cout << "Ending early." << endl;
                          break;
                     } else if (key == 'p' || key == 1048688) {
                          step_flag = 0;
@@ -378,6 +377,6 @@ int main(int argc, char *argv[])
      
      plugin_manager_.close_libraries();
 
-     cout << "Done Processing." << endl;
+     cout << "Complete: run-detector." << endl;
      return 0;
 }

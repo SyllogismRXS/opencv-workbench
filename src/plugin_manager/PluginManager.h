@@ -4,7 +4,7 @@
 /// @file PluginManager.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-06-23 15:57:28 syllogismrxs>
+/// Time-stamp: <2016-02-05 09:30:57 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -83,7 +83,7 @@ public:
           }
 
           std::string env_path = std::string(env_p);
-          cout << env_var << ": " << env_path << endl;
+          //cout << env_var << ": " << env_path << endl;
 
           // Tokenize the path and loop through each directory
           boost::char_separator<char> sep(":");
@@ -93,7 +93,7 @@ public:
                // the extension
                fs::path root = t;
                if(fs::exists(root) && fs::is_directory(root)) {
-                    cout << "Searching plugin path: " << t << endl;
+                    //cout << "Searching plugin path: " << t << endl;
 
                     fs::recursive_directory_iterator it(root);
                     fs::recursive_directory_iterator endit;
@@ -125,7 +125,7 @@ public:
                // Load each library found
                int result = this->load_library(*it);
                if (result  == FAILED_TO_OPEN_LIBRARY) {
-                    cout << "Can't load lib: " << *it << endl;
+                    //cout << "Can't load lib: " << *it << endl;
                }
           }
 
@@ -142,7 +142,8 @@ public:
           dlib = dlopen(lib_name.c_str(), RTLD_NOW);
           if(dlib == NULL){
                //std::cerr << dlerror() << endl;
-               cout << dlerror() << endl;
+               //cout << dlerror() << endl;
+               dlerror();
                return FAILED_TO_OPEN_LIBRARY;
           }
           
@@ -161,8 +162,8 @@ public:
 
      int finalize_libraries()
      {
-          cout << "------------------------------------------------" << endl;
-          cout << "Successfully loaded: " << endl;
+          //cout << "------------------------------------------------" << endl;
+          //cout << "Successfully loaded: " << endl;
 
           // create an array of the library names
           int i = 1;
@@ -171,10 +172,10 @@ public:
                lib_names_.insert(lib_names_.end(),
                                  fitr_->first);
 
-               cout << i << ": " << fitr_->first << endl;
+               //cout << i << ": " << fitr_->first << endl;
                i++;
           }
-          cout << "----------------------------" << endl;
+          //cout << "----------------------------" << endl;
           return 0;
      }
 

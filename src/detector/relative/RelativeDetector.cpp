@@ -15,7 +15,7 @@ using std::endl;
 
 RelativeDetector::RelativeDetector()
 {
-     cout << "RelativeDetector Constructor" << endl;
+     //cout << "RelativeDetector Constructor" << endl;
      thresh_value_ = 150;
      //thresh_value_ = 255;
      thresh_value_ = 50;
@@ -43,7 +43,7 @@ RelativeDetector::RelativeDetector()
 
 RelativeDetector::~RelativeDetector()
 {
-     cout << "RelativeDetector Destructor" << endl;
+     //cout << "RelativeDetector Destructor" << endl;
 }
 
 void RelativeDetector::print()

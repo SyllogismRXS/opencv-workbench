@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-01 00:30:58 syllogismrxs>
+/// Time-stamp: <2016-02-05 09:24:57 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -95,7 +95,7 @@ public:
      virtual void print()=0;
      virtual ~Detector()
      {
-          std::cout << "Detector destructor" << std::endl;
+          //std::cout << "Detector destructor" << std::endl;
      }
 
      // accept cv::Mat and return tracks?

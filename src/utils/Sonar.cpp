@@ -89,7 +89,7 @@ Sonar::Status_t Sonar::init()
                ret = BVTSonarDiscoveryAgent_Start(agent);
           
                //Let the discovery process run for a short while (5 secs)
-               cout << "Searching for available sonars..." << endl;
+               //cout << "Searching for available sonars..." << endl;
                sleep(5);
           
                // See what we found
@@ -100,7 +100,7 @@ Sonar::Status_t Sonar::init()
           
                for(int i = 0; i < numSonars; i++) {
                     ret = BVTSonarDiscoveryAgent_GetSonarInfo(agent, i, &SonarIPAddress[0], 20);
-                    printf("Found Sonar: %d, IP address: %s\n", i, SonarIPAddress);
+                    //printf("Found Sonar: %d, IP address: %s\n", i, SonarIPAddress);
                }
           
                if(numSonars == 0) {
@@ -134,11 +134,11 @@ Sonar::Status_t Sonar::init()
      cur_head_ = -1;
      num_heads_ = -1;
      num_heads_ = BVTSonar_GetHeadCount(son_);
-     printf("BVTSonar_GetHeadCount: %d\n", num_heads_);
+     //printf("BVTSonar_GetHeadCount: %d\n", num_heads_);
 
      for (int i = 0; i < num_heads_; i++) {
-          cout << "--------------------------------" << endl;
-          cout << "Head Number: " << i << endl;
+          //cout << "--------------------------------" << endl;
+          //cout << "Head Number: " << i << endl;
           heads_[i] = NULL;
           //ret = BVTSonar_GetHead(son_, 0, &heads_[i]);
           ret = BVTSonar_GetHead(son_, i, heads_+i);
@@ -150,7 +150,7 @@ Sonar::Status_t Sonar::init()
                // Check the ping count
                num_pings_ = -1;
                num_pings_ = BVTHead_GetPingCount(heads_[i]);
-               printf("BVTHead_GetPingCount: %d\n", num_pings_);
+               //printf("BVTHead_GetPingCount: %d\n", num_pings_);
                if (num_pings_ > 0) {
                     cur_head_ = i;
                }
@@ -161,8 +161,8 @@ Sonar::Status_t Sonar::init()
           cout << "Can't find valid head" << endl;
           return Sonar::Failure;
      } else {
-          cout << "--------------------------------" << endl;
-          cout << "Using head: " << cur_head_ << endl;
+          //cout << "--------------------------------" << endl;
+          //cout << "Using head: " << cur_head_ << endl;
      }
 
      // Set the stop and start ranges;
@@ -172,7 +172,7 @@ Sonar::Status_t Sonar::init()
      // Check the ping count
      num_pings_ = -1;
      num_pings_ = BVTHead_GetPingCount(heads_[cur_head_]);
-     printf("BVTHead_GetPingCount: %d\n", num_pings_);
+     //printf("BVTHead_GetPingCount: %d\n", num_pings_);
      
      // Set the range window
      this->set_range(min_range_, max_range_);

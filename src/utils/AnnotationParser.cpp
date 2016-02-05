@@ -111,7 +111,7 @@ int AnnotationParser::CheckForFile(std::string video_file,
                     fs::path result_path;
                     fs::path search_path = std::string(pPath);
 
-                    cout << "Searching for file: " << file << ", under: " << search_path.string() << endl;
+                    //cout << "Searching for file: " << file << ", under: " << search_path.string() << endl;
                     
                     bool path_found = this->find_file(search_path, file, result_path);
 
@@ -120,7 +120,7 @@ int AnnotationParser::CheckForFile(std::string video_file,
                          cout << "Found file at: " << xml_filename_ << endl;
                          return this->ParseFile(xml_filename_);
                     } else {
-                         cout << "File not found, recursively." << endl;
+                         //cout << "File not found, recursively." << endl;
                     }
                } else {
                     cout << "Env Var Not Set: OPENCV_WORKBENCH_ANNOTATED_FILES" << endl;
@@ -136,11 +136,11 @@ int AnnotationParser::CheckForFile(std::string video_file,
           return 1;
      } else {
           if (ann_type_ == hand) {
-               cout << "Hand ";
+               //cout << "Hand ";
           } else if (ann_type_ == track) {
-               cout << "Track ";
+               //cout << "Track ";
           }
-          cout << "annotation file found." << endl;
+          //cout << "annotation file found." << endl;
           return this->ParseFile(xml_filename_);
      }
 }
@@ -774,7 +774,7 @@ bool AnnotationParser::export_roi()
      int lastindex = video_filename_.find_last_of("."); 
      std::string roi_fn = video_filename_.substr(0, lastindex) + 
           std::string("_roi.avi");
-     cout << "Output: " << roi_fn << endl;
+     //cout << "Output: " << roi_fn << endl;
      
      cv::Size size(width_avg, height_avg); // height width?
      cv::VideoWriter out(roi_fn, CV_FOURCC('M','J','P','G'), 23, size, true);
@@ -805,7 +805,7 @@ bool AnnotationParser::export_roi()
                out.write(roi);
           }
      }         
-     cout << "Export ROI Complete" << endl;
+     //cout << "Export ROI Complete" << endl;
      return true;
 }
 
