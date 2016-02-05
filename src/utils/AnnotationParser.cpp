@@ -3,15 +3,21 @@
 #include <string>
 #include <algorithm>
 
+#include <stdlib.h>
+#include <time.h> 
+#include <stdio.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
+//#include <boost/random.hpp>
+//#include <boost/random/normal_distribution.hpp>
+//#include <boost/random/uniform_int.hpp>
 
 #include <opencv_workbench/syllo/syllo.h>
 
 #include <opencv_workbench/rapidxml/rapidxml.hpp>
 #include <opencv_workbench/rapidxml/rapidxml_utils.hpp>
 #include <opencv_workbench/rapidxml/rapidxml_print.hpp>
-//#include <opencv_workbench/rapidxml/rapidxml_iterators.hpp>
 
 #include <opencv_workbench/plot/Plot.h>
 
@@ -24,6 +30,7 @@ using namespace rapidxml;
 
 AnnotationParser::AnnotationParser()
 {
+     srand (time(NULL));
      this->reset();
 }
 
@@ -34,7 +41,8 @@ void AnnotationParser::reset()
      dir_ = "";
      basename_ = "";
      metrics_present_ = false;         
-
+     neg_to_pos_ratio_ = 1;
+     
      reset_metrics();
      frames.clear();
 }
@@ -224,6 +232,14 @@ void AnnotationParser::write_header()
                char * PRE_FPR = doc.allocate_string(syllo::double2str(PRE_FPR_).c_str());
                xml_node<> *PRE_FPR_node = doc.allocate_node(node_element, "PRE_FPR", PRE_FPR);
                pre_node->append_node(PRE_FPR_node);               
+
+               char * NEG_SAMPLES = doc.allocate_string(syllo::int2str(negative_sample_count_).c_str());
+               xml_node<> *NEG_SAMPLES_node = doc.allocate_node(node_element, "NEG_SAMPLES", NEG_SAMPLES);
+               pre_node->append_node(NEG_SAMPLES_node);               
+
+               char * PRE_Accuracy = doc.allocate_string(syllo::double2str(PRE_Accuracy_).c_str());
+               xml_node<> *PRE_Accuracy_node = doc.allocate_node(node_element, "PRE_Accuracy", PRE_Accuracy);
+               pre_node->append_node(PRE_Accuracy_node);               
                
                char * Pd = doc.allocate_string(syllo::double2str(Pd_).c_str());
                xml_node<> *Pd_node = doc.allocate_node(node_element, "Pd", Pd);
@@ -524,6 +540,14 @@ int AnnotationParser::ParseFile(std::string file)
                } else { 
                     cout << xml_filename_ << ": Missing PRE_FPR node" << endl;
                }
+
+               // NEG_SAMPLES
+               xml_node<> * NEG_SAMPLES_node = pre_node->first_node("NEG_SAMPLES");
+               if (NEG_SAMPLES_node != 0) {
+                    negative_sample_count_ = syllo::str2int(NEG_SAMPLES_node->value());               
+               } else { 
+                    cout << xml_filename_ << ": Missing NEG_SAMPLES node" << endl;
+               }
                               
                // Pd
                xml_node<> * Pd_node = pre_node->first_node("Pd");
@@ -640,12 +664,13 @@ int AnnotationParser::ParseFile(std::string file)
      }
      
      // Find <frames>
-     xml_node<> * frames_node = doc.first_node()->first_node("frames");
+     xml_node<> * frames_node = doc.first_node()->first_node("frames");     
      if (frames_node == 0) {
           return -1;          
-     }     
+     }          
      
      // Loop through all frames
+     int loop_frame_number = 0;
      xml_node<> *frame_node = frames_node->first_node("frame");
      do {
           if (frame_node == 0) {
@@ -660,7 +685,17 @@ int AnnotationParser::ParseFile(std::string file)
           }
                               
           int frame_number = syllo::str2int(frame_number_node->value());
-                    
+           
+          if (frame_number != loop_frame_number) {
+               // Add an empty frame, increment loop_frame_number, continue
+               Frame frame;
+               frame.set_frame_number(loop_frame_number);
+               frames[loop_frame_number] = frame;
+               cout << "Adding frame number: " << loop_frame_number << endl;
+               loop_frame_number++;
+               continue;
+          }
+         
           Frame frame;
           frame.set_frame_number(frame_number);
           
@@ -711,13 +746,16 @@ int AnnotationParser::ParseFile(std::string file)
                     object.set_undistorted_centroid(cv::Point2d(x,y));
                }
                
+               positive_sample_count_++;
                frame.objects[object_name] = object;
                
           }while ((object_node = object_node->next_sibling()) != 0 );
           
           frames[frame_number] = frame;
           
-     }while ((frame_node = frame_node->next_sibling()) != 0 );
+          loop_frame_number++;
+          frame_node = frame_node->next_sibling();          
+     }while (frame_node != 0);     
      
      return 0;
 }
@@ -928,6 +966,10 @@ std::map<std::string,double> AnnotationParser::get_params()
 
 void AnnotationParser::reset_metrics()
 {
+     positive_sample_count_ = 0;
+     negative_sample_count_ = 0;
+     PRE_Accuracy_ = 0;
+     
      TP_ = 0;
      TN_ = 0;
      FP_ = 0;
@@ -965,6 +1007,7 @@ std::map<std::string,double> AnnotationParser::get_metrics()
      metrics["PRE_FN"] = PRE_FN_;
      metrics["PRE_TPR"] = PRE_TPR_;
      metrics["PRE_FPR"] = PRE_FPR_;
+     metrics["PRE_Accuracy"] = PRE_Accuracy_;
      
      return metrics;
 }
@@ -1337,14 +1380,16 @@ void AnnotationParser::score_detector_2(AnnotationParser &truth,
 
 void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
 {
-     Pd_ = (double)inside_count_total_ / (double)count_total_;     
-     Pfa_ = (double)outside_count_total_ / (double)count_total_;
+     //Pd_ = (double)inside_count_total_ / (double)count_total_;     
+     //Pfa_ = (double)outside_count_total_ / (double)count_total_;
 
      cout << "Pd: " << Pd_ << endl;
      cout << "Pfa: " << Pfa_ << endl;
 
      PRE_TPR_ = (double)PRE_TP_ / (double)(PRE_TP_ + PRE_FN_); 
      PRE_FPR_ = (double)PRE_FP_ / (double)(PRE_FP_ + PRE_TN_); 
+
+     PRE_Accuracy_ = (double)(PRE_TP_ + PRE_TN_) / ((double)(PRE_TP_ + PRE_TN_ + PRE_FN_+ PRE_FP_));
 
      syllo::fill_line("+");
      cout << "Pre True Positives: " << PRE_TP_ << endl;
@@ -1353,8 +1398,186 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
      cout << "Pre False Negatives: " << PRE_FN_ << endl;   
      cout << "PRE TPR: " << PRE_TPR_ << endl;
      cout << "PRE FPR: " << PRE_FPR_ << endl;     
+     cout << "PRE Accuracy: " << PRE_Accuracy_ << endl;     
 }
 
+void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth, 
+                                             cv::Mat &img, cv::Mat &mask)
+{
+     if (img.empty()) {
+          return;
+     }
+
+     //boost::mt19937 gener_x, gener_y;
+     //boost::random::uniform_int_distribution<> uniform_x(0,img.cols-1), uniform_y(0,img.rows-1);
+     //boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > rng_x(gener_x, uniform_x);
+     //boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > rng_y(gener_y, uniform_x);
+     //rng_x.engine().seed(static_cast<unsigned int>(std::time(0)));
+     //rng_x.distribution().reset();
+     //rng_y.engine().seed(static_cast<unsigned int>(std::time(0)));
+     //rng_y.distribution().reset();
+     
+     cv::Mat img_clone = img.clone();
+     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);     
+     
+     // Use rectangles outside of the positive examples as negatives.
+     // A rectangle is a positive if it has any non-zero pixels inside of it.     
+                         
+     int TP = 0, TN = 0, FP = 0, FN = 0;
+          
+     if (truth.frames.count(frame) > 0) {
+          // There is an annotated frame.                    
+          
+          // Loop through each positive object and determine if it is either a
+          // true positive or false negative.          
+          for (std::map<std::string, wb::Entity>::iterator it = truth.frames[frame].objects.begin(); 
+               it != truth.frames[frame].objects.end();
+               it++) {
+
+               // Draw the object's bounding box
+               cv::rectangle(img_clone, it->second.bbox().rectangle(), cv::Scalar(0,255,0), 1, 8, 0);
+               
+               // Does this object contain any non-zero pixels?
+               bool object_contains_pixel = false;
+               BoundingBox b = it->second.bbox();
+               for(int r = b.ymin(); r < b.ymax(); r++) {
+                    for(int c = b.xmin(); c < b.xmax(); c++) {
+                         if (img.at<uchar>(r,c) != 0) {
+                              object_contains_pixel = true;
+                         }
+                    }
+               }
+
+               if (object_contains_pixel) {
+                    // At least one non-zero pixel was found in the object's
+                    // bounding box, this is a single true positive
+                    TP++;
+               } else {
+                    // There weren't any non-zero pixels found in the object's
+                    // bounding box, this is a single false negative.
+                    FN++;
+               }                              
+          }
+
+          // Using the dimensions of the positive samples' rectangles, randomly
+          // select negative samples from the current frame.
+          std::list<cv::Rect> neg_rects;          
+          for (std::map<std::string, wb::Entity>::iterator it1 = truth.frames[frame].objects.begin(); 
+               it1 != truth.frames[frame].objects.end(); it1++) {
+               cv::Rect pos_rect = it1->second.bbox().rectangle();
+               cv::Rect rect = pos_rect;
+
+               // Determine the number of negative examples we will use for this frame
+               int attempts = 0;
+               int num_neg_examples = neg_to_pos_ratio_;
+               for (int i = 0; i < num_neg_examples; i++) {
+                    attempts++;
+                    
+                    // If there are too many attempts to try to fit a negative
+                    // box but we keep getting rejected attempts, just exit, so
+                    // we don't hang forever. User should adjust ratio.
+                    if (attempts > 500) {
+                         cout << "Too many attempts to fit negative box" << endl;
+                         cout << "File: " << xml_filename_ << endl;
+                    }
+                    
+                    //int x = rng_x();
+                    //int y = rng_y();
+                    int x = rand() % (img.cols - rect.width);
+                    int y = rand() % (img.rows - rect.height);
+                    rect.x = x;
+                    rect.y = y;
+
+                    // This new rectangle can't be outside of the (2) sonar's
+                    // mask, (1) outside of the image's dimensions, (3)
+                    // intersecting with positive rectangles, (4) intersecting
+                    // with other negative rectangles
+
+                    // (1) Is it outside of the original image?
+                    bool valid = BoundingBox::is_within_image(rect, img);
+                    if (!valid) {
+                         i--;
+                         continue;
+                    }
+                    
+                    // (2) Is it outside of the sonar's mask?
+                    valid = BoundingBox::is_within_mask(rect, mask);
+                    if (!valid) {
+                         i--;
+                         continue;
+                    }                    
+                    
+                    // (3) Does it collide with a positive sample?
+                    for (std::map<std::string, wb::Entity>::iterator it2 = truth.frames[frame].objects.begin(); 
+                         it2 != truth.frames[frame].objects.end(); it2++) {
+                         valid = !BoundingBox::overlap(rect, it2->second.bbox().rectangle());
+                         if (!valid) break; // overlaps with positive sample, break.
+                    }
+                    if (!valid) {
+                         i--;
+                         continue;
+                    }
+
+                    // (4) Does it collide with another negative rectangle?
+                    for (std::list<cv::Rect>::iterator it2 = neg_rects.begin();
+                         it2 != neg_rects.end(); it2++) {
+                         valid = !BoundingBox::overlap(rect, *it2);
+                         if (!valid) break; // overlaps with negative sample, break.
+                    }
+                    if (!valid) {
+                         i--;
+                         continue;
+                    }
+                    
+                    neg_rects.push_back(rect);
+                    negative_sample_count_++;
+
+                    // Draw a red box over the "negative" sample
+                    cv::rectangle(img_clone, rect, cv::Scalar(0,0,255), 1, 8, 0);
+                    
+                    // At this point in the loop, the randomly located
+                    // rectangle has passed all of the checks. Now determine if
+                    // there are any non-zero pixels in the rectangle (false
+                    // positive) or if all of the pixels are zero (true
+                    // negative)
+                    bool non_zero_found = false;
+                    cv::Mat roi(img,rect);
+                    for (int r = 0; r < roi.rows; r++) {
+                         for (int c = 0; c < roi.cols; c++) {
+                              if (roi.at<uchar>(r,c) != 0) {
+                                   non_zero_found = true;
+                              }
+                         }
+                    }
+                    if (non_zero_found) {
+                         FP++;
+                    } else {
+                         TN++;
+                    }
+               } // loop over number of negative examples requested
+          } // loop over number of positive examples
+     } else {
+          cout << "=========> Missing annotated frame: " << xml_filename_  << " frame: " << frame << endl;
+     }
+
+     PRE_TP_ += TP;
+     PRE_TN_ += TN;
+     PRE_FP_ += FP;
+     PRE_FN_ += FN;
+
+     metrics_present_ = true;
+
+#if 1
+     cout << "==========" << endl;
+     cout << "TP: " << TP << endl;
+     cout << "TN: " << TN << endl;
+     cout << "FP: " << FP << endl;
+     cout << "FN: " << FN << endl;
+     cout << "PRE_FN: " << PRE_FN_ << endl;     
+     cv::imshow("POD Rects", img_clone);
+#endif
+     
+}
 void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
                                            cv::Mat &img)
 {

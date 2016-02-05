@@ -4,7 +4,7 @@
 /// @file BoundingBox.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-29 13:53:16 syllogismrxs>
+/// Time-stamp: <2016-02-05 15:57:58 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -125,6 +125,13 @@ BoundingBox(cv::Rect rect) :
           }
      }
 
+     static bool overlap(const cv::Rect &r1, const cv::Rect &r2)
+     {
+          BoundingBox b1(r1);
+          BoundingBox b2(r2);
+          return overlap(b1,b2);
+     }
+
      static bool overlap(const BoundingBox &b1, const BoundingBox &b2)
      {
           // If one rectangle is on the left side of the other
@@ -137,6 +144,27 @@ BoundingBox(cv::Rect rect) :
                return false;
           }               
           
+          return true;
+     }
+
+     static bool is_within_image(cv::Rect &rect, cv::Mat &img)
+     {
+          cv::Rect rect_img(0, 0, img.cols, img.rows);
+          return ((rect & rect_img) == rect);          
+     }
+
+     static bool is_within_mask(cv::Rect &rect, cv::Mat &mask)
+     {
+          // The mask is non-zero where it is valid. If any of the points
+          // within the rectangle are zero, it's not a complete overlap.
+          cv::Mat roi(mask, rect);
+          for (int r = 0; r < roi.rows; r++) {
+               for (int c = 0; c < roi.cols; c++) {
+                    if (roi.at<uchar>(r,c) == 0) {
+                         return false;
+                    }
+               }
+          }
           return true;
      }
 

@@ -12,6 +12,7 @@ YAML_PARAMS_FILE="empty"
 YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
 SWEEP_PARAM="empty"
+NEG_TO_POS_RATIO="1"
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).
@@ -25,6 +26,10 @@ do
     key="$1"
 
     case $key in
+        -r|--ratio)
+            NEG_TO_POS_RATIO="$2"
+            shift # past argument
+            ;;
         -s|--sweep)
             SWEEP_PARAM="$2"
             shift # past argument
@@ -79,6 +84,7 @@ mkdir -p ${OUT_DIR}
 
 # Copy yaml file to results directory
 cp ${YAML_PARAMS_FILE} ${OUT_DIR}
+cp ${YAML_PARAMS_FILE} ${OUT_DIR}
 
 # Generate the k-folds scenarios
 ~/repos/opencv-workbench/bin/k-fold -y ${YAML_VIDEO_FILES} -o ${OUT_DIR} -s 100 -k ${K_FOLDS}
@@ -121,8 +127,8 @@ do
             base_no_ext="${filename%.*}"
             K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"
 
-            CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE -h -o ${TRACKS_OUT_DIR} -t -g thresh -m learning -k ${K_FOLDS_FILE}"
-            echo $CMD
+            CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE -h -o ${TRACKS_OUT_DIR} -t -g thresh -m learning -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+            #echo $CMD
             ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
         done
     done
@@ -144,8 +150,8 @@ do
         # Try threshold on validation set
         echo "============="
         echo "Validating"
-        CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml -h -o ${FOLD_DIR} -t -g thresh -m validating -k ${K_FOLDS_FILE}"
-        echo $CMD
+        CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml -h -o ${FOLD_DIR} -t -g thresh -m validating -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+        #echo $CMD
         ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
     done        
 done
@@ -172,7 +178,7 @@ do
     # Try threshold on validation set
     echo "============="
     echo "Testing"
-    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE}"
-    echo $CMD
+    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+    #echo $CMD
     ${CMD}
 done        

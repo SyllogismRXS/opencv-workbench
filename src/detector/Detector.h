@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-05 09:24:57 syllogismrxs>
+/// Time-stamp: <2016-02-05 15:39:03 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -116,6 +116,7 @@ public:
      //
      //virtual vec2f desired_trajectory()=0;
      cv::Mat thresh_img() { return thresh_img_; }
+     cv::Mat mask() { return mask_; }
 
      void frame_ents(std::vector<wb::Entity> &frame_ents) 
      {

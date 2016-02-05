@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-01 17:10:29 syllogismrxs>
+/// Time-stamp: <2016-02-05 17:57:10 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -75,6 +75,12 @@ public:
      void set_folder(std::string folder) { folder_ = folder; }     
      void write_header();
 
+     int positive_sample_count() { return positive_sample_count_; } 
+     int negative_sample_count() { return negative_sample_count_; } 
+     
+     int number_of_frames() { return number_of_frames_; }
+     void set_neg_to_pos_ratio(double ratio) { neg_to_pos_ratio_ = ratio; }
+
      std::map<int,Frame> frames;
      
      std::vector<std::string> track_names();
@@ -90,6 +96,9 @@ public:
 
      void score_preprocessing(int frame, AnnotationParser &truth, 
                               cv::Mat &img);
+     
+     void score_preprocessing_2(int frame, AnnotationParser &truth, 
+                                cv::Mat &img, cv::Mat &mask);
 
      void score_preprocessing_final(AnnotationParser &truth);
      
@@ -123,6 +132,8 @@ protected:
      int depth_;     
      int number_of_frames_;
 
+     int positive_sample_count_;
+     
      fs::path dir_;
      fs::path basename_;
 
@@ -142,8 +153,12 @@ protected:
      int PRE_FN_;
      double PRE_TPR_;
      double PRE_FPR_;
+     double PRE_Accuracy_;
      double Pd_;
      double Pfa_;
+
+     double neg_to_pos_ratio_;
+     int negative_sample_count_;
 
      Parameters params_;
 

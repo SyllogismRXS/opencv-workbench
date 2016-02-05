@@ -80,9 +80,13 @@ int main(int argc, char *argv[])
      std::string ml_stage_str = "learning";
      MLStageType_t ml_stage = learning;     
      std::string last_stage_str = "detection";
+     double neg_to_pos_ratio = 1;
      
-     while ((c = getopt (argc, argv, "g:m:k:tf:hp:o:sy:")) != -1) {
+     while ((c = getopt (argc, argv, "r:g:m:k:tf:hp:o:sy:")) != -1) {
           switch (c) {               
+          case 'r':
+               neg_to_pos_ratio = syllo::str2double(std::string(optarg));
+               break;
           case 'g':
                last_stage_str = std::string(optarg);
                break;
@@ -186,6 +190,7 @@ int main(int argc, char *argv[])
      parser_tracks.set_number_of_frames(stream.get_frame_count());
      parser_tracks.set_plugin_name(plugin_name);
      parser_tracks.set_params(params);
+     parser_tracks.set_neg_to_pos_ratio(neg_to_pos_ratio);
      
      if (xml_output_dir_flag == 1) {
           parser_tracks.set_xml_output_dir(xml_output_dir);
@@ -302,13 +307,17 @@ int main(int argc, char *argv[])
           if (hand_ann_found) {
                // Score preprocessing, if available
                cv::Mat thresh_img = detector_->thresh_img();
-               parser_tracks.score_preprocessing(frame_number, parser_truth, 
-                                                 thresh_img);
+               cv::Mat mask_img = detector_->mask();
+               //parser_tracks.score_preprocessing(frame_number, parser_truth, 
+               //                                  thresh_img);
+
+               parser_tracks.score_preprocessing_2(frame_number, parser_truth, 
+                                                 thresh_img, mask_img);
 
                std::vector<wb::Entity> frame_ents;
                detector_->frame_ents(frame_ents);
           }
-                    
+          
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
           Frame frame;

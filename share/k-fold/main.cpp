@@ -41,10 +41,16 @@ public:
           {
                filename = "";
                start_frame = end_frame = 0;
+               valid = false;
           }
      std::string filename;
+     bool valid;
      int start_frame;
      int end_frame;
+     int positive_sample_count;
+     int frame_count;
+     int total_frame_count;
+     int annotated_frame_count;
 };
 
 void operator >> (const YAML::Node& node, DataSet& d)
@@ -61,10 +67,25 @@ void operator >> (const YAML::Node& node, DataSet& d)
           syllo::Status status = stream.open(d.filename);
           if (status != syllo::Success) {
                cout << "Failed to open: " << d.filename << endl;
+               d.valid = false;
+               return;
           }
           d.start_frame = 0;
           d.end_frame = stream.get_frame_count()-1;
      }
+
+     AnnotationParser parser_truth;
+     int retcode = parser_truth.CheckForFile(d.filename, AnnotationParser::hand);
+     if (retcode != 0) {
+          cout << "===> Warning: File doesn't have truth data: " << d.filename << endl;
+          d.valid = false;
+          return;
+     } else {
+          d.positive_sample_count = parser_truth.positive_sample_count();
+          d.frame_count = parser_truth.number_of_frames();
+          d.annotated_frame_count = parser_truth.frames.size();
+     }     
+     d.valid = true;
 }
 
 int main(int argc, char *argv[])
@@ -145,20 +166,40 @@ int main(int argc, char *argv[])
      std::string filenames_output_str = output_dir + "/" + "files.txt";
      filenames_output.open(filenames_output_str.c_str(), std::ofstream::out);
      
+     int total_pos_count = 0;
+     int total_frame_count = 0;
+     int total_ann_frame_count = 0;     
+          
      std::vector<DataSet> datasets;
      // Check for "data" map
      if(const YAML::Node *data = doc.FindValue("data")) {
           for(unsigned i=0; i < data->size();i++) {
                DataSet d;
                (*data)[i] >> d;
-               datasets.push_back(d);
-               filenames_output << d.filename << endl;
+               
+               if (d.valid) {
+                    datasets.push_back(d);
+                    filenames_output << d.filename << endl;
+                    total_pos_count += d.positive_sample_count;
+                    total_frame_count += d.frame_count;
+                    total_ann_frame_count += d.annotated_frame_count;
+               }               
           }
      } else {
           cout << "Invalid format. Missing data" << endl;
           return -1;
      }
      filenames_output.close();
+
+     // Write out the numbers on the input files
+     std::ofstream nums_output;
+     std::string nums_output_str = output_dir + "/" + "input_nums.txt";
+     nums_output.open(nums_output_str.c_str(), std::ofstream::out);     
+     cout << "Number of valid input files: " << datasets.size() << endl;
+     cout << "Total Positive Count: " << total_pos_count << endl;
+     cout << "Total Frame Count: " << total_frame_count << endl;
+     cout << "Total Annotated Frame Count: " << total_ann_frame_count << endl;
+     nums_output.close();     
 
      // Fill up the frames map with the frame counts of all the data
      // sets. Later, we will randomly sample from this frames map to select the
