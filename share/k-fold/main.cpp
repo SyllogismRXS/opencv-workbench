@@ -195,10 +195,10 @@ int main(int argc, char *argv[])
      std::ofstream nums_output;
      std::string nums_output_str = output_dir + "/" + "input_nums.txt";
      nums_output.open(nums_output_str.c_str(), std::ofstream::out);     
-     cout << "Number of valid input files: " << datasets.size() << endl;
-     cout << "Total Positive Count: " << total_pos_count << endl;
-     cout << "Total Frame Count: " << total_frame_count << endl;
-     cout << "Total Annotated Frame Count: " << total_ann_frame_count << endl;
+     nums_output << "Number of valid input files: " << datasets.size() << endl;
+     nums_output << "Total Positive Count: " << total_pos_count << endl;
+     nums_output << "Total Frame Count: " << total_frame_count << endl;
+     nums_output << "Total Annotated Frame Count: " << total_ann_frame_count << endl;
      nums_output.close();     
 
      // Fill up the frames map with the frame counts of all the data

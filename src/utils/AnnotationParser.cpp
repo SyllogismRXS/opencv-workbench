@@ -486,6 +486,12 @@ int AnnotationParser::ParseFile(std::string file)
           cout << "Error: Can't find size node" << endl;
           return -1;
      }
+
+     // Find <number_of_frames>
+     xml_node<> * number_of_frames_node = doc.first_node()->first_node("number_of_frames");
+     if (number_of_frames_node != 0) {
+          number_of_frames_ = syllo::str2int(number_of_frames_node->value());
+     }
      
      // Find <metrics>
      xml_node<> * metrics_node = doc.first_node()->first_node("metrics");
@@ -1567,7 +1573,7 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
 
      metrics_present_ = true;
 
-#if 1
+#if 0
      cout << "==========" << endl;
      cout << "TP: " << TP << endl;
      cout << "TN: " << TN << endl;

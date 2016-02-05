@@ -12,7 +12,7 @@ YAML_PARAMS_FILE="empty"
 YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
 SWEEP_PARAM="empty"
-NEG_TO_POS_RATIO="1"
+NEG_TO_POS_RATIO="2"
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).
@@ -113,7 +113,9 @@ RUN_DETECTOR_EXEC="/home/syllogismrxs/repos/opencv-workbench/bin/run-detector"
 # For each fold
 FOLD_DIRS=$(find ${OUT_DIR} -name "fold-*")
 for FOLD_DIR in $FOLD_DIRS
-do    
+do        
+    echo "Fold_dir: ${FOLD_DIR}"
+    
     TRACKS_OUT_DIR="${FOLD_DIR}/tracks"
     mkdir -p ${TRACKS_OUT_DIR}
     
