@@ -696,8 +696,7 @@ int AnnotationParser::ParseFile(std::string file)
                // Add an empty frame, increment loop_frame_number, continue
                Frame frame;
                frame.set_frame_number(loop_frame_number);
-               frames[loop_frame_number] = frame;
-               cout << "Adding frame number: " << loop_frame_number << endl;
+               frames[loop_frame_number] = frame;               
                loop_frame_number++;
                continue;
           }

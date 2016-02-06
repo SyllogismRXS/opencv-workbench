@@ -4,7 +4,7 @@
 /// @file ROC.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-04 18:13:30 syllogismrxs>
+/// Time-stamp: <2016-02-06 18:26:49 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2016
@@ -49,20 +49,20 @@ public:
      {
           double dist_champ = 1e9;
           std::vector< std::map<std::string,double> >::iterator it_champ;               
-          
-          double b = 1; // Y-intercept
-          double m = 1; // Slope
+                    
+          double m = 1; // slope
+          double b = 1; // Y-intercept          
           double x0 = -100;
-          double xf = 100;
+          double xf = 100;          
           cv::Point2f p1(x0, m*x0 + b);
-          cv::Point2f p2(xf, m*xf + b);          
+          cv::Point2f p2(xf, m*xf + b);
      
           double dist_champ_2 = 1e9;
           std::vector< std::map<std::string,double> >::iterator it_champ_2;
      
           for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
-              it != metrics_vector.end(); it++) {          
-                             
+              it != metrics_vector.end(); it++) {                                  
+               
                cv::Point2f p((*it)["PRE_FPR"],(*it)["PRE_TPR"]);
                
                cv::Point2f goal(0,1);
@@ -85,21 +85,30 @@ public:
                }                         
           }     
 
-          cout << "Champ Threshold (Method 1): " << (*it_champ)["thresh_value"] << endl;     
-          cout << "Champ Threshold (Method 2): " << (*it_champ_2)["thresh_value"] << endl; 
+          cout << "Champ Threshold (Closest to NW Corner): " << (*it_champ)["thresh_value"] << endl;     
+          cout << "Champ Threshold (Closest to line y=x+1): " << (*it_champ_2)["thresh_value"] << endl; 
 
           std::vector< std::map<std::string,double> >::iterator it_champ_3;
-          b = 1; // Y-intercept
-          m = 1; // Slope
+
+          double cost_FP = 0.50;
+          double cost_FN = 0.50;
+          double cost_TN = 0;
+          double cost_TP = 0;
+                              
+          b = 1; // Y-intercept          
           x0 = -100;
           xf = 100;          
           dist_champ_2 = 1e9;     
           bool iterating = true;
-          while (iterating && b > -0.2) {   
-               cv::Point2f p1(x0, m*x0 + b);
-               cv::Point2f p2(xf, m*xf + b);          
+          while (iterating && b > -0.2) {
                for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
                    it != metrics_vector.end(); it++) {     
+                    
+                    int P_count = (*it)["PRE_TP"] + (*it)["PRE_FN"];
+                    int N_count = (*it)["PRE_TN"] + (*it)["PRE_FP"];
+                    double m = (cost_FP - cost_TN) / (cost_FN - cost_TP) * (double)N_count / (double)P_count;
+                    cv::Point2f p1(x0, m*x0 + b);
+                    cv::Point2f p2(xf, m*xf + b);                    
 
                     cv::Point2f p3((*it)["PRE_FPR"],(*it)["PRE_TPR"]);
                     double u = ((p3.x-p1.x)*(p2.x-p1.x) + (p3.y-p1.y)*(p2.y-p1.y)) / pow(cv::norm(p2-p1),2);
@@ -115,16 +124,8 @@ public:
                }
                b -= 0.00001;
           }
-          cout << "Champ Threshold (Method 3): " << (*it_champ_3)["thresh_value"] << endl; 
-          
-          it_oppt = it_champ_3;
-
-          if ((*it_champ_3)["thresh_value"] != (*it_champ_2)["thresh_value"]) {
-               cout << "=======================================================" << endl;
-               cout << "Warning: thresh values don't match in fold-aggregate" << endl;
-               cout << "=======================================================" << endl;
-               it_oppt = it_champ_2;
-          }
+          cout << "Champ Threshold (Iterative)(Used): " << (*it_champ_3)["thresh_value"] << endl;          
+          it_oppt = it_champ_3;          
      }
 protected:
 private:     

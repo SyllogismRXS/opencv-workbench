@@ -119,8 +119,7 @@ int main(int argc, char *argv[])
      std::map<std::string, std::map<std::string,double> > metrics_counts;
 
      for (std::vector<fs::path>::iterator it = file_paths.begin(); 
-          it != file_paths.end(); it++) {
-          //cout << "File: " << it->string() << endl;          
+          it != file_paths.end(); it++) {          
           
           AnnotationParser parser;
           int retcode = parser.ParseFile(it->string());
