@@ -12,7 +12,7 @@ YAML_PARAMS_FILE="empty"
 YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
 SWEEP_PARAM="empty"
-NEG_TO_POS_RATIO="2"
+NEG_TO_POS_RATIO="3"
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).
@@ -84,7 +84,6 @@ mkdir -p ${OUT_DIR}
 
 # Copy yaml file to results directory
 cp ${YAML_PARAMS_FILE} ${OUT_DIR}
-cp ${YAML_PARAMS_FILE} ${OUT_DIR}
 
 # Generate the k-folds scenarios
 ~/repos/opencv-workbench/bin/k-fold -y ${YAML_VIDEO_FILES} -o ${OUT_DIR} -s 100 -k ${K_FOLDS}
@@ -100,7 +99,6 @@ done < "${OUT_DIR}/files.txt"
 
 RANGES_OUT_DIR="${OUT_DIR}/ranges"
 mkdir -p ${RANGES_OUT_DIR}
-
 
 # Expand the Threshold parameter file
 ~/repos/opencv-workbench/bin/param-range -y ${YAML_PARAMS_FILE} -o ${RANGES_OUT_DIR}

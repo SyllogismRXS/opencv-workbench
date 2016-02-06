@@ -129,20 +129,19 @@ int main(int argc, char *argv[])
                continue;
           }
 
-          //std::vector< struct ROCData> data;          
           // Open the file and read the data
           std::ifstream file(roc_file.c_str());
           
           std::string TPR, FPR, threshold,FP,FN,TP,TN;
-          while (std::getline(file, TPR, ',')) {
+          while (std::getline(file, FPR, ',')) {
 
-               if (TPR.compare(0,1,"#") == 0) {
+               if (FPR.compare(0,1,"#") == 0) {
                     // Throw away comment lines
-                    std::getline(file, TPR) ;
+                    std::getline(file, FPR) ;
                     continue;
                }                             
 
-               std::getline(file, FPR, ',') ;               
+               std::getline(file, TPR, ',') ;               
                std::getline(file, threshold, ',') ;               
 
                std::getline(file, FP, ',');
