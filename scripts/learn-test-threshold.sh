@@ -12,7 +12,7 @@ YAML_PARAMS_FILE="empty"
 YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
 SWEEP_PARAM="empty"
-NEG_TO_POS_RATIO="3"
+NEG_TO_POS_RATIO="2"
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).

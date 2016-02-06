@@ -1,15 +1,6 @@
-static_threshold: [0,50,255]
+static_threshold: [0,10,255]
 threshold_type: 0  # 0=static, 1=ratio, 2=gradient
 
-#static_threshold: [0,1,255]
-
-
-
-#static_threshold: [0,50,255]
-
-#static_threshold: [0,1,255]
-
-#ratio_threshold: 0.003
 
 #history_distance: [0,1,50]
 #history_length: 25
