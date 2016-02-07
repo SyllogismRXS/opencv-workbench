@@ -2,6 +2,9 @@ data:
         - file: /home/syllogismrxs/Documents/Thesis/data/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.son
         - file: /home/syllogismrxs/Documents/Thesis/data/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_44.son
         - file: /home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_10_14-two-divers-and-fish.son
+        - file: /home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son
+          frames: [527,673]
+  
         #- file: /home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_26_08-negatives-one-large-target.son        
         #- file: /home/syllogismrxs/Documents/Thesis/data/2014-01-24-ME-sonar-only-diver/2014_01_24_15_29_18.son
         #- file: /home/syllogismrxs/Documents/Thesis/data/2014-01-24-ME-sonar-only-diver/2014_01_24_15_20_19.son        

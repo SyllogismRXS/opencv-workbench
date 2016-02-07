@@ -277,6 +277,11 @@ int main(int argc, char *argv[])
           
           // Was a frame_types yaml file passed?
           if (frame_types.size() > 0) { 
+               // Skip the frame if it's unused
+               if (frame_types[frame_number].frame_type() == Frame::unused) {
+                    continue;
+               }
+               
                // Skip the frame if it's not labeled with the proper stage
                if (frame_types[frame_number].frame_type() == Frame::test &&
                    ml_stage != testing) {

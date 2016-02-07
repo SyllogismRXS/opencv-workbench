@@ -4,7 +4,7 @@
 /// @file ROC.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-06 18:26:49 syllogismrxs>
+/// Time-stamp: <2016-02-07 12:37:13 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2016
@@ -106,7 +106,12 @@ public:
                     
                     int P_count = (*it)["PRE_TP"] + (*it)["PRE_FN"];
                     int N_count = (*it)["PRE_TN"] + (*it)["PRE_FP"];
+
+                    //cout << "P_count: " << P_count << endl;
+                    //cout << "N_count: " << N_count << endl;                    
+                    
                     double m = (cost_FP - cost_TN) / (cost_FN - cost_TP) * (double)N_count / (double)P_count;
+                    //cout << "Slope: " << m << endl;
                     cv::Point2f p1(x0, m*x0 + b);
                     cv::Point2f p2(xf, m*xf + b);                    
 
@@ -124,6 +129,14 @@ public:
                }
                b -= 0.00001;
           }
+
+          // If the it_champ_3 wasn't set, iterating failed
+          if (iterating) {
+               cout << "ROC Iterating Failed, using method 2" << endl;
+               it_oppt = it_champ_2;
+          } else {
+               it_oppt = it_champ_3;
+          }          
           cout << "Champ Threshold (Iterative)(Used): " << (*it_champ_3)["thresh_value"] << endl;          
           it_oppt = it_champ_3;          
      }

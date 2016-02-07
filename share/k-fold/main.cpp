@@ -48,8 +48,7 @@ public:
      int start_frame;
      int end_frame;
      int positive_sample_count;
-     int frame_count;
-     int total_frame_count;
+     int frame_count;     
      int annotated_frame_count;
 };
 
@@ -290,16 +289,36 @@ int main(int argc, char *argv[])
 
                YAML::Emitter out;
                out << YAML::BeginSeq;
-               for (int i = it->start_frame; i <= it->end_frame; i++) {
+
+               for (int i = 0; i < it->frame_count; i++) {
                     out << YAML::BeginMap;
                     out << YAML::Key << "frame";
                     out << YAML::Value << syllo::int2str(i);
                     out << YAML::Key << "frame_type";
-                    out << YAML::Value << frames[f].frame_type();
-                    out << YAML::EndMap;
 
-                    f++;
+                    // Make sure the current frame number is within the
+                    // start/end range
+                    if (i >= it->start_frame && i <= it->end_frame) {
+                         out << YAML::Value << frames[f].frame_type();
+                         f++;
+                    } else {
+                         // unused if the frame is not within the start/end nums
+                         out << YAML::Value << Frame::unused;
+                    }
+                    out << YAML::EndMap;
                }
+               
+               //for (int i = it->start_frame; i <= it->end_frame; i++) {
+               //     out << YAML::BeginMap;
+               //     out << YAML::Key << "frame";
+               //     out << YAML::Value << syllo::int2str(i);
+               //     out << YAML::Key << "frame_type";
+               //     out << YAML::Value << frames[f].frame_type();
+               //     out << YAML::EndMap;
+               //     
+               //     f++;
+               //}
+               
                out << YAML::EndSeq;
 
                std::string fold_dir = output_dir + "/fold-" + syllo::int2str(fold);

@@ -4,7 +4,7 @@
 /// @file Frame.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-31 23:38:16 syllogismrxs>
+/// Time-stamp: <2016-02-07 12:49:39 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -46,7 +46,8 @@ class Frame {
 public:
 
      typedef enum FrameType {
-          train = 0,
+          unused = 0,
+          train,
           validate,
           test
      }FrameType_t;
