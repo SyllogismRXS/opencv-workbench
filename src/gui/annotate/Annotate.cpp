@@ -70,6 +70,7 @@ Annotate::Annotate(VideoWindow *parent)
 
      edit_enabled_ = false;
      box_selected_ = false;
+     display_labels_ = false;
 
      near_thresh = 10;
 
@@ -82,6 +83,7 @@ Annotate::Annotate(VideoWindow *parent)
      add_shortcut("Qt::Key_E", QKeySequence(Qt::Key_E), this, SLOT(erase_box()));
      add_shortcut("Qt::Key_M", QKeySequence(Qt::Key_M), this, SLOT(edit_enabled()));
      add_shortcut("Qt::Key_S", QKeySequence(Qt::Key_S), this, SLOT(save_annotation()));
+     add_shortcut("Qt::Key_L", QKeySequence(Qt::Key_L), this, SLOT(display_labels()));
 }
 
 void Annotate::export_roi()
@@ -106,6 +108,11 @@ void Annotate::edit_enabled()
      if (!edit_enabled_) {
           box_selected_ = false;
      }
+}
+
+void Annotate::display_labels()
+{
+     display_labels_ = !display_labels_;
 }
 
 void Annotate::save_annotation()
@@ -231,13 +238,15 @@ void Annotate::on_mouseMoved(QMouseEvent * event)
                pt_ = p;
           }
 
-          // Update the object's bounding box
-          BoundingBox b(std::min(pt1_.x(),pt2_.x()),
-                        std::max(pt1_.x(),pt2_.x()),
-                        std::min(pt1_.y(),pt2_.y()),
-                        std::max(pt1_.y(),pt2_.y()));
+          if (edit_pt1_ || edit_pt2_ || edit_box_) {
+               // Update the object's bounding box
+               BoundingBox b(std::min(pt1_.x(),pt2_.x()),
+                             std::max(pt1_.x(),pt2_.x()),
+                             std::min(pt1_.y(),pt2_.y()),
+                             std::max(pt1_.y(),pt2_.y()));
           
-          it_selected_->second.set_bbox(b);
+               it_selected_->second.set_bbox(b);
+          }
      }     
 }
 
@@ -247,7 +256,7 @@ void Annotate::mouseReleased(QMouseEvent * event)
      edit_pt1_ = false;
      edit_pt2_ = false;
      edit_box_ = false;
-     edit_pt_ = false;
+     edit_pt_ = false;     
 }
 
 QString Annotate::str2qstr(std::string str)
@@ -311,17 +320,24 @@ void Annotate::before_display(cv::Mat &img)
                         cv::Scalar(0,0,255),2,8,0);
      }
 
-     // Find all objects in the next frame and get the box:
+     // Draw rectangles around all objects in the next frame.
      for (std::map<std::string, wb::Entity>::iterator it = objects_->begin();
           it != objects_->end(); it++) {          
           cv::Rect rect = it->second.bbox().rectangle();         
           
-          if (box_selected_ && it_selected_ == it) {
+          if (box_selected_ && it_selected_->second.name() == it->second.name()) {
                // Selected rect is red
+               it_selected_ = it;
                cv::rectangle(img,rect,cv::Scalar(0,0,255),1,8,0);
-          } else {
+          } else {               
                cv::rectangle(img,rect,cv::Scalar(0,255,0),1,8,0);
           }
+          
+          if (display_labels_) {
+               std::string text = it->second.name();
+               cv::putText(img, text, cv::Point(rect.x-3,rect.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 2, 8, false);
+          }
+          
           //img.at<cv::Vec3b>(rect.tl().y, rect.tl().x) = cv::Vec3b(0,255,0);
           //img.at<cv::Vec3b>(rect.br().y, rect.br().x) = cv::Vec3b(0,255,0);
      }     

@@ -116,6 +116,7 @@ protected:
      AnnotationParser parser_;
 
      bool edit_enabled_;          
+     bool display_labels_;
      
 private:
      
@@ -125,6 +126,7 @@ private slots:
      void save_annotation();
      void erase_box();
      void edit_enabled();     
+     void display_labels();
 };
 
 #endif
