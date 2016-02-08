@@ -1,0 +1,114 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <stdio.h>
+#include <time.h>
+#include <algorithm>
+#include <vector>
+#include <map>
+
+// OpenCV headers
+#include <cv.h>
+#include <highgui.h>
+
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/syllo/syllo.h>
+
+#include <opencv_workbench/utils/AnnotationParser.h>
+#include <opencv_workbench/plot/Plot.h>
+
+#include <opencv_workbench/detector/Detector.h>
+#include <opencv_workbench/plugin_manager/PluginManager.h>
+
+#include <opencv_workbench/syllo/syllo.h>
+#include <opencv_workbench/wb/ROC.h>
+#include <yaml-cpp/yaml.h>
+
+using std::cout;
+using std::endl;
+
+namespace fs = ::boost::filesystem;
+
+int main(int argc, char *argv[])
+{              
+     std::string xml_dir = "";
+     
+     int c;          
+     std::string output_dir = "";
+     std::string param_sweep = "";
+     while ((c = getopt (argc, argv, "o:d:")) != -1) {
+          switch (c) {                         
+          case 'o':
+               output_dir = std::string(optarg);               
+               break;          
+          case 'd':
+               xml_dir = std::string(optarg);
+               break;          
+          case '?':
+               if (optopt == 'd') {
+                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+               } else if (isprint (optopt)) {
+                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+               } else {
+                    fprintf (stderr,
+                             "Unknown option character `\\x%x'.\n",
+                             optopt);
+               }
+               return 1;
+          default:
+               abort ();
+          }
+     }     
+
+     // Check existence of xml directory
+     if ( !boost::filesystem::exists( fs::path(xml_dir) ) ) {
+          cout << "Error: XML Directory doesn't exist." << endl;
+          return -1;
+     }
+     
+     // Open each xml file and count metrics
+     std::vector<fs::path> file_paths;
+     syllo::get_files_with_ext(fs::path(xml_dir), ".xml", 
+                               file_paths, false);
+     
+     // Loop through all files. Summing TP, TN, FP, FN
+     int TP = 0, TN = 0, FP = 0, FN = 0;
+     for (std::vector<fs::path>::iterator it = file_paths.begin(); 
+          it != file_paths.end(); it++) {          
+          
+          cout << "File: " << it->string() << endl;
+          
+          AnnotationParser parser;
+          int retcode = parser.ParseFile(it->string());
+          if (retcode != 0) {
+               cout << "Failed to parse: " << it->string();
+               continue;
+          }
+          
+          std::map<std::string,double> metrics = parser.get_metrics();
+               
+          TP += metrics["PRE_TP"];
+          TN += metrics["PRE_TN"];
+          FP += metrics["PRE_FP"];
+          FN += metrics["PRE_FN"];
+     }
+
+     double accuracy = (double)(TP + TN) / ((double)(TP + TN + FN + FP));
+     cout << "PRE Accuracy: " << accuracy << endl;
+     
+     if (output_dir == "") {
+          output_dir = xml_dir;
+     }
+     
+     std::string out_filename = output_dir + "/test-results.txt";
+     std::ofstream output;
+     output.open(out_filename.c_str(), std::ofstream::out);
+     output << "PRE Accuracy: " << syllo::double2str(accuracy) << endl;
+     output.close();          
+          
+     return 0;
+}

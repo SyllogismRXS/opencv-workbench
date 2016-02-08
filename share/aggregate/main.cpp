@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
      // Open each xml file and count metrics
      std::vector<fs::path> file_paths;
      syllo::get_files_with_ext(fs::path(xml_dir), ".xml", 
-                               file_paths);   
+                               file_paths,true);   
      
           
      std::vector< std::map<std::string,double> > metrics_vector;

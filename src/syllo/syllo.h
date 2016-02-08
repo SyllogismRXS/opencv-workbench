@@ -32,7 +32,7 @@ namespace syllo
      // return the filenames of all files that have the specified extension
      // in the specified directory and all subdirectories
      void get_files_with_ext(const fs::path& root, const std::string& ext, 
-                                  std::vector<fs::path>& ret);
+                             std::vector<fs::path>& ret, bool recursive);
 
      void fill_line(std::string ch);
      
