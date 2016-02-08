@@ -1484,6 +1484,7 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
                     if (attempts > 500) {
                          cout << "Too many attempts to fit negative box" << endl;
                          cout << "File: " << xml_filename_ << endl;
+                         break;
                     }
                     
                     //int x = rng_x();

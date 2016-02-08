@@ -130,6 +130,7 @@ do
             CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE -h -o ${TRACKS_OUT_DIR} -t -g thresh -m learning -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
             #echo $CMD
             ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
+            #${CMD}
         done
     done
     
@@ -153,6 +154,7 @@ do
         CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml -h -o ${FOLD_DIR} -t -g thresh -m validating -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
         #echo $CMD
         ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
+        #${CMD}
     done        
 done
 
@@ -180,5 +182,6 @@ do
     echo "Testing"
     CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
     #echo $CMD
-    ${CMD}
+    ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
+    #${CMD}
 done        
