@@ -1,5 +1,7 @@
-ratio_threshold: [0.00000001 , 0.00018 , 0.009]
+ratio_threshold: [0.000000001 , 0.001 , 0.010]
+#ratio_threshold: [0.000000001 , 0.0005 , 0.010]
 threshold_type: 1 # 0=static, 1=ratio, 2=gradient
 
+#ratio_threshold: [0.00000001 , 0.00018 , 0.009]
 #ratio_threshold: [0.000001 , 0.000159998 , 0.008]
 #ratio_threshold: [0.000001 , 0.0002 , 0.005]

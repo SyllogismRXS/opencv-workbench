@@ -1406,21 +1406,14 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
      cout << "PRE Accuracy: " << PRE_Accuracy_ << endl;     
 }
 
+// Uses negative samples that have a rectangle the same size as the positive
+// object's rectangle.
 void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth, 
                                              cv::Mat &img, cv::Mat &mask)
 {
      if (img.empty()) {
           return;
-     }
-
-     //boost::mt19937 gener_x, gener_y;
-     //boost::random::uniform_int_distribution<> uniform_x(0,img.cols-1), uniform_y(0,img.rows-1);
-     //boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > rng_x(gener_x, uniform_x);
-     //boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > rng_y(gener_y, uniform_x);
-     //rng_x.engine().seed(static_cast<unsigned int>(std::time(0)));
-     //rng_x.distribution().reset();
-     //rng_y.engine().seed(static_cast<unsigned int>(std::time(0)));
-     //rng_y.distribution().reset();
+     }     
      
      cv::Mat img_clone = img.clone();
      cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);     
@@ -1584,6 +1577,9 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
 #endif
      
 }
+
+
+// Counts at most one false positive per frame.
 void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth, 
                                            cv::Mat &img)
 {
@@ -1678,20 +1674,102 @@ void AnnotationParser::score_preprocessing(int frame, AnnotationParser &truth,
           if (contains_TN) TN++;
           
      } else {
-          cout << "=========> Missing annotated frame: " << xml_filename_  << " frame: " << frame << endl;
-          //// There isn't an annotated frame, did we detect any non-zero pixels?
-          //// At this point we could have false positives or true negatives
-          //for(int r = 0; r < img.rows; r++) {
-          //     for(int c = 0; c < img.cols; c++) {
-          //          if (img.at<uchar>(r,c) != 0) {
-          //               // We found a non-zero pixel, but there wasn't an
-          //               // annotated frame. This is a false positive.
-          //               FP++;                         
-          //          } else {
-          //               TN++;                         
-          //          }
-          //     }
-          //}          
+          cout << "=========> Missing annotated frame: " << xml_filename_  << " frame: " << frame << endl;          
+     }        
+
+     PRE_TP_ += TP;
+     PRE_TN_ += TN;
+     PRE_FP_ += FP;
+     PRE_FN_ += FN;
+
+     metrics_present_ = true;
+
+#if 0
+     cout << "==========" << endl;
+     cout << "TP: " << TP << endl;
+     cout << "TN: " << TN << endl;
+     cout << "FP: " << FP << endl;
+     cout << "FN: " << FN << endl;
+     cout << "PRE_FN: " << PRE_FN_ << endl;     
+     cv::imshow("POD Rects", img_clone);
+#endif
+}
+
+// Every pixel is either a TP, FP, TN, or FN
+void AnnotationParser::score_preprocessing_3(int frame, AnnotationParser &truth, 
+                                             cv::Mat &img, cv::Mat &mask)
+{
+     if (img.empty()) {
+          return;
+     }
+          
+     cv::Mat img_clone = img.clone();
+     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);
+     
+     int TP = 0, TN = 0, FP = 0, FN = 0;
+     
+     if (truth.frames.count(frame) > 0) {
+          // There is an annotated frame.          
+          std::map<std::string, wb::Entity>::iterator it;
+          for (it = truth.frames[frame].objects.begin(); 
+               it != truth.frames[frame].objects.end();
+               it++) {
+
+               // Draw the object's bounding box
+               cv::rectangle(img_clone, it->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
+               
+               // Does this object contain any non-zero pixels?               
+               BoundingBox b = it->second.bbox();
+               for(int r = b.ymin(); r < b.ymax(); r++) {
+                    for(int c = b.xmin(); c < b.xmax(); c++) {
+                         if (img.at<uchar>(r,c) != 0) {                              
+                              TP++;
+                         } else {
+                              FN++;
+                         }
+                    }
+               }               
+          }
+          // Are there any non-zero pixels outside of the object's bounding
+          // boxes? (Counting false positives and true negatives          
+          for(int r = 0; r < img.rows; r++) {
+               for(int c = 0; c < img.cols; c++) {
+                    cv::Point p(c,r);
+                    
+                    // Does this point exist in an object's bounding box?
+                    bool object_contains_pixel = false;
+                    std::map<std::string, wb::Entity>::iterator it;
+                    for (it = truth.frames[frame].objects.begin(); 
+                         it != truth.frames[frame].objects.end();
+                         it++) {
+                         if (it->second.bbox().contains(p)) {
+                              // The point exists inside of an object's
+                              // bounding box.
+                              object_contains_pixel = true;
+                         }
+                    }
+                    
+                    if (!object_contains_pixel) {
+                         // The point is NOT contained by an object
+                         if (img.at<uchar>(r,c) != 0) {
+                              // The pixel has non-zero value, but it isn't
+                              // contained by any of the objects. This is a
+                              // false positive.
+                              FP++;                              
+                         } else {
+                              // The pixel has zero value and it isn't
+                              // contained by any of the objects. This is a
+                              // true negative.
+                              TN++;                              
+                         }             
+                    } else {
+                         // The pixel is contained by an object. We previously
+                         // accounted for true positives above.
+                    }
+               }
+          }                    
+     } else {
+          cout << "=========> Missing annotated frame: " << xml_filename_  << " frame: " << frame << endl;          
      }        
 
      PRE_TP_ += TP;

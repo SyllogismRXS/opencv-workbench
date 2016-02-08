@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-05 17:57:10 syllogismrxs>
+/// Time-stamp: <2016-02-08 14:35:45 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -98,6 +98,9 @@ public:
                               cv::Mat &img);
      
      void score_preprocessing_2(int frame, AnnotationParser &truth, 
+                                cv::Mat &img, cv::Mat &mask);
+
+     void score_preprocessing_3(int frame, AnnotationParser &truth, 
                                 cv::Mat &img, cv::Mat &mask);
 
      void score_preprocessing_final(AnnotationParser &truth);

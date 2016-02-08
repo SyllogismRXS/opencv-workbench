@@ -313,10 +313,18 @@ int main(int argc, char *argv[])
                // Score preprocessing, if available
                cv::Mat thresh_img = detector_->thresh_img();
                cv::Mat mask_img = detector_->mask();
+
+               // Counts at most one false positive per frame.
                //parser_tracks.score_preprocessing(frame_number, parser_truth, 
                //                                  thresh_img);
 
-               parser_tracks.score_preprocessing_2(frame_number, parser_truth, 
+               // Uses negative samples that have a rectangle the same size as
+               // the positive object's rectangle.
+               //parser_tracks.score_preprocessing_2(frame_number, parser_truth, 
+               //                                  thresh_img, mask_img);
+
+               // Every pixel is either a TP, FP, TN, or FN
+               parser_tracks.score_preprocessing_3(frame_number, parser_truth, 
                                                  thresh_img, mask_img);
 
                std::vector<wb::Entity> frame_ents;
