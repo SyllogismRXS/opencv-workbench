@@ -30,6 +30,19 @@ int main(int argc, char *argv[])
      //Gray2Jet(gray,jet_opencv);
      cv::applyColorMap(gray, jet_opencv, cv::COLORMAP_JET);
      cv::imshow("Jet Opencv", jet_opencv);
+
+     cv::Mat jet_2_gray;
+     Jet2Gray_matlab(jet_matlab,jet_2_gray);
+     cv::imshow("Jet to Gray Test",jet_2_gray);
+     
+     // Check
+     for (int r = 0; r < gray.rows; r++) {
+          for (int c = 0; c < gray.cols; c++) {
+               if (gray.at<uchar>(r,c) != jet_2_gray.at<uchar>(r,c))  {
+                    cout << "Mismatched grays" << endl;
+               }
+          }
+     }
      
      cv::waitKey(0);
      return 0;
