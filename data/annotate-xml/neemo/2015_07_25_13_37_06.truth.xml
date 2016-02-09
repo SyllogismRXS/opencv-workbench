@@ -37007,25 +37007,7 @@
 			<frame_number>1819</frame_number>
 		</frame>
 		<frame>
-			<frame_number>1820</frame_number>
-			<object>
-				<name>diver:1</name>
-				<ID>1</ID>
-				<age>0</age>
-				<pose>Unspecified</pose>
-				<truncated>0</truncated>
-				<difficult>0</difficult>
-				<centroid>
-					<x>0</x>
-					<y>0</y>
-				</centroid>
-				<bndbox>
-					<xmin>353</xmin>
-					<ymin>375</ymin>
-					<xmax>353</xmax>
-					<ymax>375</ymax>
-				</bndbox>
-			</object>
+			<frame_number>1820</frame_number>			
 		</frame>
 		<frame>
 			<frame_number>1821</frame_number>
