@@ -18,9 +18,10 @@ Parameters::Parameters()
      static_threshold = 150;
      gradient_threshold = 150;
      threshold_type = static_type;
+     //threshold_type = gradient_type;
 }
 
-void Parameters::set_yaml_file(std::string yaml_file)
+void Parameters::set_yaml_file(std::string yaml_files)
 {
      yaml_file_ = yaml_file;
      

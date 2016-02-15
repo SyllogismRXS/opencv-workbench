@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-31 23:41:44 syllogismrxs>
+/// Time-stamp: <2016-02-14 20:44:11 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
