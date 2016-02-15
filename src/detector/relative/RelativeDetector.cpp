@@ -105,7 +105,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      wb::get_sonar_mask(original, mask_);
 
      if (!hide_windows_) {       
+          cv::imshow("Sonar Image", original);
           cv::imshow("Gray", gray);  
+          cv::imshow("Sonar Mask", mask_*255);          
      }     
      if (last_stage_ < thresh) {
           return 0;

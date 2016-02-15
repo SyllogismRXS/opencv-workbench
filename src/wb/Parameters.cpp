@@ -21,7 +21,7 @@ Parameters::Parameters()
      //threshold_type = gradient_type;
 }
 
-void Parameters::set_yaml_file(std::string yaml_files)
+void Parameters::set_yaml_file(std::string yaml_file)
 {
      yaml_file_ = yaml_file;
      
