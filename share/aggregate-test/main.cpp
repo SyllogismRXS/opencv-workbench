@@ -99,7 +99,17 @@ int main(int argc, char *argv[])
 
      double accuracy = (double)(TP + TN) / ((double)(TP + TN + FN + FP));
      cout << "PRE Accuracy: " << accuracy << endl;
-     
+
+     double TPR = (double)TP / ((double)TP + (double)FN);
+     double FPR = (double)FP / ((double)FP + (double)TN);
+     double TNR = (double)TN / ((double)FP + (double)TN);
+     double PPV = (double)TP / ((double)TP + (double)FP);
+     double NPV = (double)TN / ((double)TN + (double)FN);
+     double FDR = (double)FP / ((double)FP + (double)TP);
+     double FNR = (double)FN / ((double)FN + (double)TP);
+     double F1 = 2.0*(double)TP / (double)(2*TP+FP+FN);
+     double MCC = ((double)TP*(double)TN - (double)FP*(double)FN) / sqrt(((double)TP+(double)FP)*((double)TP+(double)FN)*((double)TN+(double)FP)*((double)TN+(double)FN));
+                                                  
      if (output_dir == "") {
           output_dir = xml_dir;
      }
@@ -108,6 +118,22 @@ int main(int argc, char *argv[])
      std::ofstream output;
      output.open(out_filename.c_str(), std::ofstream::out);
      output << "PRE Accuracy: " << syllo::double2str(accuracy) << endl;
+     output << "PRE TPR: " << syllo::double2str(TPR) << endl;
+     output << "PRE FPR: " << syllo::double2str(FPR) << endl;
+
+     output << "PRE TNR: " << syllo::double2str(TNR) << endl;
+     output << "PRE PPV: " << syllo::double2str(PPV) << endl;
+     output << "PRE NPV: " << syllo::double2str(NPV) << endl;
+     output << "PRE FDR: " << syllo::double2str(FDR) << endl;
+     output << "PRE FNR: " << syllo::double2str(FNR) << endl;
+     output << "PRE F1: " << syllo::double2str(F1) << endl;
+     output << "PRE MCC: " << syllo::double2str(MCC) << endl;
+
+     
+     output << "PRE TP: " << syllo::int2str(TP) << endl;
+     output << "PRE TN: " << syllo::int2str(TN) << endl;
+     output << "PRE FP: " << syllo::int2str(FP) << endl;
+     output << "PRE FN: " << syllo::int2str(FN) << endl;
      output.close();          
           
      return 0;
