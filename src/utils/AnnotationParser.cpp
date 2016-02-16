@@ -1406,6 +1406,7 @@ void AnnotationParser::score_preprocessing_final(AnnotationParser &truth)
      cout << "PRE Accuracy: " << PRE_Accuracy_ << endl;     
 }
 
+#define SHOW_POD_RECTS 0
 // Uses negative samples that have a rectangle the same size as the positive
 // object's rectangle.
 void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth, 
@@ -1415,8 +1416,13 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
           return;
      }     
      
+#if SHOW_POD_RECTS
      cv::Mat img_clone = img.clone();
-     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);     
+     cv::Mat mask_inverted;      
+     cv::threshold(mask, mask_inverted,0.5,1.0,cv::THRESH_BINARY_INV);     
+     cv::addWeighted(img_clone,1.0,mask_inverted*255,0.75,0,img_clone);
+     cv::cvtColor(img_clone, img_clone, CV_GRAY2BGR);          
+#endif
      
      // Use rectangles outside of the positive examples as negatives.
      // A rectangle is a positive if it has any non-zero pixels inside of it.     
@@ -1432,8 +1438,10 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
                it != truth.frames[frame].objects.end();
                it++) {
 
+#if SHOW_POD_RECTS
                // Draw the object's bounding box
-               cv::rectangle(img_clone, it->second.bbox().rectangle(), cv::Scalar(0,255,0), 1, 8, 0);
+               cv::rectangle(img_clone, it->second.bbox().rectangle(), cv::Scalar(0,255,0), 2, 8, 0);
+#endif
                
                // Does this object contain any non-zero pixels?
                bool object_contains_pixel = false;
@@ -1531,8 +1539,10 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
                     neg_rects.push_back(rect);
                     negative_sample_count_++;
 
+#if SHOW_POD_RECTS
                     // Draw a red box over the "negative" sample
-                    cv::rectangle(img_clone, rect, cv::Scalar(0,0,255), 1, 8, 0);
+                    cv::rectangle(img_clone, rect, cv::Scalar(0,0,255), 2, 8, 0);
+#endif
                     
                     // At this point in the loop, the randomly located
                     // rectangle has passed all of the checks. Now determine if
@@ -1566,7 +1576,7 @@ void AnnotationParser::score_preprocessing_2(int frame, AnnotationParser &truth,
 
      metrics_present_ = true;
 
-#if 0
+#if SHOW_POD_RECTS
      cout << "==========" << endl;
      cout << "TP: " << TP << endl;
      cout << "TN: " << TN << endl;
