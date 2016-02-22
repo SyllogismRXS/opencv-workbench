@@ -12,12 +12,14 @@ Parameters::Parameters()
 {
      history_length = 10;
      history_distance = 15;
-     ratio_threshold = 0.003;
+     //ratio_threshold = 0.003;
+     ratio_threshold = 0.00162001;
      //static_threshold = 150;
      //static_threshold = 50;
      static_threshold = 150;
      gradient_threshold = 150;
-     threshold_type = static_type;
+     //threshold_type = static_type;
+     threshold_type = ratio_type;
      //threshold_type = gradient_type;
 }
 

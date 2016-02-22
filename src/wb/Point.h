@@ -4,7 +4,7 @@
 /// @file Point.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-09-25 13:05:23 syllogismrxs>
+/// Time-stamp: <2016-02-22 15:58:36 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -73,13 +73,23 @@ namespace wb {
           int x() { return point_.x; }
           int y() { return point_.y; }
 
+          void set_visited(bool visited) { visited_ = visited; }
+          bool visited() { return visited_; }
+
+          void set_cluster_id(int cluster_id) { cluster_id_ = cluster_id; }
+          int cluster_id() { return cluster_id_; }
+
      protected:
-     private:          
+     private:                    
           cv::Point point_;
           int value_;
           bool assigned_;
           float distance_;
           Cluster * parent_;
+
+          int cluster_id_;
+
+          bool visited_;
      };
 }
 

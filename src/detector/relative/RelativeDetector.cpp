@@ -71,7 +71,7 @@ void RelativeDetector::thresholding(cv::Mat &src, cv::Mat &dst)
      case Parameters::static_type:
           cv::threshold(src, dst, params_->static_threshold, 255, cv::THRESH_TOZERO);
           break;
-     case Parameters::ratio_type:
+     case Parameters::ratio_type:          
           wb::adaptive_threshold(src, dst, thresh_value_, params_->ratio_threshold, 5, mask_);
           break;
      case Parameters::gradient_type:

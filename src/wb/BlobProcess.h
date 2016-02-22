@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-30 18:16:39 syllogismrxs>
+/// Time-stamp: <2016-02-22 16:16:55 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -90,6 +90,9 @@ public:
      void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
                             int min_blob_size);
 
+     void find_clusters(cv::Mat &input, std::vector<wb::Blob> &clusters, 
+                            unsigned int min_cluster_size);
+
      void assign_hungarian(std::vector<wb::Blob> &meas, 
                            std::vector<wb::Blob> &tracks,
                            std::vector<wb::Blob> &fused);
@@ -133,7 +136,7 @@ public:
      void frame_ents(std::vector<wb::Entity> frame_ents) 
      { 
           BlobProcess::blobs_to_entities(frame_blobs_, frame_ents);
-     }
+     }     
      
 protected:
      

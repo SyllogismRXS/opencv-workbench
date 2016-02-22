@@ -10,6 +10,8 @@ namespace wb {
      {
           parent_ = NULL;
           assigned_ = false;
+          visited_ = false;
+          cluster_id_ = 0;
      }
 
      Point::Point(int x, int y)
