@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-22 16:16:55 syllogismrxs>
+/// Time-stamp: <2016-02-26 17:22:24 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -164,6 +164,10 @@ protected:
 
      std::vector<wb::Blob> frame_blobs_;
 
+     double Pd_;
+     double B_ft_;
+     double B_nt_;
+     
 private:
      int count_;
      int min_blob_size_;

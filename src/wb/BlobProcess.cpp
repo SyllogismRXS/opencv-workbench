@@ -45,6 +45,10 @@ BlobProcess::BlobProcess()
      min_blob_size_ = 30;//15, 20, 30;
      //min_blob_size_ = 5;//15, 20, 30;
      next_id_ = 0;
+
+     Pd_ = 0.9;
+     B_nt_ = 0.5;
+     B_ft_ = 0.1;     
 }
 
 int BlobProcess::next_available_id()
