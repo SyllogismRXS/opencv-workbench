@@ -17,9 +17,10 @@ using std::endl;
 
 namespace wb {
 
-     Entity::Entity() : id_(-1), name_("unknown:-1"), type_(Unknown), age_(0),
-                        occluded_age_(0), occluded_(false), is_tracked_(false),
-                        visited_(false), cluster_id_(0)
+     Entity::Entity() : id_(-1), name_("unknown:-1"), 
+                        type_(Unknown), age_(0), occluded_age_(0), 
+                        occluded_(false), is_tracked_(false), visited_(false), 
+                        cluster_id_(0)
      {
           //KF_ = cv::KalmanFilter(4, 2, 0);
           //transition_matrix_ = cv::Mat_<float>(4,4);
@@ -40,9 +41,9 @@ namespace wb {
           x0.resize(4,1);    // Initial state
           covar.resize(4,4); // Covariance matrix
 
-          //double T = 0.066666667;//; dt
+          double T = 0.066666667;//; dt
           //double T = 1;//; dt
-          double T = 0.05;
+          //double T = 0.05;
           A << 1, 0, T, 0,
                0, 1, 0, T,
                0, 0, 1, 0,
@@ -62,12 +63,17 @@ namespace wb {
           Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * q;
 
           //double r = 0.04;
-          double r = 50;
+          //double r = 50;
+          //double r = 10;
+          ///double r = 0.04;
+          double r = 10;
           R << r, 0,
                0, r;
-
-          //double v = 0.1;
-          double v = 20;
+          
+          //double v = 0.01;
+          //double v = 10;
+          double v = 100;
+          //double v = 2;
           covar << v, 0, 0, 0,
                    0, v, 0, 0,
                    0, 0, v, 0,
@@ -214,6 +220,7 @@ namespace wb {
           double avg_y = (double)sum_y / (double)sum_value;
 
           centroid_ = cv::Point(round(avg_x), round(avg_y));
+          est_centroid_ = centroid_;
 
           // +1's to account for slight error in rectangle drawing?
           //bbox_ = cv::Rect rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);

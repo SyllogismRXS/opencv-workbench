@@ -44,6 +44,8 @@ int main(int argc, char * argv[]) {
      cout << "MHT Test" << endl;
 
 
+     cv::Mat img = cv::Mat::zeros(300,300,CV_8UC3);
+     
      std::vector<wb::Blob> measurements;
      std::vector<wb::Blob> tracks;
      std::vector<wb::Blob> fused_tracks;
@@ -51,20 +53,18 @@ int main(int argc, char * argv[]) {
      // Using two "established" tracks
      wb::Blob t1;
      t1.set_id(1);
-     t1.set_undistorted_centroid(cv::Point2f(1,1));
      wb::Point p1;
-     p1.set_position(cv::Point(1,1));
+     p1.set_position(cv::Point(100,100));
      p1.set_value(255);
      t1.add_point(p1);
      t1.set_frame(10);
      t1.init();
-     t1.set_age(10);
+     t1.set_age(10);     
 
      wb::Blob t2;
      t2.set_id(2);
-     t2.set_undistorted_centroid(cv::Point2f(4,1));
      wb::Point p2;
-     p2.set_position(cv::Point(4,1));
+     p2.set_position(cv::Point(200,50));
      p2.set_value(255);
      t2.add_point(p2);
      t2.set_frame(10);
@@ -76,8 +76,7 @@ int main(int argc, char * argv[]) {
 
      // Using three "measurements"
      wb::Blob m1;
-     m1.set_id(1);
-     m1.set_undistorted_centroid(cv::Point2f(2.5,1));
+     m1.set_id(1);     
      wb::Point p3;
      p3.set_position(cv::Point(2.5,1));
      p3.set_value(255);
@@ -113,7 +112,85 @@ int main(int argc, char * argv[]) {
      measurements.push_back(m3);
      
      BlobProcess blob_process;
-     blob_process.assign_mht(measurements, tracks, fused_tracks);
+     blob_process.set_blobs(tracks);
+     blob_process.overlay(img, img, IDS|TRACKS|ERR_ELLIPSE);
+
+     cv::imshow("Tracks", img);
+     cv::waitKey(0);
+     //blob_process.assign_mht(measurements, tracks, fused_tracks);
+
+     //std::vector<wb::Blob> measurements;
+     //std::vector<wb::Blob> tracks;
+     //std::vector<wb::Blob> fused_tracks;
+     //
+     //// Using two "established" tracks
+     //wb::Blob t1;
+     //t1.set_id(1);
+     //t1.set_undistorted_centroid(cv::Point2f(1,1));
+     //wb::Point p1;
+     //p1.set_position(cv::Point(1,1));
+     //p1.set_value(255);
+     //t1.add_point(p1);
+     //t1.set_frame(10);
+     //t1.init();
+     //t1.set_age(10);
+     //
+     //wb::Blob t2;
+     //t2.set_id(2);
+     //t2.set_undistorted_centroid(cv::Point2f(4,1));
+     //wb::Point p2;
+     //p2.set_position(cv::Point(4,1));
+     //p2.set_value(255);
+     //t2.add_point(p2);
+     //t2.set_frame(10);
+     //t2.init();
+     //t2.set_age(10);
+     //
+     //tracks.push_back(t1);
+     //tracks.push_back(t2);
+     //
+     //// Using three "measurements"
+     //wb::Blob m1;
+     //m1.set_id(1);
+     //m1.set_undistorted_centroid(cv::Point2f(2.5,1));
+     //wb::Point p3;
+     //p3.set_position(cv::Point(2.5,1));
+     //p3.set_value(255);
+     //m1.add_point(p3);
+     //m1.set_frame(10);
+     //m1.init();
+     //m1.set_age(1);
+     //
+     //wb::Blob m2;
+     //m2.set_id(1);
+     //m2.set_undistorted_centroid(cv::Point2f(4,0));
+     //wb::Point p4;
+     //p4.set_position(cv::Point(4,0));
+     //p4.set_value(255);
+     //m2.add_point(p4);
+     //m2.set_frame(10);
+     //m2.init();
+     //m2.set_age(1);
+     //
+     //wb::Blob m3;
+     //m3.set_id(1);
+     //m3.set_undistorted_centroid(cv::Point2f(5,0));
+     //wb::Point p5;
+     //p5.set_position(cv::Point(5,0));
+     //p5.set_value(255);
+     //m3.add_point(p5);
+     //m3.set_frame(10);
+     //m3.init();
+     //m3.set_age(1);
+     //
+     //measurements.push_back(m1);
+     //measurements.push_back(m2);
+     //measurements.push_back(m3);
+     //
+     //BlobProcess blob_process;
+     //blob_process.set_blobs(tracks);
+     ////blob_process.assign_mht(measurements, tracks, fused_tracks);
+     
      
      //if (argc > 3) {
      //
@@ -246,7 +323,6 @@ int main(int argc, char * argv[]) {
      /// //std::ofstream dotfile ("/home/syllogismrxs/test.dot");
      /// //boost::write_graphviz(dotfile, g,
      /// //                      boost::make_label_writer(boost::get(&Vertex::foo, g)));
-
-     cout << "Done" << endl;
+     
      return 0;
 }

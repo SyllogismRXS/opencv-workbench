@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-29 18:26:00 syllogismrxs>
+/// Time-stamp: <2016-03-01 15:46:24 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -70,7 +70,8 @@ namespace wb {
           typedef enum MhtType {
                fp = 0,
                dt,
-               nt
+               nt,
+               root
           }MhtType_t;
 
           MhtType_t mht_type;                    
@@ -160,7 +161,10 @@ namespace wb {
           void set_frame(int frame) { frame_ = frame; }
           int frame() { return frame_; }
           
+          // Only public, so they can be used in graphviz
           int id_;
+          double prob_; // branch probability
+          double norm_prob_;
 
           void set_cluster_id(int cluster_id) { cluster_id_ = cluster_id; }
           int cluster_id() { return cluster_id_; }
@@ -169,10 +173,16 @@ namespace wb {
           cv::Point trail_history(int past);
           void update_trail();
 
-          void set_prob(double prob) { prob_ = prob; }
-          double prob() { return prob_; }
+          
+          void set_prob(double prob, bool norm=false) 
+          { 
+               if (norm) norm_prob_ = prob;                   
+               prob_ = prob; 
+          }
+          double prob() { return prob_; }          
 
      protected:          
+          bool prob_is_set_;
           std::string name_;
           EntityType_t type_;
           std::vector<wb::Point> points_;
@@ -216,9 +226,7 @@ namespace wb {
           std::list<cv::Point2f> trail_;
           
           void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }    
-
-          double prob_; // branch probability
+          float distance() { return distance_; }              
 
      private:
      };
