@@ -1,10 +1,12 @@
 time_step: 0.05
-time_end: 8
+time_end: 12
+
+#sensor_sample_period: 1
 
 traj_threshold: 0.002 # good for no noise
 #traj_threshold: 0.035 # good for noise of 0.02
 
-display_plot: true
+display_plot: false
 
 # x - East = 0 degrees
 # y - North = 90 degrees

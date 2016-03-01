@@ -55,7 +55,8 @@ namespace syllo {
      int KalmanFilter::predict(const Eigen::MatrixXf &u)
      {
           x_ = F_*x_ + B_*u;
-          P_ = F_*P_*F_.transpose() + Q_;          
+          P_ = F_*P_*F_.transpose() + Q_;              
+          
 	  return 0;
      }
      
@@ -77,7 +78,7 @@ namespace syllo {
 	  return P_;
      }
 
-     Ellipse KalmanFilter::error_ellipse(int dim0, int dim1, double confidence)
+     Ellipse KalmanFilter::error_ellipse(double confidence)
      {
           if (confidence < 0) {
                confidence = 0;
@@ -85,25 +86,67 @@ namespace syllo {
                confidence = 1;
           }
 
-          Eigen::EigenSolver<Eigen::MatrixXf> es(P_);
-          cv::Point2d center = cv::Point2d(x_(0,0),x_(1,0));
+          Eigen::MatrixXf B = this->meas_covariance();          
+          //cout << "B: " << endl << B << endl;
 
-          // Compute the eigenvectors and eigenvalues
+          //Eigen::MatrixXf B;
+          //B.resize(2,2);
+          //B << 500.5886, 400.6111, 400.6111, 500.7801;
+          
+          // Compute the eigenvectors and eigenvalues of the covariance matrix
+          Eigen::EigenSolver<Eigen::MatrixXf> es(B);
           Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evecs = es.eigenvectors();
           Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evalues = es.eigenvalues();
           
-          double q0x = evecs(dim0,0).real();
-          double q0y = evecs(dim1,0).real();
-          double angle = 180.0/3.14159265359 * atan2(q0y,q0x);          
+          // Find the larger (1st) eigenvalue / eigenvector
+          double eig0 = evalues(0).real();
+          double eig1 = evalues(1).real();
 
-          double lambda0 = evalues(dim0).real();
-          double lambda1 = evalues(dim1).real();
+          double lambda0, lambda1;
+          int eig_1st_index;
+          if (eig0 >= eig1) {
+               eig_1st_index = 0;
+               lambda0 = eig0;
+               lambda1 = eig1;
+          } else {
+               eig_1st_index = 1;
+               lambda0 = eig1;
+               lambda1 = eig0;
+          }
           
-          double p = confidence;
-          double r0 = sqrt(-2*log(1-p/1.00)*lambda0);
-          double r1 = sqrt(-2*log(1-p/1.00)*lambda1);
+          // Determine the angle of the ellipse
+          double q0x = evecs.col(eig_1st_index)(0).real();
+          double q0y = evecs.col(eig_1st_index)(1).real();
+          double angle = 180.0/3.14159265359 * atan2(q0y,q0x);                 
+          
+          double p = confidence; // 0.0 - 1.0
 
+          // The major and minor axes of the ellipse are stored as "half" of
+          // the major axes because cv::ellipse accepts half sizes for input
+          double r0 = sqrt(-2.0*log(1.0-p/1.00)*lambda0) / 2.0;
+          double r1 = sqrt(-2.0*log(1.0-p/1.00)*lambda1) / 2.0;
+          
+          cv::Point2d center = cv::Point2d(x_(0,0),x_(1,0));
+          //cv::Point2d center(160,120);
           return Ellipse(center, cv::Vec2d(r0,r1), angle);
+     }
+
+     bool KalmanFilter::is_within_region(Eigen::MatrixXf Zm, double nsigma) 
+     {
+          Eigen::MatrixXf B = this->meas_covariance();
+          Eigen::MatrixXf diff = Zm - H_*x_;
+          Eigen::MatrixXf dist_mat = diff.transpose()*B.inverse()*diff;          
+          double dist = dist_mat(0,0);
+          if (dist <= pow(nsigma,2)) {
+               return true;
+          } else {
+               return false;
+          }
+     }
+
+     Eigen::MatrixXf KalmanFilter::meas_covariance()
+     {
+          return H_ * P_ * H_.transpose() + R_;
      }
 }
 

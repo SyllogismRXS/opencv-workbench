@@ -19,6 +19,24 @@ using std::cout;
 using std::endl;
 
 namespace wb {     
+
+     #define PI 3.14159265359
+
+     double gaussian_probability(Eigen::MatrixXd &x, 
+                                 Eigen::MatrixXd &u, 
+                                 Eigen::MatrixXd &cov)
+     {
+          double n = u.rows();
+          double deter = cov.determinant();
+          Eigen::MatrixXd cov_inv = cov.inverse();
+          Eigen::MatrixXd diff = x - u;          
+          
+          double norm = 1.0 / ( pow(2*PI,n/2.0) * pow(deter,0.5) );
+          //cout << "norm: " << norm << endl;
+          Eigen::MatrixXd numerator = diff.transpose() * cov_inv * diff;
+          //cout << "numerator: " << numerator << endl;
+          return norm * exp(-0.5 * numerator(0,0));
+     }
      
      void cluster_points(cv::Mat &src, std::list<wb::Cluster*> &clusters, 
                          int thresh, float gate, int min_cluster_size)

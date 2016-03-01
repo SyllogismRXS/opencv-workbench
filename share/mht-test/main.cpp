@@ -9,6 +9,7 @@
 #include <opencv_workbench/syllo/syllo.h>
 #include <opencv_workbench/wb/Blob.h>
 #include <opencv_workbench/wb/BlobProcess.h>
+#include <opencv_workbench/wb/WB.h>
 
 using std::cout;
 using std::endl;
@@ -39,7 +40,7 @@ enum vertex_Vertex_t { vertex_Vertex };
 BOOST_INSTALL_PROPERTY(vertex, Vertex);
 }
 
-int main() {
+int main(int argc, char * argv[]) {
      cout << "MHT Test" << endl;
 
 
@@ -113,7 +114,50 @@ int main() {
      
      BlobProcess blob_process;
      blob_process.assign_mht(measurements, tracks, fused_tracks);
-
+     
+     //if (argc > 3) {
+     //
+     //     double x_in = syllo::str2double(std::string(argv[1]));
+     //     double u_in = syllo::str2double(std::string(argv[2]));
+     //     double cov_in = syllo::str2double(std::string(argv[3]));
+     //     
+     //     // Test Gaussian Probability:
+     //     Eigen::MatrixXd x, u, cov;
+     //
+     //     x.resize(2,1);
+     //     x << x_in, x_in;
+     //
+     //     u.resize(2,1);
+     //     u << u_in, u_in;
+     //
+     //     cov.resize(2,2);
+     //     cov << cov_in, 1, 3, cov_in;
+     //     
+     //     double prob = wb::gaussian_probability(x,u,cov);          
+     //     cout << "Probability: " << prob << endl;
+     //}
+     // if (argc > 3) {
+     // 
+     //      double x_in = syllo::str2double(std::string(argv[1]));
+     //      double u_in = syllo::str2double(std::string(argv[2]));
+     //      double cov_in = syllo::str2double(std::string(argv[3]));
+     //      
+     //      // Test Gaussian Probability:
+     //      Eigen::MatrixXd x, u, cov;
+     // 
+     //      x.resize(1,1);
+     //      x(0,0) = x_in;
+     // 
+     //      u.resize(1,1);
+     //      u(0,0) = u_in;
+     // 
+     //      cov.resize(1,1);
+     //      cov(0,0) = cov_in;
+     //      
+     //      double prob = wb::gaussian_probability(x,u,cov);          
+     //      cout << "Probability: " << prob << endl;
+     // }
+     
      /// // // Edges stored in std::list
      /// // // Nodes stored in std::vector
      /// // // Undirected graph

@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
           double err = sqrt( pow(state(0,0) - it_truth->x, 2) + pow(state(1,0) - it_truth->y, 2) );
           error.push_back(cv::Point2d(t,err));          
 
-          Ellipse ell = kf.error_ellipse(0,2,0.95);
+          Ellipse ell = kf.error_ellipse(0.95);
           
           std::string ell_str = "set object " + syllo::int2str(obj_count++) + " ellipse center ";
           ell_str += syllo::double2str(ell.center().x) + "," + syllo::double2str(ell.center().y) + " size " + syllo::double2str(ell.axes()(0)) + "," + syllo::double2str(ell.axes()(1))  + " angle " + syllo::double2str(ell.angle()) + " front fillstyle empty border -1";

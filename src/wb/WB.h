@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-28 17:45:44 syllogismrxs>
+/// Time-stamp: <2016-02-28 13:47:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -47,6 +47,8 @@
 
 #include <opencv_workbench/wb/Cluster.h>
 
+#include <Eigen/Dense>
+
 namespace wb {
 
      template<typename T> double distance(T p1, T p2)
@@ -77,6 +79,10 @@ namespace wb {
 
      double getThreshVal_Otsu_8u(cv::Mat& _src , cv::Mat &mask );
      void multi_otsu(cv::Mat &_src, cv::Mat &_dst, cv::Mat &_mask, cv::Mat &_first);
+
+     double gaussian_probability(Eigen::MatrixXd &x, 
+                                 Eigen::MatrixXd &u, 
+                                 Eigen::MatrixXd &cov);
 }
 
 #endif

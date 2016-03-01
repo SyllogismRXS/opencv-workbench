@@ -95,10 +95,11 @@ int main(int argc, char *argv[])
            0,
            0;
      
-     covar << 0.1, 0, 0, 0,
-              0, 0.1, 0, 0,
-              0, 0, 0.1, 0,
-              0, 0, 0, 0.1;
+     double var = 0.1;
+     covar << var, 0, 0, 0,
+              0, var, 0, 0,
+              0, 0, var, 0,
+              0, 0, 0, var;
      
      kf.setModel(A,B,H,Q,R);
      kf.init(x0, covar);
@@ -221,6 +222,9 @@ int main(int argc, char *argv[])
      styles.push_back("points");
      
      syllo::Plot plot_covar;
-     plot_covar.plot(vectors, title_covar, labels, styles);          
+     plot_covar.plot(vectors, title_covar, labels, styles);
+
+     std::string temp;
+     std::cin >> temp;
      return 0;
 }

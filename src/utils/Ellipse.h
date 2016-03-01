@@ -4,7 +4,7 @@
 /// @file Ellipse.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2015-12-02 14:57:39 syllogismrxs>
+/// Time-stamp: <2016-02-29 16:22:12 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 02 Dec 2015
@@ -55,6 +55,8 @@ public:
      {}
      
      cv::Point2d center() { return center_; }
+
+     // Stores half the minor / major axes size due to cv::ellipse function
      cv::Vec2d axes() { return axes_; }
      double angle() { return angle_; }
 

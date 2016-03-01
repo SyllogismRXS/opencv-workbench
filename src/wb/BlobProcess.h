@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-26 17:22:24 syllogismrxs>
+/// Time-stamp: <2016-02-29 17:58:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -167,11 +167,16 @@ protected:
      double Pd_;
      double B_ft_;
      double B_nt_;
+     int N_tgt_;
+
+     std::list<vertex_t> hyps_;
+     std::list<vertex_t> prev_hyps_;
      
 private:
      int count_;
      int min_blob_size_;
      int next_id_;
+     int next_mht_id_;
 };
 
 #endif

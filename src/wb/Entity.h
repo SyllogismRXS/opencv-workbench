@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-01-29 12:24:48 syllogismrxs>
+/// Time-stamp: <2016-02-29 18:26:00 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -131,6 +131,8 @@ namespace wb {
 
           void matched_track(Entity &match);
           void copy_track_info(Entity &other);
+
+          void copy_meas_info(Entity &other);
           
           bool occluded() { return occluded_; }
           void set_occluded(bool occluded) { occluded_ = occluded; }
@@ -146,7 +148,7 @@ namespace wb {
           void correct_tracker();
           cv::Point estimated_centroid();
           void set_estimated_centroid(cv::Point p) {est_centroid_ = p;}
-          Ellipse error_ellipse(int dim0, int dim1, double confidence);
+          Ellipse error_ellipse(double confidence);
           
           void set_matched(bool matched) { matched_ = matched; }
           void set_visited(bool visited) { visited_ = visited; }
@@ -166,6 +168,9 @@ namespace wb {
           std::list<cv::Point2f> & trail() { return trail_; }
           cv::Point trail_history(int past);
           void update_trail();
+
+          void set_prob(double prob) { prob_ = prob; }
+          double prob() { return prob_; }
 
      protected:          
           std::string name_;
@@ -206,12 +211,15 @@ namespace wb {
 
           int cluster_id_;
 
-          cv::Point start_centroid_;
+          cv::Point start_centroid_;          
           
           std::list<cv::Point2f> trail_;
           
           void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }            
+          float distance() { return distance_; }    
+
+          double prob_; // branch probability
+
      private:
      };
 

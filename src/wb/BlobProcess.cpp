@@ -48,7 +48,9 @@ BlobProcess::BlobProcess()
 
      Pd_ = 0.9;
      B_nt_ = 0.5;
-     B_ft_ = 0.1;     
+     B_ft_ = 0.1; 
+     N_tgt_ = 0; // TODO: calculate
+     next_mht_id_ = 3;
 }
 
 int BlobProcess::next_available_id()
@@ -491,13 +493,16 @@ void BlobProcess::build_tree(vertex_t &vertex,
                              int next_id)
 {
      if (it_meas == meas.end()) {
+          hyps_.push_back(vertex);
           return;
      }
 
      // It could be a false positive
      vertex_t fp = boost::add_vertex(graph_);
+     graph_[fp] = *it_meas;
      graph_[fp].mht_type = wb::Entity::fp;
-     graph_[fp].set_id(0);
+     graph_[fp].set_id(-2);
+     graph_[fp].set_prob(graph_[vertex].prob()*B_ft_);
      edge_t fp_e; bool fp_b;
      boost::tie(fp_e,fp_b) = boost::add_edge(vertex,fp,graph_);
 
@@ -505,23 +510,54 @@ void BlobProcess::build_tree(vertex_t &vertex,
 
      // It could be a new track
      vertex_t nt = boost::add_vertex(graph_);
-     graph_[nt].mht_type = wb::Entity::nt;
-     graph_[nt].set_id(next_id);
+     graph_[nt] = *it_meas;
+     graph_[nt].mht_type = wb::Entity::nt;     
+     graph_[nt].new_track(next_id);
+     graph_[nt].set_prob(graph_[vertex].prob()*B_nt_);
      edge_t nt_e; bool nt_b;
      boost::tie(nt_e,nt_b) = boost::add_edge(vertex,nt,graph_);
 
      build_tree(nt, it_meas+1, meas, tracks, next_id+1);
 
+     cout << "Tracks Size: " << tracks.size() << endl;
      // Does the measurement fall within a track's gate?
      std::vector<wb::Blob>::iterator it = tracks.begin();
      while (it != tracks.end()) {
-          if (cv::norm(it_meas->undistorted_centroid() - it->undistorted_centroid()) <= 2.0) {
+          //if (cv::norm(it_meas->undistorted_centroid() - it->undistorted_centroid()) <= 2.0) {
+          Eigen::MatrixXf Zm; Zm.resize(2,1);
+          Zm << it_meas->centroid().x, it_meas->centroid().y;
+          if (it->tracker().is_within_region(Zm,3)) {
+
+               cout << "Falls Within region!" << endl;
+               
+               Eigen::MatrixXd u, cov;
+               Eigen::MatrixXd zero_mean;
+               zero_mean.resize(2,1);
+               zero_mean << 0, 0;
+                              
+               u.resize(2,1);
+               cov.resize(2,2);
+               
+               Eigen::MatrixXd state = it->tracker().state().cast<double>();
+               u << state(0,0), state(1,0);
+               
+               Eigen::MatrixXd B = it->tracker().meas_covariance().cast<double>();               
+               
+               Eigen::MatrixXd diff = Zm.cast<double>() - u;
+               double mahal_dist = wb::gaussian_probability(diff, zero_mean, B);
+               
                // The measurement falls within a track's gate.
                // Add it to the hyp tree, remove the track from the track's
                // vector and recurse.
-               vertex_t dt = boost::add_vertex(graph_);
+               vertex_t dt = boost::add_vertex(graph_);               
                graph_[dt] = *it;
+               graph_[dt].copy_meas_info(*it_meas);
+               graph_[dt].detected_track();
                graph_[dt].mht_type = wb::Entity::dt;
+               
+               double p = graph_[vertex].prob() * Pd_ * mahal_dist / (1.0-Pd_);
+
+               graph_[dt].set_prob(p);
 
                edge_t dt_e; bool dt_b;
                boost::tie(dt_e,dt_b) = boost::add_edge(vertex,dt,graph_);
@@ -552,20 +588,79 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      // 2. A Detected Track
      // 3. A False Positive Track
 
-     vertex_t root = boost::add_vertex(graph_);
-     graph_[root].set_id(-2);
-     int next_id = 3;
+     hyps_.clear();     
+     if (prev_hyps_.size() == 0) {
+          vertex_t root = boost::add_vertex(graph_);
+          graph_[root].set_id(-1);
+          graph_[root].set_prob(1);          
+          prev_hyps_.push_back(root);
+     }
 
-     std::vector<wb::Blob>::iterator it_meas = meas.begin();
-     std::vector<wb::Blob>::iterator it_tracks = tracks.begin();
-     build_tree(root, it_meas, meas, tracks, next_id);
+     // Pre-multiply all prev hyps by (1-Pd)^N_tgt / find highest id     
+     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
+          it != prev_hyps_.end(); it++) {
+          graph_[*it].set_prob( graph_[*it].prob() * pow(1.0-Pd_,N_tgt_) );
 
-     // write graph to console
-     cout << "\n-- graphviz output START --" << endl;
-     boost::write_graphviz(std::cout, graph_,
-                           boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
-     cout << "\n------------" << endl;
+          // Assign next_mht_id_ to highest current ID + 1
+          if (graph_[*it].id() >= next_mht_id_) {
+               next_mht_id_ = graph_[*it].id() + 1;
+          }
+     }     
+     
+     cout << "Hyp Size: " << prev_hyps_.size() << endl;
+     
+     // Expand each hypothesis based on received measurements     
+     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
+          it != prev_hyps_.end(); it++) {
+          std::vector<wb::Blob>::iterator it_meas = meas.begin();
+          std::vector<wb::Blob>::iterator it_tracks = tracks.begin();          
+          build_tree(*it, it_meas, meas, tracks, next_mht_id_);
+     }
 
+     // Calculate sum of hyp probabilities for normalization
+     double hyp_sum = 0;
+     for (std::list<vertex_t>::iterator it = hyps_.begin(); 
+          it != hyps_.end(); it++) {
+          hyp_sum += graph_[*it].prob();
+     }
+     
+     // Normalize all probabilities, remove low prob hyps
+     {
+          std::list<vertex_t>::iterator it = hyps_.begin(); 
+          while (it != hyps_.end()) {               
+
+               double new_prob = graph_[*it].prob() / hyp_sum;
+               graph_[*it].set_prob(new_prob);
+               
+               cout << "Prob: " << new_prob << endl;
+               
+#if 0
+               // Low prob hypothesis, remove it
+               if (new_prob < 0.05) {
+                    hyps_.erase(it++);
+               } else {
+                    // Add to fused tracks
+                    fused.push_back(graph_[*it]);                    
+                    ++it;
+               }         
+#else
+               fused.push_back(graph_[*it]);                    
+               ++it;
+#endif               
+          }    
+     }
+     
+     cout << "Returning Fused Tracks: " << fused.size() << endl;
+
+     // copy over current hyps to next frame
+     prev_hyps_ = hyps_;
+
+     //// write graph to console
+     //cout << "\n-- graphviz output START --" << endl;
+     //boost::write_graphviz(std::cout, graph_,
+     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
+     //cout << "\n------------" << endl;
+     //
      std::ofstream dotfile ("/home/syllogismrxs/test.dot");
      boost::write_graphviz(dotfile, graph_,
                            boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
@@ -1185,11 +1280,14 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
           }
 
           if (flags & ERR_ELLIPSE) {
-               Ellipse ell = it->error_ellipse(0,2,0.95);
+               //Ellipse ell = it->error_ellipse(0.9973); // 3 std
+               //Ellipse ell = it->error_ellipse(0.9545); // 2 std
+               Ellipse ell = it->error_ellipse(0.6827); // 1 std
                cv::Point center = ell.center();
                cv::Size axes(ell.axes()(0), ell.axes()(1));
-               cv::ellipse(dst, center, axes, ell.angle(), 0, 360, cv::Scalar(0,80,80), 1, 8, 0);
-          }
+               //The -angle is used because OpenCV defines the angle clockwise instead of anti-clockwise
+               cv::ellipse(dst, center, axes, -ell.angle(), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+          }          
      }
 }
 

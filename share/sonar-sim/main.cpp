@@ -31,6 +31,7 @@
 #include <opencv_workbench/wb/Blob.h>
 #include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
+#include <opencv_workbench/utils/OpenCV_Helpers.h>
 
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -172,6 +173,10 @@ void draw_sonar_lines(cv::Mat &src, cv::Mat &dst, double beam_width)
      cv::line(dst, end_2, start, cv::Scalar(0,0,0), 1, 8, 0);          
 }
 
+#define USE_HUNGARIAN 0
+#define USE_MHT 1
+#define USE_SINGLE 0
+
 int main(int argc, char *argv[])
 {
      cout << "================================" << endl;
@@ -186,6 +191,7 @@ int main(int argc, char *argv[])
      double t0 = 0;
      double dt;
      double tend;
+     double sample_period;
      
      std::ifstream fin(argv[1]);
      YAML::Parser parser(fin);     
@@ -195,6 +201,14 @@ int main(int argc, char *argv[])
      // Get time information:
      doc["time_step"] >> dt;
      doc["time_end"] >> tend;
+
+     if(const YAML::Node *psampleperiod = doc.FindValue("sensor_sample_period")) {
+          *psampleperiod >> sample_period;
+     } else {
+          sample_period = dt;
+     }
+     
+     int sample_period_count = cvRound(sample_period / dt);
 
      double traj_threshold;
      doc["traj_threshold"] >> traj_threshold;
@@ -211,7 +225,6 @@ int main(int argc, char *argv[])
           dyns.push_back(dyn);          
      }     
           
-     // Compute Trajectories
      // Get reference to the Sonar sensor
      Dynamics *sonar = NULL;
      for (std::vector<Dynamics>::iterator it = dyns.begin(); it != dyns.end();
@@ -273,18 +286,19 @@ int main(int argc, char *argv[])
      std::vector<wb::Blob> tracks;
      // Loop through all generated trajectories
      bool step_flag = true;
+     int loop_number = 0;
      int frame_number = 0;
+     bool exit_sim = false;
      std::vector<double> tt = Dynamics::time_vector(t0,dt,tend);     
-     for (std::vector<double>::iterator it = tt.begin(); it != tt.end(); 
-          it++, frame_number++) {
+     for (std::vector<double>::iterator it = tt.begin(); 
+          it != tt.end() && !exit_sim; it++, loop_number++) {
+
+          bool scan_sample = loop_number % sample_period_count == 0 ? true : false;
 
           std::map<int, wb::Blob> tracks_frame;
           
-          frame_img = cv::Scalar(255,255,255);
+          //frame_img = cv::Scalar(255,255,255);
                     
-          // Rotate the sonar image to "pointing back up"
-          //cv::warpAffine(img, img, rot_mat, img.size());
-
           // Clear out the plot vectors
           //vectors.clear() ; labels.clear(); styles.clear();          
 
@@ -300,17 +314,15 @@ int main(int argc, char *argv[])
                if (it_tracks->is_tracked()) {
                     it_tracks->predict_tracker();
                }
-          }
+          }                   
           
-          // Loop through all objects that have dynamics
+          // Create measurements from sensor's perspective
           for (std::vector<Dynamics>::iterator it_ent = dyns.begin();
                it_ent != dyns.end(); it_ent++) {
                
                // Grab the current state and then step the model
-               //Dynamics::state_5d_type state = it_ent->state();
                Dynamics::state_5d_type measurement = it_ent->measurement();
-               it_ent->step_motion_model(dt, *it);
-
+               
                cv::Point2d pos(measurement[0], measurement[1]);
 
                vectors[syllo::int2str(it_ent->id())].push_back(pos);
@@ -318,128 +330,167 @@ int main(int argc, char *argv[])
                if (it_ent->type() == "sensor") {
                     // Skip if this is the sensor
                     continue;
-               }
-               
-               /////////////////////////////////////////////////
-               // Can the sonar see the object at this point?
-               // Within range and bearing limits?          
-               // Compute bearing from sonar to target          
-               // Position of contact, relative to ownship                              
-               cv::Point2d offset = pos - sonar_pos;
-               cv::Point2d cnt_relative_pos = rotate_2D(offset, -sonar_heading);
-               double bearing_to_cnt = atan2(cnt_relative_pos.y, 
-                                             cnt_relative_pos.x);
-               
-               double dist = cv::norm(offset);               
-               
-               if ((min_angle_ <= bearing_to_cnt) && (bearing_to_cnt <= max_angle_) && 
-                   (dist >= x_min) && dist <= x_max) {
-                    // Put target in sonar's image
-               
-                    //cout << "Bearing: " << bearing_to_cnt * 180 / PI;
-                
-                    // convert offset to polar coordinates
-                    double R = dist;
-                    double theta = bearing_to_cnt;
-                
-                    // x = R*cos(theta), y = R*sin(theta);
-                    double x = R*cos(theta);
-                    double y = R*sin(theta);                    
-                     
-                    int x_pos = cvRound(img_width/2 - y / (y_max/2) * img_height*sin(max_angle_));
-                    int y_pos = cvRound(img_height - x / x_max * img_height);                                            
-                    
-                    if (x_pos < 0 || x_pos > frame_img.cols || y_pos < 0 || y_pos > frame_img.rows) {
-                         // error, skip
-                         cout << "bounds" << endl;
-                         continue;
-                    }                         
-
-                    wb::Blob blob;
-                    blob.set_id(it_ent->id());
-                    blob.set_undistorted_centroid(cv::Point2f(x,y));
-                    wb::Point p;
-                    p.set_position(cv::Point(x_pos,y_pos));
-                    p.set_value(255);
-                    blob.add_point(p);
-                    blob.set_frame(frame_number);                    
-                    blob.init();
-                    
-                    tracks_history[it_ent->id()].push_back(blob);
-                    tracks_frame[it_ent->id()] = blob;
-                    
-                    measurements.push_back(blob);
-                    
-                    cv::circle(frame_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
-                    cv::circle(history_img,cv::Point(x_pos, y_pos),1,cv::Scalar(0,0,0),-1,8,0);
-                                        
-                    std::ostringstream convert;
-                    convert << it_ent->id();               
-                    const std::string& text = convert.str();
-                    cv::putText(frame_img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
-                    //cv::putText(history_img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);
                }               
-          }          
+               
+               if (scan_sample) {
+                    /////////////////////////////////////////////////
+                    // Can the sonar see the object at this point?
+                    // Within range and bearing limits?          
+                    // Compute bearing from sonar to target          
+                    // Position of contact, relative to ownship                              
+                    cv::Point2d offset = pos - sonar_pos;
+                    cv::Point2d cnt_relative_pos = rotate_2D(offset, -sonar_heading);
+                    double bearing_to_cnt = atan2(cnt_relative_pos.y, 
+                                                  cnt_relative_pos.x);
+               
+                    double dist = cv::norm(offset);               
+               
+                    if ((min_angle_ <= bearing_to_cnt) && (bearing_to_cnt <= max_angle_) && 
+                        (dist >= x_min) && dist <= x_max) {
+                         // Put target in sonar's image
+               
+                         //cout << "Bearing: " << bearing_to_cnt * 180 / PI;
+                
+                         // convert offset to polar coordinates
+                         double R = dist;
+                         double theta = bearing_to_cnt;
+                
+                         // x = R*cos(theta), y = R*sin(theta);
+                         double x = R*cos(theta);
+                         double y = R*sin(theta);                    
+                     
+                         int x_pos = cvRound(img_width/2 - y / (y_max/2) * img_height*sin(max_angle_));
+                         int y_pos = cvRound(img_height - x / x_max * img_height);                                            
+                    
+                         if (x_pos < 0 || x_pos > frame_img.cols || y_pos < 0 || y_pos > frame_img.rows) {
+                              // error, skip
+                              cout << "bounds" << endl;
+                              continue;
+                         }                         
+
+                         cv::Point blob_pos(x_pos, y_pos);
+
+                         wb::Blob blob;
+                         blob.set_id(it_ent->id());
+                         blob.set_undistorted_centroid(cv::Point2f(x,y));
+                         wb::Point p;
+                         p.set_position(blob_pos);
+                         p.set_value(255);
+                         blob.add_point(p);
+                         blob.set_frame(frame_number);                    
+                         blob.init();                         
+                    
+                         tracks_history[it_ent->id()].push_back(blob);
+                         tracks_frame[it_ent->id()] = blob;
+                    
+                         measurements.push_back(blob);
+                    
+                         wb::drawTriangle(frame_img, blob_pos, cv::Scalar(0,0,0), 10);
+                    
+                         cv::circle(frame_img,blob_pos,1,cv::Scalar(0,0,0),-1,8,0);
+                         cv::circle(history_img,blob_pos,1,cv::Scalar(0,0,0),-1,8,0);
+                                        
+                         std::ostringstream convert;
+                         convert << it_ent->id();               
+                         const std::string& text = convert.str();
+                         cv::putText(frame_img, text, cv::Point(x_pos+5, y_pos-5), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0,0,0), 1, 8, false);                         
+                    } 
+                    
+                    // Draw sonar lines on images
+                    draw_sonar_lines(frame_img, frame_img, beam_width_);          
+                    draw_sonar_lines(history_img, history_img, beam_width_);                                                 
+
+#if USE_SINGLE                                        
+                    // Assume single track for now
+                    if (tracks.size() == 0) {
+                         tracks = measurements;   
+                         tracks.back().set_age(6); // make it tracked
+                    } else {
+                         Eigen::MatrixXf Zm;
+                         Zm.resize(2,1);
+                         Zm << measurements.back().centroid().x, measurements.back().centroid().y;
+
+                         if(tracks.back().tracker().is_within_region(Zm,3)) {
+                              cout << "In region!" << endl;
+                         } else {
+                              cout << "Out of region!" << endl;
+                         }
+                         
+                         measurements.back().matched_track(tracks.back());
+                         tracks = measurements;
+                    }     
+#elif USE_HUNGARIAN
+                    // Send "measurements" to hungarian assignment algorithm
+                    std::vector<wb::Blob> fused_tracks;
+                    blob_process.assign_hungarian(measurements, tracks, fused_tracks);
+                    tracks = fused_tracks;                    
+#elif USE_MHT
+                    // Send "measurements" to MHT
+                    std::vector<wb::Blob> fused_tracks;
+                    blob_process.assign_mht(measurements, tracks, fused_tracks);
+                    tracks = fused_tracks;                    
+#endif                              
+               } // if scan_sample             
+               blob_process.set_blobs(tracks);
+               
+               // Draw Tracks on image
+               cv::Mat tracks_img(frame_img.size(), CV_8UC3);
+               tracks_img = cv::Scalar(255,0,0);
+               blob_process.overlay(tracks_img, tracks_img, TRACKS | ERR_ELLIPSE);
+               cv::imshow("Tracks", tracks_img);
+          
+               //// Compute Trajectory Analysis
+               //cv::Mat traj_img = frame_img;//img_color;//.clone();
+               //traj.trajectory_similarity(tracks_history, frame_number, 
+               //                           traj_img, traj_threshold);
+               //
+               //cv::Mat history_traj_img = history_img;//img_color;//.clone();
+               //traj.trajectory_similarity(tracks_history, frame_number, 
+               //                           history_traj_img, traj_threshold);
+               //cv::imshow("History", history_traj_img);
+               //cv::imshow("Frame", traj_img);           
+          
+               cv::Mat traj_img = frame_img;
+               traj.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+                                                     traj_img, traj_threshold);
+          
+               cv::imshow("Frame", traj_img);  
+
+               /////////////////////////////////////////////////////////////////////                    
+                    
+               // Handle pausing / stepping
+               if (step_flag) {
+                    int key = cv::waitKey(0);    
+                    if (key == 'q' || key == 1048689) { // 'q' key
+                         cout << "Ending early." << endl;
+                         exit_sim = true;                              
+                    } else if (key == 'p' || key == 1048688) {
+                         step_flag = 0;
+                    }     
+               } else {
+                    int key = cv::waitKey(30);               
+                    if (key == 'q' || key == 1048689) {
+                         cout << "Ending early." << endl;
+                         exit_sim = true;                              
+                    } else if (key == 'p' || key == 1048688) {
+                         step_flag = 1;
+                    } 
+               }
+          }
+
+          // Generate Trajectories for all objects that have dynamics
+          for (std::vector<Dynamics>::iterator it_ent = dyns.begin();
+               it_ent != dyns.end(); it_ent++) {               
+               // Grab the current state and then step the model
+               it_ent->step_motion_model(dt, *it);
+          }
           
           if (display_plot) {
                // Plot the tracks          
                std::vector<std::string> empty_objects;
                plot.plot(vectors, title, labels, styles, options, empty_objects);
-          }
-          
-          // Draw sonar lines on images
-          draw_sonar_lines(frame_img, frame_img, beam_width_);          
-          draw_sonar_lines(history_img, history_img, beam_width_);          
-
-          // Send "measurements" to hungarian assignment algorithm
-          std::vector<wb::Blob> fused_tracks;
-          blob_process.assign_hungarian(measurements, tracks, fused_tracks);
-          tracks = fused_tracks;
-          blob_process.set_blobs(tracks);          
-          
-          // Draw Tracks on image
-          cv::Mat tracks_img(frame_img.size(), CV_8UC3);
-          tracks_img = cv::Scalar(255,0,0);
-          blob_process.overlay(tracks_img, tracks_img, RECTS | TRACKS | IDS);
-          cv::imshow("Tracks", tracks_img);
-          
-          //// Compute Trajectory Analysis
-          //cv::Mat traj_img = frame_img;//img_color;//.clone();
-          //traj.trajectory_similarity(tracks_history, frame_number, 
-          //                           traj_img, traj_threshold);
-          //
-          //cv::Mat history_traj_img = history_img;//img_color;//.clone();
-          //traj.trajectory_similarity(tracks_history, frame_number, 
-          //                           history_traj_img, traj_threshold);
-          //cv::imshow("History", history_traj_img);
-          //cv::imshow("Frame", traj_img);           
-          
-          cv::Mat traj_img = frame_img;
-          traj.trajectory_similarity_track_diff(tracks_frame, frame_number, 
-                                                traj_img, traj_threshold);
-          
-          cv::imshow("Frame", traj_img);
-          
-          /////////////////////////////////////////////////////////////////////                    
-                    
-          // Handle pausing / stepping
-          if (step_flag) {
-               int key = cv::waitKey(0);    
-               if (key == 'q' || key == 1048689) { // 'q' key
-                    cout << "Ending early." << endl;
-                    break;
-               } else if (key == 'p' || key == 1048688) {
-                    step_flag = 0;
-               }     
-          } else {
-               int key = cv::waitKey(30);               
-               if (key == 'q' || key == 1048689) {
-                    cout << "Ending early." << endl;
-                    break;
-               } else if (key == 'p' || key == 1048688) {
-                    step_flag = 1;
-               } 
           }          
+          frame_number++;                              
      }     
      cv::waitKey(0);     
      return 0;

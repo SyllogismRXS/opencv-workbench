@@ -16,8 +16,19 @@ namespace wb{
 
      void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d)
      {
-          cv::line(img, cv::Point(center.x - d, center.y - d), cv::Point(center.x + d, center.y + d), color, 2, CV_AA, 0);
-          cv::line(img, cv::Point(center.x + d, center.y - d), cv::Point(center.x - d, center.y + d), color, 2, CV_AA, 0 );
+          cv::line(img, cv::Point(center.x - d, center.y - d), cv::Point(center.x + d, center.y + d), color, 1, CV_AA, 0);
+          cv::line(img, cv::Point(center.x + d, center.y - d), cv::Point(center.x - d, center.y + d), color, 1, CV_AA, 0 );
+     }
+
+     void drawTriangle(cv::Mat &img, cv::Point &center, cv::Scalar color, int size)
+     {
+          cv::Point pt1(center.x, center.y - size);
+          cv::Point pt2(center.x+size, center.y+size);
+          cv::Point pt3(center.x-size, center.y+size);
+          
+          cv::line(img, pt1, pt2, color, 1, CV_AA, 0);
+          cv::line(img, pt2, pt3, color, 1, CV_AA, 0);
+          cv::line(img, pt3, pt1, color, 1, CV_AA, 0);
      }
 
      void show_nonzero(cv::Mat &img)
