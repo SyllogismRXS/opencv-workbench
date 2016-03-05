@@ -29,10 +29,26 @@ int main()
      cv::Mat visualizeimage(240, 320, CV_8UC3, cv::Scalar::all(0));	
      cv::ellipse(visualizeimage, ellipse, cv::Scalar::all(255), 2);
      
+     ////////////////////////////////////////////////////////////
+     //// Create second to test:
+     Eigen::MatrixXf F,B,H,Q,R,x,P;
+     
+     H.resize(2,2);
+     H << 1,0,0,1;
+     
+     P.resize(2,2);
+     P << 500.5886, 400.6111, 400.6111, 500.7801;
 
-     // Create second to test:
-     syllo::KalmanFilter kf_;
-     Ellipse ell = kf_.error_ellipse(0.95);
+     R.resize(2,2);
+     R << 0,0,0,0;
+     
+     x.resize(2,1);
+     x << 160,120;
+     
+     syllo::KalmanFilter kf_(F,B,H,Q,R);
+     kf_.init(x,P);
+          
+     Ellipse ell = kf_.error_ellipse(0.9545);
      cv::Point center = ell.center();
      cv::Size axes(ell.axes()(0), ell.axes()(1));
      cv::ellipse(visualizeimage, center, axes, -ell.angle(), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);

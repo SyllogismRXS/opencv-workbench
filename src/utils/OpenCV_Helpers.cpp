@@ -22,9 +22,12 @@ namespace wb{
 
      void drawTriangle(cv::Mat &img, cv::Point &center, cv::Scalar color, int size)
      {
+          int s = cvRound((double)size * sqrt(3.0) / 2.0);
+          int d = cvRound(0.5 * (double)size);
+          
           cv::Point pt1(center.x, center.y - size);
-          cv::Point pt2(center.x+size, center.y+size);
-          cv::Point pt3(center.x-size, center.y+size);
+          cv::Point pt2(center.x+s, center.y+d);
+          cv::Point pt3(center.x-s, center.y+d);
           
           cv::line(img, pt1, pt2, color, 1, CV_AA, 0);
           cv::line(img, pt2, pt3, color, 1, CV_AA, 0);

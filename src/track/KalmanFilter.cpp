@@ -85,15 +85,10 @@ namespace syllo {
           } else if (confidence > 1) {
                confidence = 1;
           }
-
-          Eigen::MatrixXf B = this->meas_covariance();          
-          //cout << "B: " << endl << B << endl;
-
-          //Eigen::MatrixXf B;
-          //B.resize(2,2);
-          //B << 500.5886, 400.6111, 400.6111, 500.7801;
           
-          // Compute the eigenvectors and eigenvalues of the covariance matrix
+          // Compute the eigenvectors and eigenvalues of the measurement
+          // covariance matrix
+          Eigen::MatrixXf B = this->meas_covariance();          
           Eigen::EigenSolver<Eigen::MatrixXf> es(B);
           Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evecs = es.eigenvectors();
           Eigen::EigenSolver< Eigen::MatrixXf >::EigenvectorsType evalues = es.eigenvalues();
@@ -131,13 +126,14 @@ namespace syllo {
           return Ellipse(center, cv::Vec2d(r0,r1), angle);
      }
 
-     bool KalmanFilter::is_within_region(Eigen::MatrixXf Zm, double nsigma) 
+     bool KalmanFilter::is_within_region(Eigen::MatrixXf Zm, double std) 
      {
           Eigen::MatrixXf B = this->meas_covariance();
           Eigen::MatrixXf diff = Zm - H_*x_;
           Eigen::MatrixXf dist_mat = diff.transpose()*B.inverse()*diff;          
           double dist = dist_mat(0,0);
-          if (dist <= pow(nsigma,2)) {
+          //if (dist <= pow(nsigma,2)) {
+          if (dist <= std) {
                return true;
           } else {
                return false;

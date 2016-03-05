@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-01 15:46:24 syllogismrxs>
+/// Time-stamp: <2016-03-01 21:06:52 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -181,6 +181,9 @@ namespace wb {
           }
           double prob() { return prob_; }          
 
+          void set_R(double r);
+          void set_P(double p);
+          
      protected:          
           bool prob_is_set_;
           std::string name_;

@@ -504,6 +504,7 @@ void BlobProcess::build_tree(vertex_t &vertex,
      graph_[fp].mht_type = wb::Entity::fp;
      graph_[fp].set_id(-2);
      graph_[fp].set_prob(graph_[vertex].prob()*B_ft_);
+     cout << "FP Prob: " << graph_[fp].prob() << endl;
      edge_t fp_e; bool fp_b;
      boost::tie(fp_e,fp_b) = boost::add_edge(vertex,fp,graph_);
 
@@ -515,15 +516,16 @@ void BlobProcess::build_tree(vertex_t &vertex,
      graph_[nt].mht_type = wb::Entity::nt;     
      graph_[nt].new_track(next_id);
      graph_[nt].set_prob(graph_[vertex].prob()*B_nt_);
+     cout << "NT Prob: " << graph_[nt].prob() << endl;
      edge_t nt_e; bool nt_b;
      boost::tie(nt_e,nt_b) = boost::add_edge(vertex,nt,graph_);
 
      build_tree(nt, it_meas+1, meas, tracks, next_id+1);
           
-     // Return if the current vertex is not a track
-     if (graph_[vertex].mht_type == wb::Entity::fp) {
-          return;
-     }
+     //// Return if the current vertex is not a track
+     //if (graph_[vertex].mht_type == wb::Entity::fp) {
+     //     return;
+     //}
      
      // Does the measurement fall within a track's gate?
      std::vector<wb::Blob>::iterator it = tracks.begin();
@@ -548,12 +550,13 @@ void BlobProcess::build_tree(vertex_t &vertex,
                u << state(0,0), state(1,0);
                
                Eigen::MatrixXd B = it->tracker().meas_covariance().cast<double>();               
-               //cout << "B: " << endl << B << endl;
-               
                Eigen::MatrixXd diff = Zm.cast<double>() - u;
-               //cout << "Diff: " << endl << diff << endl;
                double mahal_dist = wb::gaussian_probability(diff, zero_mean, B);
-               cout << "mahal_dist: " << mahal_dist << endl;
+               double mahal_max = wb::gaussian_probability(zero_mean, zero_mean, B);
+               //cout << "mahal_dist: " << mahal_dist << endl;
+
+               double mahal_dist_norm = mahal_dist / mahal_max; 
+               //cout << "mahal_dist (norm): " << mahal_dist_norm;
                
                // The measurement falls within a track's gate.
                // Add it to the hyp tree, remove the track from the track's
@@ -564,9 +567,10 @@ void BlobProcess::build_tree(vertex_t &vertex,
                graph_[dt].detected_track();
                graph_[dt].mht_type = wb::Entity::dt;
                
-               double p = graph_[vertex].prob() * Pd_ * mahal_dist / (1.0-Pd_);
+               double p = graph_[vertex].prob() * Pd_ * mahal_dist_norm / (1.0-Pd_);
 
                graph_[dt].set_prob(p);
+               cout << "DT Prob: " << graph_[dt].prob() << endl;
 
                edge_t dt_e; bool dt_b;
                boost::tie(dt_e,dt_b) = boost::add_edge(vertex,dt,graph_);
@@ -622,68 +626,168 @@ make_vertex_writer(TypeMap t, IDMap w,ProbMap c) {
      return vertex_writer<TypeMap,IDMap,ProbMap>(t,w,c);
 }
 
+//void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
+//                             std::vector<wb::Blob> &tracks,
+//                             std::vector<wb::Blob> &fused)
+//{
+//     cout << "Number of measurements: " << meas.size() << endl;
+//     //vertex_t node = boost::add_vertex(graph_);
+//     //graph_[node].set_id(4);
+//     //
+//     //wb::Blob b;
+//     //graph_[node] = b;
+//
+//     // Each measurement can be:
+//     // 1. A New Track
+//     // 2. A Detected Track
+//     // 3. A False Positive Track
+//
+//     N_tgt_ = tracks.size(); // Number of previous fused targets
+//     
+//     //// Clear out the old graph and add back the previous hyps
+//     //graph_.clear();
+//     //for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
+//     //     it != prev_hyps_.end(); it++) {
+//     //     boost::add_vertex(*it,graph_);
+//     //}     
+//     
+//     hyps_.clear();
+//     if (prev_hyps_.size() == 0) {
+//          vertex_t root = boost::add_vertex(graph_);
+//          graph_[root].set_id(-1);
+//          graph_[root].set_prob(1, true);  
+//          graph_[root].mht_type = wb::Entity::root;
+//          prev_hyps_.push_back(root);
+//     }
+//
+//     // Pre-multiply all prev hyps by (1-Pd)^N_tgt / find highest id     
+//     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
+//          it != prev_hyps_.end(); it++) {
+//          
+//          graph_[*it].set_prob( graph_[*it].prob() * pow(1.0-Pd_,N_tgt_) );
+//
+//          // Assign next_mht_id_ to highest current ID + 1
+//          if (graph_[*it].id() >= next_mht_id_) {
+//               next_mht_id_ = graph_[*it].id() + 1;
+//          }          
+//     }     
+//     
+//     cout << "Hyp Size: " << prev_hyps_.size() << endl;
+//     cout << "N_tgt: " << N_tgt_ << endl;
+//     cout << "Pd: " << Pd_ << endl;
+//     cout << "B_ft_" << B_ft_ << endl;
+//     cout << "B_nt_" << B_nt_ << endl;
+//     
+//     // Expand each hypothesis based on received measurements          
+//     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
+//          it != prev_hyps_.end(); it++) {
+//          std::vector<wb::Blob> meas_copy = meas;
+//          std::vector<wb::Blob> tracks_copy = tracks;
+//          
+//          std::vector<wb::Blob>::iterator it_meas = meas_copy.begin();
+//          std::vector<wb::Blob>::iterator it_tracks = tracks_copy.begin();
+//          build_tree(*it, it_meas, meas_copy, tracks_copy, next_mht_id_);
+//     }
+//
+//     // Calculate sum of hyp probabilities for normalization
+//     double hyp_sum = 0;
+//     for (std::list<vertex_t>::iterator it = hyps_.begin(); 
+//          it != hyps_.end(); it++) {
+//          hyp_sum += graph_[*it].prob();
+//     }
+//          
+//     // Normalize all probabilities, remove low prob hyps
+//     {
+//          int new_targets = 0;
+//          int hyps_size = hyps_.size();
+//          
+//          std::list<vertex_t>::iterator it = hyps_.begin(); 
+//          while (it != hyps_.end()) {               
+//
+//               double new_prob = graph_[*it].prob() / hyp_sum;
+//               graph_[*it].set_prob(new_prob,true);
+//               
+//               if (graph_[*it].mht_type == wb::Entity::nt) {
+//                    new_targets++;
+//               }
+//               
+//               //// Low prob hypothesis, remove it
+//               //if (new_prob < 0.08) {
+//               //     hyps_.erase(it++);
+//               //} else {
+//               // Add to fused tracks if it's not a FP
+//               if (graph_[*it].mht_type != wb::Entity::fp) {
+//                    fused.push_back(graph_[*it]);                    
+//               }
+//               ++it;
+//               //}
+//          }    
+//          
+//          B_nt_ = (double)new_targets / (double)hyps_size;          
+//     }
+//     
+//     cout << "Returning Fused Tracks: " << fused.size() << endl;
+//
+//     // copy over current hyps to next frame
+//     prev_hyps_ = hyps_;
+//
+//     //// write graph to console
+//     //cout << "\n-- graphviz output START --" << endl;
+//     //boost::write_graphviz(std::cout, graph_,
+//     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
+//     //cout << "\n------------" << endl;
+//     //
+//     //std::ofstream dotfile ("/home/syllogismrxs/test.dot");
+//     //boost::write_graphviz(dotfile, graph_,
+//     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
+//
+//     std::ofstream dotfile ("/home/syllogismrxs/test.dot");
+//     boost::write_graphviz(dotfile, graph_,
+//                           make_vertex_writer(boost::get(&wb::Blob::mht_type, graph_), 
+//                                              boost::get(&wb::Blob::id_, graph_),
+//                                              boost::get(&wb::Blob::norm_prob_, graph_)));
+//
+//}
+
 void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
                              std::vector<wb::Blob> &tracks,
                              std::vector<wb::Blob> &fused)
 {
-     cout << "Number of measurements: " << meas.size() << endl;
-     //vertex_t node = boost::add_vertex(graph_);
-     //graph_[node].set_id(4);
-     //
-     //wb::Blob b;
-     //graph_[node] = b;
-
-     // Each measurement can be:
-     // 1. A New Track
-     // 2. A Detected Track
-     // 3. A False Positive Track
-
-     N_tgt_ = tracks.size(); // Number of previous fused targets
-     
-     //// Clear out the old graph and add back the previous hyps
-     //graph_.clear();
-     //for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
-     //     it != prev_hyps_.end(); it++) {
-     //     boost::add_vertex(*it,graph_);
-     //}     
-     
      hyps_.clear();
-     if (prev_hyps_.size() == 0) {
-          vertex_t root = boost::add_vertex(graph_);
-          graph_[root].set_id(-1);
-          graph_[root].set_prob(1, true);  
-          graph_[root].mht_type = wb::Entity::root;
-          prev_hyps_.push_back(root);
-     }
-
-     // Pre-multiply all prev hyps by (1-Pd)^N_tgt / find highest id     
-     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
-          it != prev_hyps_.end(); it++) {
-          
-          graph_[*it].set_prob( graph_[*it].prob() * pow(1.0-Pd_,N_tgt_) );
-
-          // Assign next_mht_id_ to highest current ID + 1
-          if (graph_[*it].id() >= next_mht_id_) {
-               next_mht_id_ = graph_[*it].id() + 1;
-          }          
-     }     
      
-     cout << "Hyp Size: " << prev_hyps_.size() << endl;
+     // Determine the next_mht_id_ and...
+     // Determine number of unique target IDs
+     std::map<int,int> unique_ids;
+     for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
+         it != tracks.end(); it++) {          
+          int id = it->id();
+          unique_ids[id] = id;          
+          if (id >= next_mht_id_) {
+               next_mht_id_ = id + 1;
+          }
+     }
+     
+     N_tgt_ = unique_ids.size(); // Number of unique previous target IDs
+          
+     // Pre-multiply each hypothesis by (1-Pd)^N_tgt
+     for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
+         it != tracks.end(); it++) {
+          it->set_prob( it->prob() * pow(1-Pd_,N_tgt_));
+     }
+     
+     vertex_t root = boost::add_vertex(graph_);
+     graph_[root].set_id(-1);
+     graph_[root].set_prob(1, true);  
+     graph_[root].mht_type = wb::Entity::root;     
+     
      cout << "N_tgt: " << N_tgt_ << endl;
      cout << "Pd: " << Pd_ << endl;
      cout << "B_ft_" << B_ft_ << endl;
      cout << "B_nt_" << B_nt_ << endl;
      
      // Expand each hypothesis based on received measurements          
-     for (std::list<vertex_t>::iterator it = prev_hyps_.begin(); 
-          it != prev_hyps_.end(); it++) {
-          std::vector<wb::Blob> meas_copy = meas;
-          std::vector<wb::Blob> tracks_copy = tracks;
-          
-          std::vector<wb::Blob>::iterator it_meas = meas_copy.begin();
-          std::vector<wb::Blob>::iterator it_tracks = tracks_copy.begin();
-          build_tree(*it, it_meas, meas_copy, tracks_copy, next_mht_id_);
-     }
+     std::vector<wb::Blob>::iterator it_meas = meas.begin();
+     build_tree(root, it_meas, meas, tracks, next_mht_id_);
 
      // Calculate sum of hyp probabilities for normalization
      double hyp_sum = 0;
@@ -691,59 +795,45 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
           it != hyps_.end(); it++) {
           hyp_sum += graph_[*it].prob();
      }
+     cout << "Prob Sum: " << hyp_sum << endl;
           
      // Normalize all probabilities, remove low prob hyps
-     {
-          int new_targets = 0;
-          int hyps_size = hyps_.size();
+     int new_targets = 0;
+     int hyps_size = hyps_.size();
           
-          std::list<vertex_t>::iterator it = hyps_.begin(); 
-          while (it != hyps_.end()) {               
+     std::list<vertex_t>::iterator it = hyps_.begin(); 
+     while (it != hyps_.end()) {               
 
-               double new_prob = graph_[*it].prob() / hyp_sum;
-               graph_[*it].set_prob(new_prob,true);
+          double new_prob = graph_[*it].prob() / hyp_sum;
+          graph_[*it].set_prob(new_prob,true);
                
-               if (graph_[*it].mht_type == wb::Entity::nt) {
-                    new_targets++;
-               }
+          if (graph_[*it].mht_type == wb::Entity::nt) {
+               new_targets++;
+          }
                
-               //// Low prob hypothesis, remove it
-               //if (new_prob < 0.08) {
-               //     hyps_.erase(it++);
-               //} else {
-               // Add to fused tracks if it's not a FP
-               if (graph_[*it].mht_type != wb::Entity::fp) {
-                    fused.push_back(graph_[*it]);                    
-               }
-               ++it;
-               //}
-          }    
+          //// Low prob hypothesis, remove it
+          //if (new_prob < 0.08) {
+          //     hyps_.erase(it++);
+          //} else {
+          // Add to fused tracks if it's not a FP
+          if (graph_[*it].mht_type != wb::Entity::fp) {
+               fused.push_back(graph_[*it]);                    
+          }
+          ++it;
+          //}
+     }    
           
-          B_nt_ = (double)new_targets / (double)hyps_size;          
-     }
-     
+     B_nt_ = (double)new_targets / (double)hyps_size;          
+          
      cout << "Returning Fused Tracks: " << fused.size() << endl;
-
-     // copy over current hyps to next frame
-     prev_hyps_ = hyps_;
-
-     //// write graph to console
-     //cout << "\n-- graphviz output START --" << endl;
-     //boost::write_graphviz(std::cout, graph_,
-     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
-     //cout << "\n------------" << endl;
-     //
-     //std::ofstream dotfile ("/home/syllogismrxs/test.dot");
-     //boost::write_graphviz(dotfile, graph_,
-     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
-
+     
      std::ofstream dotfile ("/home/syllogismrxs/test.dot");
      boost::write_graphviz(dotfile, graph_,
                            make_vertex_writer(boost::get(&wb::Blob::mht_type, graph_), 
                                               boost::get(&wb::Blob::id_, graph_),
                                               boost::get(&wb::Blob::norm_prob_, graph_)));
-
 }
+
 
 void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                                    std::vector<wb::Blob> &tracks,
@@ -1358,13 +1448,13 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
           }
 
           if (flags & ERR_ELLIPSE) {
-               //Ellipse ell = it->error_ellipse(0.9973); // 3 std
+               Ellipse ell = it->error_ellipse(0.9973); // 3 std
                //Ellipse ell = it->error_ellipse(0.9545); // 2 std
-               Ellipse ell = it->error_ellipse(0.6827); // 1 std
-               cv::Point center = ell.center();
-               cv::Size axes(ell.axes()(0), ell.axes()(1));
+               //Ellipse ell = it->error_ellipse(0.6827); // 1 std
+               cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
+               cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                //The -angle is used because OpenCV defines the angle clockwise instead of anti-clockwise
-               cv::ellipse(dst, center, axes, -ell.angle(), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+               cv::ellipse(dst, center, axes, -cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
           }          
      }
 }

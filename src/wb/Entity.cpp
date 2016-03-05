@@ -85,6 +85,28 @@ namespace wb {
           kf_.setModel(A,B,H,Q,R);
      }
 
+     void Entity::set_R(double r)
+     {
+          Eigen::MatrixXf R;
+          R.resize(2,2);
+          
+          R << r, 0,
+               0, r;
+          kf_.set_R(R);
+     }
+
+     void Entity::set_P(double p)
+     {
+          Eigen::MatrixXf covar;
+          covar.resize(4,4);
+          
+          covar << p, 0, 0, 0,
+                   0, p, 0, 0,
+                   0, 0, p, 0,
+                   0, 0, 0, p;
+          kf_.set_P(covar);
+     }
+
      void Entity::init()
      {
           compute_metrics();
