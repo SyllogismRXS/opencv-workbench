@@ -36,7 +36,7 @@ int main(int argc, char * argv[]) {
      t1.init();
      t1.set_age(10);     
      t1.set_R(0);
-     t1.set_P(1500);
+     t1.set_P(3);
      t1.set_prob(1);
 
      tracks.push_back(t1);          
@@ -45,7 +45,7 @@ int main(int argc, char * argv[]) {
      wb::Blob m1;
      m1.set_id(11);     
      wb::Point p3;
-     p3.set_position(cv::Point(150,100));
+     p3.set_position(cv::Point(101,101));
      p3.set_value(255);
      m1.add_point(p3);
      m1.set_frame(10);
@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
      wb::Blob t2;
      t2.set_id(2);
      wb::Point p2;
-     p2.set_position(cv::Point(200,150));
+     p2.set_position(cv::Point(200,100));
      p2.set_value(255);
      t2.add_point(p2);
      t2.set_frame(10);
@@ -80,7 +80,7 @@ int main(int argc, char * argv[]) {
      t2.set_age(10);
      t2.set_R(0);
      t2.set_P(1500);  
-     t1.set_prob(2);
+     t1.set_prob(1);
 
      tracks.push_back(t1);
      tracks.push_back(t2);         

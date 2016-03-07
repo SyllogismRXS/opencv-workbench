@@ -68,12 +68,12 @@ namespace syllo {
 	  return 0;
      }
      
-     Eigen::MatrixXf KalmanFilter::state()
+     Eigen::MatrixXf KalmanFilter::state() const
      {
 	  return x_;
      }
      
-     Eigen::MatrixXf KalmanFilter::covariance()
+     Eigen::MatrixXf KalmanFilter::covariance() const
      {
 	  return P_;
      }
@@ -143,6 +143,6 @@ namespace syllo {
      Eigen::MatrixXf KalmanFilter::meas_covariance()
      {
           return H_ * P_ * H_.transpose() + R_;
-     }
+     }     
 }
 

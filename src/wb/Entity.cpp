@@ -22,6 +22,7 @@ namespace wb {
                         occluded_(false), is_tracked_(false), visited_(false), 
                         cluster_id_(0)
      {
+          matched_ = false;
           //KF_ = cv::KalmanFilter(4, 2, 0);
           //transition_matrix_ = cv::Mat_<float>(4,4);
           //transition_matrix_  << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1;

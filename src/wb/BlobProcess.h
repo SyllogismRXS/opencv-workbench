@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-01 17:07:59 syllogismrxs>
+/// Time-stamp: <2016-03-06 22:35:40 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -80,6 +80,18 @@ typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, wb::B
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
+
+class TracksHypothesis {
+public:
+     TracksHypothesis() : probability(0)
+     {          
+     }
+     std::vector<wb::Blob> tracks;
+     vertex_t node;
+     std::map<std::string,std::string> config; // "trackID:measurementID"
+     double probability;
+};
+
 ////////////////////////////
 class BlobProcess {
 public:          
@@ -105,7 +117,13 @@ public:
                      std::vector<wb::Blob>::iterator it_meas,
                      std::vector<wb::Blob> &meas, 
                      std::vector<wb::Blob> tracks,
+                     std::map<std::string,std::string> config,
                      int next_id);
+
+     //void build_hyp_matrix(std::vector<wb::Blob>::iterator it_meas,
+     //                      std::vector<wb::Blob> &meas, 
+     //                      std::vector<wb::Blob> tracks,
+     //                      int next_id);
      
      void overlay_blobs(cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> & blobs);
@@ -169,6 +187,8 @@ protected:
      double B_nt_;
      int N_tgt_;
 
+     std::list<TracksHypothesis> track_hyps_;
+     
      std::list<vertex_t> hyps_;
      std::list<vertex_t> prev_hyps_;
      

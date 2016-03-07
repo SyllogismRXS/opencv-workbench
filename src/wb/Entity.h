@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-01 21:06:52 syllogismrxs>
+/// Time-stamp: <2016-03-06 12:02:12 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -142,7 +142,7 @@ namespace wb {
           //void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}          
           //cv::KalmanFilter tracker() { return KF_; }
           void set_tracker(syllo::KalmanFilter kf) { kf_ = kf; }
-          syllo::KalmanFilter tracker() { return kf_; }
+          syllo::KalmanFilter &tracker() { return kf_; }
 
           void init();
           void predict_tracker();
