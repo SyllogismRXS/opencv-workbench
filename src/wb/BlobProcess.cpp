@@ -25,6 +25,9 @@
 #include <opencv_workbench/syllo/syllo.h>
 #include "BlobProcess.h"
 
+#include "munkres.h"
+#include "boostmatrixadapter.h"
+
 using std::cout;
 using std::endl;
 
@@ -923,6 +926,129 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
                                               boost::get(&wb::Blob::norm_prob_, graph_)));
 }
 
+void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas, 
+                                 std::vector<wb::Blob> &tracks,
+                                 std::vector<wb::Blob> &fused)
+{
+     // Create cost matrix using the euclidean distance between previous and
+     // current blob centroids
+     int meas_count = meas.size();
+     int tracks_count = tracks.size();
+
+     // Determine max of meas_count and tracks
+     int rows = -1, cols = -1;
+
+     int r_start = 0, r_end = 0;
+     int c_start = 0, c_end = 0;
+
+     if (meas_count == tracks_count) {
+          // Equal number of tracks and measurements
+          rows = cols = meas_count;
+     } else if (meas_count > tracks_count) {
+          // More measurements than tracks
+          rows = cols = meas_count;
+
+          r_start = 0;
+          r_end = rows;
+          c_start = tracks_count;
+          c_end = meas_count;
+     } else {
+          // More tracks than measurements
+          rows = cols = tracks_count;
+
+          r_start = meas_count;
+          r_end = tracks_count;
+          c_start = 0;
+          c_end = cols;
+     }
+
+     Matrix<double> matrix(rows, cols);
+  
+     // New blob measurements are along the Y-axis (left hand side)
+     // Old Blob tracks are along x-axis (top-side)
+     std::vector<wb::Blob>::iterator it = meas.begin();
+     int r = 0;
+     for(; it != meas.end(); it++) {
+          std::vector<wb::Blob>::iterator it_prev = tracks.begin();
+          int c = 0;
+          for (; it_prev != tracks.end(); it_prev++) {
+               cv::Point p1 = it->estimated_centroid(); //it->centroid();
+               cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
+               int dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
+
+               int curr_cost = dist;
+               if (curr_cost > 1000) {
+                    curr_cost = INT_MAX;
+               }
+
+               matrix(r,c) = curr_cost;
+                              
+               c++;
+          }
+          r++;
+     }
+
+     Munkres<double> m;
+     m.solve(matrix);
+
+     new_tracks_.clear();
+     // Use the assignment to update the old tracks with new blob measurement
+     r = 0;
+     it = meas.begin();
+     for(int r = 0; r < rows; r++) {
+          std::vector<wb::Blob>::iterator it_prev = tracks.begin();
+          for (int c = 0; c < cols; c++) {
+               if (matrix(r,c) == 0) {
+                    if (r < meas_count && c < tracks_count) {
+
+                         cv::Point p1 = it->estimated_centroid();//it->centroid();
+                         cv::Point p2 = it_prev->estimated_centroid(); //it->it_prev->centroid();
+                         double dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
+
+                         if (dist > 100) { // needs to be based off of covariance matrix
+                              // TOO MUCH OF A JUMP IN POSITION
+                              // Probably a missed track
+                              it_prev->missed_track();
+                              fused.push_back(*it_prev);
+
+                              // And a new track
+                              it->new_track(next_available_id());
+                              fused.push_back(*it);
+
+                              new_tracks_.push_back(*it);
+
+                         } else {
+                              // Found an assignment. Update the new measurement
+                              // with the track ID and age of older track. Add
+                              // to fused vector
+                              it->matched_track(*it_prev);
+                              fused.push_back(*it);
+                         }
+                    } else if (r >= meas_count) {
+                         it_prev->missed_track();
+                         fused.push_back(*it_prev);
+                    } else if (c >= tracks_count) {
+                         // Possible new track
+                         it->new_track(next_available_id());
+                         fused.push_back(*it);
+
+                         new_tracks_.push_back(*it);
+                    }
+                    break; // There is only one assignment per row
+               }
+               if (c < tracks_count-1) {
+                    it_prev++;
+               }
+          }
+          if (r < meas_count-1) {
+               it++;
+          }
+     }
+
+
+
+     
+}
 
 void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                                    std::vector<wb::Blob> &tracks,

@@ -1,6 +1,11 @@
 OpenCV Workbench
 --------------------
 
+Requires:
+https://github.com/saebyn/munkres-cpp
+git clone https://github.com/saebyn/munkres-cpp.git
+
+
 Installation
 --------------------
 

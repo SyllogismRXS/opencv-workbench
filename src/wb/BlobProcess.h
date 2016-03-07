@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-06 22:35:40 syllogismrxs>
+/// Time-stamp: <2016-03-07 18:07:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -108,6 +108,10 @@ public:
      void assign_hungarian(std::vector<wb::Blob> &meas, 
                            std::vector<wb::Blob> &tracks,
                            std::vector<wb::Blob> &fused);
+
+     void assign_munkres(std::vector<wb::Blob> &meas, 
+                         std::vector<wb::Blob> &tracks,
+                         std::vector<wb::Blob> &fused);
 
      void assign_mht(std::vector<wb::Blob> &meas, 
                      std::vector<wb::Blob> &tracks,
