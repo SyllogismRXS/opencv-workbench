@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
           // Run Kalman Filter on all tracks          
           for(std::vector<wb::Blob>::iterator it_tracks = tracks.begin(); 
               it_tracks != tracks.end(); it_tracks++) {
-               if (it_tracks->is_tracked()) {
+               if (it_tracks->is_confirmed()) {
                     it_tracks->predict_tracker();
                }
           }                   
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
 
                          wb::Blob blob;
                          blob.set_id(it_ent->id());
-                         blob.set_undistorted_centroid(cv::Point2f(x,y));
+                         blob.set_centroid(cv::Point2d(x,y));
                          wb::Point p;
                          p.set_position(blob_pos);
                          p.set_value(255);
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
                     } else {
                          Eigen::MatrixXf Zm;
                          Zm.resize(2,1);
-                         Zm << measurements.back().centroid().x, measurements.back().centroid().y;
+                         Zm << measurements.back().pixel_centroid().x, measurements.back().pixel_centroid().y;
 
                          if(tracks.back().tracker().is_within_region(Zm,3)) {
                               cout << "In region!" << endl;

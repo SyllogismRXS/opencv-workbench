@@ -229,56 +229,57 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.frame_ents(frame_ents_);
      
      cv::Mat blob_img;     
-     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS);
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);     
      
-     cv::Mat short_lived;
-     blob_process_.overlay_short_lived(gray, short_lived);     
-      
-     cv::Mat blob_consolidate;
-     blob_process_.consolidate_tracks(gray, blob_consolidate);     
-     
-     cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
-      
-     // Add undistorted centroids and compute trajectory analysis
-     std::map<int, wb::Blob> tracks_frame;
-     std::vector<wb::Blob> blobs = blob_process_.blobs();
-     std::vector<wb::Blob>::iterator it = blobs.begin();
-     for (; it != blobs.end(); it++) {      
-          // Have to transform tracks from distorted cartesian
-          // to polar, then to undistorted cartesian
-          cv::Point p = it->estimated_centroid();
-           
-          double x, y;
-          if (stream_ != NULL && stream_->type() == syllo::SonarType) {           
-               double range = stream_->pixel_range(p.y, p.x); //row, col
-               double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180               
-               x = range*sin(bearing);
-               y = -range*cos(bearing);
-          } else {
-               x = p.x;
-               y = p.y;
-          }
-                      
-          it->set_undistorted_centroid(cv::Point2f(x,y));
-          it->set_frame(frame_number);
-           
-          tracks_history_[it->id()].push_back(*it);
-          tracks_frame[it->id()] = *it;                     
-     }    
-     
-     // Calculate Similarity between current tracks
-     traj_.trajectory_similarity(tracks_history_, frame_number, 
-                                 blob_consolidate, 0.017);
-     //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
-     //                                       blob_consolidate, 0.02);          
-     
-     //////////////////////////////////////////////////////////////
-     /// Diver Detections / Object Labelling
-     ////////////////////////////////////////////////////
-     blob_process_.displace_detect(params_->history_length,
-                                   params_->history_distance);
+     // cv::Mat short_lived;
+     // blob_process_.overlay_short_lived(gray, short_lived);     
+     //  
+     // cv::Mat blob_consolidate;
+     // blob_process_.consolidate_tracks(gray, blob_consolidate);     
+     // 
+     // cv::Mat original_rects = original.clone();
+     // blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
+     //  
+     // // Add undistorted centroids and compute trajectory analysis
+     // std::map<int, wb::Blob> tracks_frame;
+     // std::vector<wb::Blob> blobs = blob_process_.blobs();
+     // std::vector<wb::Blob>::iterator it = blobs.begin();
+     // for (; it != blobs.end(); it++) {      
+     //      // Have to transform tracks from distorted cartesian
+     //      // to polar, then to undistorted cartesian
+     //      cv::Point p = it->estimated_pixel_centroid();          
+     //       
+     //      double x, y;
+     //      if (stream_ != NULL && stream_->type() == syllo::SonarType) {           
+     //           double range = stream_->pixel_range(p.y, p.x); //row, col
+     //           double bearing = stream_->pixel_bearing(p.y, p.x) * 0.017453293; // pi/180               
+     //           x = range*sin(bearing);
+     //           y = -range*cos(bearing);
+     //      } else {
+     //           x = p.x;
+     //           y = p.y;
+     //      }
+     //                            
+     //      it->set_centroid(cv::Point2d(x,y));
+     //      it->set_frame(frame_number);
+     //       
+     //      tracks_history_[it->id()].push_back(*it);
+     //      tracks_frame[it->id()] = *it;                     
+     // }    
+     // 
+     // // Calculate Similarity between current tracks
+     // traj_.trajectory_similarity(tracks_history_, frame_number, 
+     //                             blob_consolidate, 0.017);
+     // //traj_.trajectory_similarity_track_diff(tracks_frame, frame_number, 
+     // //                                       blob_consolidate, 0.02);          
+     // 
+     // //////////////////////////////////////////////////////////////
+     // /// Diver Detections / Object Labelling
+     // ////////////////////////////////////////////////////
+     // blob_process_.displace_detect(params_->history_length,
+     //                               params_->history_distance);
      
      // Copy track detections to tracks_ object
      tracks_.clear(); // clear out the tracks from previous loop      
@@ -293,10 +294,10 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           cv::imshow("erode", erode);
           cv::imshow("Dilate", dilate);      
           cv::imshow("Blobs", blob_img);        
-          cv::imshow("Tracking Tracks",short_lived);
-          cv::imshow("Consolidate", blob_consolidate);      
-          cv::imshow("Tracks", original_rects);          
-          cv::imshow("Traj", blob_consolidate);
+          //cv::imshow("Tracking Tracks",short_lived);
+          //cv::imshow("Consolidate", blob_consolidate);      
+          //cv::imshow("Tracks", original_rects);          
+          //cv::imshow("Traj", blob_consolidate);
      }
      
      return 0;

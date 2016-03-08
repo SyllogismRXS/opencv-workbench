@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-06 12:02:12 syllogismrxs>
+/// Time-stamp: <2016-03-08 12:44:52 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -91,19 +91,22 @@ namespace wb {
           
           void compute_metrics();
 
-          cv::Point centroid();
-          cv::Point start_centroid();
-          void set_start_centroid(cv::Point start_centroid);          
-
+          cv::Point pixel_centroid() { return pixel_centroid_; }
+          cv::Point2d centroid() { return centroid_; }
+          
+          cv::Point start_pixel_centroid() { return start_pixel_centroid_; }
+          void set_start_pixel_centroid(cv::Point2d start_pixel_centroid) { start_pixel_centroid_ = start_pixel_centroid; }
+          
+          cv::Point2d start_centroid() { return start_centroid_; }
+          void set_start_centroid(cv::Point2d start_centroid) { start_centroid_ = start_centroid; }
+          
           cv::Rect rectangle();
           BoundingBox & bbox() { return bbox_; }
           void set_bbox(BoundingBox bbox) { bbox_ = bbox; }
 
-          void set_centroid(cv::Point p) { centroid_ = p; }
-          void set_undistorted_centroid(cv::Point2f p) { undistorted_centroid_ = p; }
-          cv::Point2f undistorted_centroid() { return undistorted_centroid_; }
-          //void set_rectangle(cv::Rect rect) { rectangle_ = rect; }
-
+          void set_centroid(cv::Point2d p) { centroid_ = p; }
+          void set_pixel_centroid(cv::Point p) { pixel_centroid_ = p; }
+          
           // Point related
           std::vector<wb::Point> & points() { return points_; }
           int size() { return points_.size(); }
@@ -122,8 +125,7 @@ namespace wb {
           
           int age() { return age_; }
           void set_age(int age);
-          bool is_visible();
-          bool is_tracked();
+          bool is_confirmed();
           bool is_dead();
 
           void new_track(int id);
@@ -136,7 +138,7 @@ namespace wb {
           void copy_meas_info(Entity &other);
           
           bool occluded() { return occluded_; }
-          void set_occluded(bool occluded) { occluded_ = occluded; }
+          void set_occluded(bool occluded);
           // TODO: reset occluded age at this point?
 
           //void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}          
@@ -147,8 +149,12 @@ namespace wb {
           void init();
           void predict_tracker();
           void correct_tracker();
-          cv::Point estimated_centroid();
-          void set_estimated_centroid(cv::Point p) {est_centroid_ = p;}
+          cv::Point estimated_pixel_centroid();
+          cv::Point2d estimated_centroid();
+          
+          void set_estimated_pixel_centroid(cv::Point p) {est_pixel_centroid_ = p;}
+          void set_estimated_centroid(cv::Point2d p) {est_centroid_ = p;}
+          
           Ellipse error_ellipse(double confidence);
           
           void set_matched(bool matched) { matched_ = matched; }
@@ -189,14 +195,18 @@ namespace wb {
           std::string name_;
           EntityType_t type_;
           std::vector<wb::Point> points_;
-          cv::Point centroid_;
-          cv::Point est_centroid_;
-          cv::Point2f undistorted_centroid_;
+          
+          cv::Point est_pixel_centroid_;          
+          cv::Point2d est_centroid_;          
+
+          cv::Point pixel_centroid_; // image (col,row) location
+          cv::Point2d centroid_;     // x/y coordinate in space
+          
           //cv::Rect rectangle_;
           int age_;
           int occluded_age_;
           bool occluded_;
-          bool is_tracked_;
+          bool is_confirmed_;
           BoundingBox bbox_;
 
           int frame_;
@@ -224,7 +234,8 @@ namespace wb {
 
           int cluster_id_;
 
-          cv::Point start_centroid_;          
+          cv::Point start_pixel_centroid_;          
+          cv::Point2d start_centroid_;          
           
           std::list<cv::Point2f> trail_;
           

@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-07 18:07:42 syllogismrxs>
+/// Time-stamp: <2016-03-08 12:38:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -53,11 +53,12 @@
 #include "Blob.h"
 
 typedef enum OverlayFlags {
-     BLOBS       = 1 << 0,
-     RECTS       = 1 << 1,
-     TRACKS      = 1 << 2,
-     IDS         = 1 << 3,
-     ERR_ELLIPSE = 1 << 4
+     BLOBS          = 1 << 0,
+     RECTS          = 1 << 1,
+     TRACKS         = 1 << 2,
+     IDS            = 1 << 3,
+     ERR_ELLIPSE    = 1 << 4,
+     CONFIRMED_ONLY = 1 << 5
 }OverlayFlags_t;
      
 inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)

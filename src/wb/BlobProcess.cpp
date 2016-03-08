@@ -110,7 +110,7 @@ void region_query(rtree_t &rtree, double eps, wb::Blob *b,
      std::list<value> returned_values;
 #if 0
      // Find nearest # of rectangles
-     point sought = point(b->centroid().x, b->centroid().y);
+     point sought = point(b->pixel_centroid().x, b->pixel_centroid().y);
      rtree.query(bgi::nearest(sought, 20), std::back_inserter(returned_values));
 #else
      // Find all elements within the rtree bounds
@@ -509,7 +509,7 @@ void delete_matrix(int **array, int rows, int cols)
 //               it2 != tracks.end(); it2++) {
 //
 //               Eigen::MatrixXf Zm; Zm.resize(2,1);
-//               Zm << it1->centroid().x, it1->centroid().y;
+//               Zm << it1->pixel_centroid().x, it1->pixel_centroid().y;
 //               if (it2->tracker().is_within_region(Zm,3)) {
 //                    // It is within the gate
 //               }
@@ -573,7 +573,7 @@ void BlobProcess::build_tree(vertex_t &vertex,
           // Has the track been matched to a measurement yet?
           if (!it->matched()) {
                Eigen::MatrixXf Zm; Zm.resize(2,1);
-               Zm << it_meas->centroid().x, it_meas->centroid().y;
+               Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
                if (it->tracker().is_within_region(Zm,3)) {
 
                     Eigen::MatrixXd u, cov;
@@ -938,28 +938,15 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
      // Determine max of meas_count and tracks
      int rows = -1, cols = -1;
 
-     int r_start = 0, r_end = 0;
-     int c_start = 0, c_end = 0;
-
      if (meas_count == tracks_count) {
           // Equal number of tracks and measurements
           rows = cols = meas_count;
      } else if (meas_count > tracks_count) {
           // More measurements than tracks
-          rows = cols = meas_count;
-
-          r_start = 0;
-          r_end = rows;
-          c_start = tracks_count;
-          c_end = meas_count;
+          rows = cols = meas_count;          
      } else {
           // More tracks than measurements
-          rows = cols = tracks_count;
-
-          r_start = meas_count;
-          r_end = tracks_count;
-          c_start = 0;
-          c_end = cols;
+          rows = cols = tracks_count;          
      }
 
      Matrix<double> matrix(rows, cols);
@@ -972,8 +959,8 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
           std::vector<wb::Blob>::iterator it_prev = tracks.begin();
           int c = 0;
           for (; it_prev != tracks.end(); it_prev++) {
-               cv::Point p1 = it->estimated_centroid(); //it->centroid();
-               cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
+               cv::Point p1 = it->estimated_pixel_centroid();
+               cv::Point p2 = it_prev->estimated_pixel_centroid();
                int dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
 
                int curr_cost = dist;
@@ -1001,8 +988,8 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                if (matrix(r,c) == 0) {
                     if (r < meas_count && c < tracks_count) {
 
-                         cv::Point p1 = it->estimated_centroid();//it->centroid();
-                         cv::Point p2 = it_prev->estimated_centroid(); //it->it_prev->centroid();
+                         cv::Point p1 = it->estimated_pixel_centroid();
+                         cv::Point p2 = it_prev->estimated_pixel_centroid();
                          double dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
 
                          if (dist > 100) { // needs to be based off of covariance matrix
@@ -1044,10 +1031,6 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                it++;
           }
      }
-
-
-
-     
 }
 
 void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
@@ -1102,8 +1085,8 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
           std::vector<wb::Blob>::iterator it_prev = tracks.begin();
           int c = 0;
           for (; it_prev != tracks.end(); it_prev++) {
-               cv::Point p1 = it->estimated_centroid(); //it->centroid();
-               cv::Point p2 = it_prev->estimated_centroid(); //it_prev->centroid();
+               cv::Point p1 = it->estimated_pixel_centroid(); //it->pixel_centroid();
+               cv::Point p2 = it_prev->estimated_pixel_centroid(); //it_prev->pixel_centroid();
                int dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
 
                //int p1_size = it->size();
@@ -1166,8 +1149,8 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
                if (assignment[r*cols + c] == 1) {
                     if (r < meas_count && c < tracks_count) {
 
-                         cv::Point p1 = it->estimated_centroid();//it->centroid();
-                         cv::Point p2 = it_prev->estimated_centroid(); //it->it_prev->centroid();
+                         cv::Point p1 = it->estimated_pixel_centroid();
+                         cv::Point p2 = it_prev->estimated_pixel_centroid();
                          double dist = round(pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2));
 
                          if (dist > 100) { // needs to be based off of covariance matrix
@@ -1233,14 +1216,13 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      //this->overlay_blobs(input,cluster_img);
      //overlay(input, cluster_img, RECTS | IDS);
      //cv::imshow("Clustered",cluster_img);
-
-     // First match blobs based on overlapping bounding boxes
+     
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
      //////////////////////////////////////////////////////////////////////////
      std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
      for(; it != prev_blobs_.end(); it++) {
-          if (it->is_tracked()) {
+          if (it->is_confirmed()) {
                it->predict_tracker();
           }
      }
@@ -1248,7 +1230,8 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      blobs_.clear();
 
      // This has some bug that crashes with too many blobs
-     this->assign_hungarian(frame_blobs_, prev_blobs_, blobs_);
+     //this->assign_hungarian(frame_blobs_, prev_blobs_, blobs_);
+     this->assign_munkres(frame_blobs_, prev_blobs_, blobs_);
 
      blob_maintenance();
 
@@ -1541,7 +1524,7 @@ bool BlobProcess::cluster_blobs(cv::Mat &in, cv::Mat &out,
                          ymax = (*it2)->bbox().ymax();
                     }
                }
-               b.set_centroid(cv::Point(cvRound((xmax-xmin)/2.0),cvRound((ymax-ymin)/2.0)));
+               b.set_pixel_centroid(cv::Point(cvRound((xmax-xmin)/2.0),cvRound((ymax-ymin)/2.0)));
                b.set_bbox(BoundingBox(xmin,xmax,ymin,ymax));
                clusters.push_back(b);
           }
@@ -1571,7 +1554,7 @@ void BlobProcess::overlay_blobs(cv::Mat &src, cv::Mat &dst,
                dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = point_color;
           }
 
-          cv::Point centroid_point = it->centroid();
+          cv::Point centroid_point = it->pixel_centroid();
           cv::Rect rect = it->bbox().rectangle();
 
           std::ostringstream convert;
@@ -1627,6 +1610,12 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for(; it != blobs_.end(); it++) {
 
+          if ((flags & CONFIRMED_ONLY) && !it->is_confirmed()) {
+               // If we are only plotting confirmed tracks and it's not
+               // confirmed, ignore this track/blob.
+               continue;
+          }
+          
           if (flags & BLOBS) {
                cv::Vec3b point_color = cv::Vec3b(20,255,57);
                if (it->occluded()) {
@@ -1640,10 +1629,7 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
                     dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = point_color;
                }
           }
-
-          //cv::Point centroid_point = it->centroid();
-          //cv::circle(dst, centroid_point, 1, cv::Scalar(255,255,255), -1, 8, 0);
-
+         
           cv::Rect rect = it->bbox().rectangle();
 
           if (flags & RECTS) {
@@ -1658,7 +1644,7 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
           }
 
           if (flags & TRACKS) {
-               cv::Point est_centroid = it->estimated_centroid();
+               cv::Point est_centroid = it->estimated_pixel_centroid();
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
           }
 
@@ -1682,8 +1668,8 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      dst = src.clone();
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for (; it != blobs_.end(); it++) {
-          if (it->is_tracked()) {
-               cv::Point est_centroid = it->estimated_centroid();
+          if (it->is_confirmed()) {
+               cv::Point est_centroid = it->estimated_pixel_centroid();
                //cv::Rect rect = (*it)->rectangle();
 
                std::ostringstream convert;
@@ -1702,8 +1688,8 @@ bool BlobProcess::displace_detect(int history, double distance)
 
      for (std::vector<wb::Blob>::iterator it = blobs_.begin();
           it != blobs_.end(); it++) {
-          if (it->is_tracked()) {
-               if (wb::distance(it->centroid(),it->trail_history(history)) > distance) { //30, 15
+          if (it->is_confirmed()) {
+               if (wb::distance(it->pixel_centroid(),it->trail_history(history)) > distance) { //30, 15
                     it->set_type(wb::Entity::Diver);
                } else {
                     it->set_type(wb::Entity::Unknown);
@@ -1729,6 +1715,9 @@ void BlobProcess::blobs_to_entities(std::vector<wb::Blob> &blobs,
           track.set_type(it->type());
           track.set_centroid(it->centroid());
           track.set_estimated_centroid(it->estimated_centroid());
+
+          track.set_pixel_centroid(it->pixel_centroid());
+          track.set_estimated_pixel_centroid(it->estimated_pixel_centroid());
 
           ents.push_back(track);
      }

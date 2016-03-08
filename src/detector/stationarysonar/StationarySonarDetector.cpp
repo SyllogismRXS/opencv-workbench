@@ -151,7 +151,7 @@ int StationarySonarDetector::set_frame(int frame_number, const cv::Mat &original
       
           // Have to transform tracks from distorted cartesian
           // to polar, then to undistorted cartesian
-          cv::Point p = it->estimated_centroid();
+          cv::Point p = it->pixel_centroid();
            
           double x, y;
           if (stream_ != NULL && stream_->type() == syllo::SonarType) {           
@@ -164,7 +164,7 @@ int StationarySonarDetector::set_frame(int frame_number, const cv::Mat &original
                y = p.y;
           }
                       
-          it->set_undistorted_centroid(cv::Point2f(x,y));
+          it->set_centroid(cv::Point2d(x,y));
           it->set_frame(frame_number);
           
           tracks_history_[it->id()].push_back(*it);

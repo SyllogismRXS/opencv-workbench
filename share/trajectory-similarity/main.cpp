@@ -27,7 +27,7 @@ void trajectory_diff(std::vector<wb::Entity> &traj,
                      std::vector<cv::Point2d> &diffs)
 {
      std::vector<wb::Entity>::reverse_iterator it = traj.rbegin();
-     cv::Point prev;
+     cv::Point2d prev;
      for(; it != traj.rend(); it++) {
           if (it == traj.rbegin()) {
                prev = it->centroid();
@@ -109,11 +109,11 @@ void trajectory_polar_diff(std::vector<wb::Entity> &traj,
      cv::Point2d prev;
      for(; it != traj.rend(); it++) {
           if (it == traj.rbegin()) {
-               prev = it->undistorted_centroid();
+               prev = it->centroid();
                continue;
           }
 
-          cv::Point2d p = it->undistorted_centroid();
+          cv::Point2d p = it->centroid();
 
           // Convert to polar
           double range = sqrt( pow(p.x,2) + pow(p.y,2) );
@@ -140,7 +140,7 @@ void trajectory_polar_diff(std::vector<wb::Entity> &traj,
                    
           diffs.push_back(temp);          
                
-          prev = it->undistorted_centroid();
+          prev = it->centroid();
      }
 }
 
@@ -237,12 +237,12 @@ int main(int argc, char *argv[])
           
                e1.set_name(t1_str);
                e1.set_centroid(*it_1);
-               e1.set_undistorted_centroid(*it_1);
+               e1.set_pixel_centroid(*it_1);
 
                wb::Entity e2;
                e2.set_name(t2_str);
                e2.set_centroid(*it_2);
-               e2.set_undistorted_centroid(*it_2);
+               e2.set_pixel_centroid(*it_2);
 
                t1.push_back(e1);
                t2.push_back(e2);

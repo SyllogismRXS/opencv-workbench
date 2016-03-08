@@ -9,17 +9,14 @@
 using std::cout;
 using std::endl;
 
-#define MAX_AGE 10
-#define VISIBLE_AGE 5
-#define START_TRACK_AGE 5
-#define MIN_AGE -2
-#define DEAD_OCCLUDED_AGE 10
+#define CONFIRMED_AGE 3
+#define DEAD_OCCLUDED_AGE 5
 
 namespace wb {
 
      Entity::Entity() : id_(-1), name_("unknown:-1"), 
                         type_(Unknown), age_(0), occluded_age_(0), 
-                        occluded_(false), is_tracked_(false), visited_(false), 
+                        occluded_(false), is_confirmed_(false), visited_(false), 
                         cluster_id_(0)
      {
           matched_ = false;
@@ -112,22 +109,12 @@ namespace wb {
      {
           compute_metrics();
 
-          //KF_.statePre.at<float>(0) = centroid_.x;
-          //KF_.statePre.at<float>(1) = centroid_.y;
-          //KF_.statePre.at<float>(2) = 0;
-          //KF_.statePre.at<float>(3) = 0;
-          //cv::setIdentity(KF_.measurementMatrix);
-          //cv::setIdentity(KF_.processNoiseCov, cv::Scalar::all(1e-3));
-          ////cv::setIdentity(KF_.measurementNoiseCov, cv::Scalar::all(10));
-          //cv::setIdentity(KF_.measurementNoiseCov, cv::Scalar::all(.01));
-          //cv::setIdentity(KF_.errorCovPost, cv::Scalar::all(.1));
-
-          x0 << centroid_.x,
-                centroid_.y,
+          x0 << pixel_centroid_.x,
+                pixel_centroid_.y,
                 0,
                 0;
 
-          start_centroid_ = centroid_;
+          start_pixel_centroid_ = pixel_centroid_;
 
           kf_.init(x0, covar);
      }
@@ -147,21 +134,22 @@ namespace wb {
           return result;
      }
 
-     cv::Point Entity::start_centroid()
-     {
-          return start_centroid_;
-     }
-
-     void Entity::set_start_centroid(cv::Point start_centroid)
-     {
-          start_centroid_ = start_centroid;
-     }
-
-     cv::Point Entity::estimated_centroid()
+     cv::Point Entity::estimated_pixel_centroid()
      {
           // the Kalman filter's estimate centroid. Otherwise, use the entity's
-          // current centroid if it isn't tracked yet
-          if (this->is_tracked()) {               
+          // current centroid if it isn't confirmed yet
+          if (this->is_confirmed()) {               
+               return est_pixel_centroid_;
+          } else {
+               return pixel_centroid_;
+          }
+     }
+
+     cv::Point2d Entity::estimated_centroid()
+     {
+          // the Kalman filter's estimate centroid. Otherwise, use the entity's
+          // current centroid if it isn't confirmed yet
+          if (this->is_confirmed()) {               
                return est_centroid_;
           } else {
                return centroid_;
@@ -182,27 +170,21 @@ namespace wb {
           u << 0,0;
           kf_.predict(u);
           state = kf_.state();
-          est_centroid_ = cv::Point(cvRound(state(0,0)),cvRound(state(1,0)));
+          est_pixel_centroid_ = cv::Point(cvRound(state(0,0)),cvRound(state(1,0)));
      }
 
      void Entity::correct_tracker()
      {          
-          //cv::Mat_<float> measurement(2,1);
-          //measurement(0) = centroid_.x;
-          //measurement(1) = centroid_.y;
-          //cv::Mat estimated = KF_.correct(measurement);
-
           // correct tracker update using the newly computed centroid.
-          z << centroid_.x, centroid_.y;
+          z << pixel_centroid_.x, pixel_centroid_.y;
           kf_.update(z);
           state = kf_.state();
-          //est_centroid_ = cv::Point(estimated.at<float>(0),estimated.at<float>(1));
-          est_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));
+          est_pixel_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));
      }
 
      void Entity::update_trail()
      {
-          trail_.push_back(estimated_centroid());
+          trail_.push_back(estimated_pixel_centroid());
      }
 
      void Entity::compute_metrics()
@@ -242,78 +224,49 @@ namespace wb {
           double avg_x = (double)sum_x / (double)sum_value;
           double avg_y = (double)sum_y / (double)sum_value;
 
-          centroid_ = cv::Point(round(avg_x), round(avg_y));
-          est_centroid_ = centroid_;
+          pixel_centroid_ = cv::Point(round(avg_x), round(avg_y));
+          est_pixel_centroid_ = pixel_centroid_;
 
           // +1's to account for slight error in rectangle drawing?
           //bbox_ = cv::Rect rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);
-          bbox_.set_box(xmin, xmax+1, ymin, ymax+1);
-
-          //rectangle_ = cv::Rect();
-     }
-
-     cv::Point Entity::centroid()
-     {
-          return centroid_;
+          bbox_.set_box(xmin, xmax+1, ymin, ymax+1);          
      }
 
      cv::Rect Entity::rectangle()
      {
-          //return rectangle_;
           return bbox_.rectangle();
-     }
+     }     
 
-     bool Entity::is_visible()
+     bool Entity::is_confirmed()
      {
-          if (age_ > VISIBLE_AGE) {
+          if (is_confirmed_) return true;
+
+          if (age_ >= CONFIRMED_AGE) {
+               is_confirmed_ = true;
                return true;
           } else {
-               return false;
-          }
-     }
-
-     bool Entity::is_tracked()
-     {
-          if (is_tracked_) return true;
-
-          if (age_ > START_TRACK_AGE) {
-               is_tracked_ = true;
-               return true;
-          } else {
-               is_tracked_ = false;
+               is_confirmed_ = false;
                return false;
           }
      }
 
      bool Entity::is_dead()
      {
-          if (occluded_age_ > DEAD_OCCLUDED_AGE) {
+          if (occluded_age_ >= DEAD_OCCLUDED_AGE) {
                return true;
           } else {
                return false;
-          }
-
-          //if (age_ < MIN_AGE) {
-          //     return true;
-          //} else {
-          //     return false;
-          //}
+          }          
      }
 
      void Entity::inc_age()
      {
-          age_++;
-          //if (age_ > MAX_AGE) {
-          //     age_ = MAX_AGE;
-          //}
+          age_++;          
      }
 
      void Entity::set_age(int age)
      {
-          age_ = age;
-          //if (age_ > MAX_AGE) {
-          //     age_ = MAX_AGE;
-          //}
+          age_ = age;          
      }
 
      void Entity::dec_age()
@@ -343,13 +296,22 @@ namespace wb {
           this->set_occluded(false);
      }
 
+     void Entity::set_occluded(bool occluded) 
+     {
+          occluded_ = occluded; 
+          if (!occluded_) {
+               this->set_occluded_age(0);
+          }
+     }
+
      void Entity::copy_track_info(Entity &other)
      {
           this->set_id(other.id());
-          this->set_age(other.age());
-          //this->set_centroid(other.centroid());
+          this->set_age(other.age());          
+          this->set_estimated_pixel_centroid(other.estimated_pixel_centroid());
           this->set_estimated_centroid(other.estimated_centroid());
           this->set_start_centroid(other.start_centroid());
+          this->set_start_pixel_centroid(other.start_pixel_centroid());
           this->set_tracker(other.tracker());
           this->trail_ = other.trail_;
      }
@@ -357,6 +319,7 @@ namespace wb {
      void Entity::copy_meas_info(Entity &other)
      {
           this->centroid_ = other.centroid();
+          this->pixel_centroid_ = other.pixel_centroid();
           this->bbox_ = other.bbox();
      }
 

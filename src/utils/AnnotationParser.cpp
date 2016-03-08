@@ -399,12 +399,12 @@ void AnnotationParser::write_header()
                object_node->append_node(centroid_node);
 
                // "x" position node
-               char * x = doc.allocate_string(syllo::double2str(object_it->second.undistorted_centroid().x).c_str());
+               char * x = doc.allocate_string(syllo::double2str(object_it->second.centroid().x).c_str());
                xml_node<> *x_node = doc.allocate_node(node_element, "x", x);
                centroid_node->append_node(x_node);
 
                // "y" position node
-               char * y = doc.allocate_string(syllo::double2str(object_it->second.undistorted_centroid().y).c_str());
+               char * y = doc.allocate_string(syllo::double2str(object_it->second.centroid().y).c_str());
                xml_node<> *y_node = doc.allocate_node(node_element, "y", y);
                centroid_node->append_node(y_node);
                
@@ -748,7 +748,7 @@ int AnnotationParser::ParseFile(std::string file)
                     double x, y;
                     x = syllo::str2double(centroid->first_node("x")->value());
                     y = syllo::str2double(centroid->first_node("y")->value());                    
-                    object.set_undistorted_centroid(cv::Point2d(x,y));
+                    object.set_centroid(cv::Point2d(x,y));
                }
                
                positive_sample_count_++;
@@ -894,7 +894,7 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
                     // Push the point onto the appropriate points vector
                     //points[it_obj->first].push_back(it_obj->second.bbox().centroid());
                     //points[it_obj->first].push_back(it_obj->second.centroid());
-                    points[it_obj->first].push_back(it_obj->second.undistorted_centroid());
+                    points[it_obj->first].push_back(it_obj->second.centroid());
                }     
           }          
      }

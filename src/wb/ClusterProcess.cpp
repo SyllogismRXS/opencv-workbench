@@ -119,7 +119,7 @@ void ClusterProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      dst = src.clone();
      std::list<wb::Cluster*>::iterator it = clusters_.begin();
      for (; it != clusters_.end(); it++) {
-          if ((*it)->is_visible()) {
+          if ((*it)->is_confirmed()) {
                cv::Point est_centroid = (*it)->estimated_centroid();
                //cv::Rect rect = (*it)->rectangle();
                
@@ -314,7 +314,7 @@ void ClusterProcess::process_frame(cv::Mat &src)
      //////////////////////////////////////////////////////////////////////////
      std::list<wb::Cluster*>::iterator it_prev = prev_clusters_.begin();
      for(; it_prev != prev_clusters_.end(); it_prev++) {
-          if ((*it_prev)->is_visible()) {
+          if ((*it_prev)->is_confirmed()) {
                (*it_prev)->predict_tracker();
           }
      }

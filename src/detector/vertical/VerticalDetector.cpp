@@ -90,11 +90,11 @@ void VerticalDetector::trajectory_polar_diff(std::list<wb::Entity> &traj,
      cv::Point2d prev;
      for(; it != traj.rend(); it++) {
           if (it == traj.rbegin()) {
-               prev = it->undistorted_centroid();
+               prev = it->centroid();
                continue;
           }
      
-          cv::Point2d p = it->undistorted_centroid();
+          cv::Point2d p = it->centroid();
      
           // Convert to polar
           double range = sqrt( pow(p.x,2) + pow(p.y,2) );
@@ -114,7 +114,7 @@ void VerticalDetector::trajectory_polar_diff(std::list<wb::Entity> &traj,
                    
           diffs.push_back(temp);          
                
-          prev = it->undistorted_centroid();
+          prev = it->centroid();
      }
 }
 
@@ -162,7 +162,7 @@ void VerticalDetector::trajectory_similarity(int frame_number, cv::Mat &img)
                // Clear out track IDs that are dead
                tracks_history_.erase(it++);
           } else {
-               if (it->second.back().is_tracked()) {
+               if (it->second.back().is_confirmed()) {
                     //cout << "Tracked: " << it->first << endl;
                     // Compute derivative of each current track's trajectory
                     trajectory_polar_diff(it->second, trajectories[it->first]);                    
@@ -219,8 +219,8 @@ void VerticalDetector::trajectory_similarity(int frame_number, cv::Mat &img)
           // circle the trajectories
           if (it->second.RMSE < 0.017) {
                // Get the two IDs in the track history and circle them
-               cv::Point p1 = tracks_history_[it->second.ID1].back().centroid();
-               cv::Point p2 = tracks_history_[it->second.ID2].back().centroid();
+               cv::Point p1 = tracks_history_[it->second.ID1].back().pixel_centroid();
+               cv::Point p2 = tracks_history_[it->second.ID2].back().pixel_centroid();
                
                //cv::circle(img, p1, 10, cv::Scalar(0,255,255), 1, 8, 0);
                //cv::circle(img, p2, 10, cv::Scalar(0,255,255), 1, 8, 0);
@@ -403,7 +403,7 @@ int VerticalDetector::set_frame(int frame_number, const cv::Mat &original)
 
            // Have to transform tracks from distorted cartesian
            // to polar, then to undistorted cartesian
-           cv::Point p = it->estimated_centroid();
+           cv::Point p = it->pixel_centroid();
 
            double x, y;
            if (stream_->type() == syllo::SonarType) {           
@@ -416,8 +416,7 @@ int VerticalDetector::set_frame(int frame_number, const cv::Mat &original)
                 y = p.y;
            }
            
-           //it->set_undistorted_centroid(cv::Point2f(p.x,p.y));
-           it->set_undistorted_centroid(cv::Point2f(x,y));
+           it->set_centroid(cv::Point2d(x,y));
            it->set_frame(frame_number);
            
            //tracks_history_[it->id()].push_back((wb::Entity)*it);

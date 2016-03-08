@@ -58,11 +58,11 @@ void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Blob> &traj,
      cv::Point2d prev;
      for(; it != traj.rend(); it++) {
           if (it == traj.rbegin()) {
-               prev = it->undistorted_centroid();
+               prev = it->centroid();
                continue;
           }
      
-          cv::Point2d p = it->undistorted_centroid();          
+          cv::Point2d p = it->centroid();          
      
           // Convert to polar
           double range = sqrt( pow(p.x,2) + pow(p.y,2) );
@@ -82,7 +82,7 @@ void TrajectoryAnalysis::trajectory_polar_diff(std::list<wb::Blob> &traj,
                    
           diffs.push_back(temp);          
                
-          prev = it->undistorted_centroid();
+          prev = it->centroid();
      }
 }
 
@@ -136,8 +136,8 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
                traj_avgs_[key].ID1 = avg.ID1;
                traj_avgs_[key].ID2 = avg.ID2;
                
-               cv::Point2d p1 = it_1->second.undistorted_centroid();
-               cv::Point2d p2 = it_2->second.undistorted_centroid();
+               cv::Point2d p1 = it_1->second.centroid();
+               cv::Point2d p2 = it_2->second.centroid();
 
                Polar polar1 = Polar::cart2polar(p1);
                Polar polar2 = Polar::cart2polar(p2);
@@ -150,8 +150,8 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
 
                
                
-               if (simulated_ || (it_1->second.is_tracked() && 
-                                  it_2->second.is_tracked())) {
+               if (simulated_ || (it_1->second.is_confirmed() && 
+                                  it_2->second.is_confirmed())) {
                     
                     double diff_avg = traj_avgs_[key].diff_sum / (double)traj_avgs_[key].count;
                     double abs_diff = std::abs(diff-diff_avg);
@@ -163,8 +163,8 @@ void TrajectoryAnalysis::trajectory_similarity_track_diff(std::map<int, wb::Blob
                     cout << "Value: " << abs_diff << endl;
 #endif                                           
                     if (abs_diff < threshold) {
-                         cv::Point c1 = it_1->second.centroid();
-                         cv::Point c2 = it_2->second.centroid();
+                         cv::Point c1 = it_1->second.pixel_centroid();
+                         cv::Point c2 = it_2->second.pixel_centroid();
                          if (img.channels() == 1) {
                               cv::line(img, c1, c2, 0, 1, 8, 0);
                          } else {
@@ -189,7 +189,7 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob>
                // Clear out track IDs that are dead
                tracks_history.erase(it++);
           } else {
-               if (it->second.back().is_tracked() || simulated_) {                    
+               if (it->second.back().is_confirmed() || simulated_) {                    
                     // Compute derivative of each current track's trajectory
                     trajectory_polar_diff(it->second, trajectories[it->first]);                    
                }
@@ -246,8 +246,8 @@ void TrajectoryAnalysis::trajectory_similarity(std::map<int, std::list<wb::Blob>
           // circle the trajectories
           if (it->second.RMSE < RMSE_threshold) { // 0.017
                // Get the two IDs in the track history and circle them
-               cv::Point p1 = tracks_history[it->second.ID1].back().centroid();
-               cv::Point p2 = tracks_history[it->second.ID2].back().centroid();
+               cv::Point p1 = tracks_history[it->second.ID1].back().pixel_centroid();
+               cv::Point p2 = tracks_history[it->second.ID2].back().pixel_centroid();
                
                //cv::circle(img, p1, 10, cv::Scalar(0,255,255), 1, 8, 0);
                //cv::circle(img, p2, 10, cv::Scalar(0,255,255), 1, 8, 0);
