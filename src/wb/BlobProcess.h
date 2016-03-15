@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-08 12:38:14 syllogismrxs>
+/// Time-stamp: <2016-03-14 23:09:09 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -49,6 +49,8 @@
 
 #include <boost/graph/adjacency_list.hpp> 
 #include <boost/graph/graphviz.hpp>
+
+#include <opencv_workbench/utils/Stream.h>
 
 #include "Blob.h"
 
@@ -105,6 +107,10 @@ public:
 
      void find_clusters(cv::Mat &input, std::vector<wb::Blob> &clusters, 
                             unsigned int min_cluster_size);
+     
+     void assign_gate_aggregate(std::vector<wb::Blob> &meas, 
+                                std::vector<wb::Blob> &tracks,
+                                std::vector<wb::Blob> &fused);
 
      void assign_hungarian(std::vector<wb::Blob> &meas, 
                            std::vector<wb::Blob> &tracks,
@@ -160,6 +166,8 @@ public:
      { 
           BlobProcess::blobs_to_entities(frame_blobs_, frame_ents);
      }     
+
+     void set_stream(syllo::Stream *stream) { stream_ = stream; }
      
 protected:
      
@@ -196,6 +204,8 @@ protected:
      
      std::list<vertex_t> hyps_;
      std::list<vertex_t> prev_hyps_;
+
+     syllo::Stream * stream_;
      
 private:
      int count_;

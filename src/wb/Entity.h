@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-08 12:44:52 syllogismrxs>
+/// Time-stamp: <2016-03-14 21:32:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -49,6 +49,7 @@
 #include <opencv_workbench/wb/Point.h>
 #include <opencv_workbench/track/KalmanFilter.h>
 #include <opencv_workbench/utils/Ellipse.h>
+#include <opencv_workbench/utils/Stream.h>
 
 namespace wb {
 
@@ -189,6 +190,8 @@ namespace wb {
 
           void set_R(double r);
           void set_P(double p);
+
+          void set_stream(syllo::Stream *stream) { stream_ = stream; }
           
      protected:          
           bool prob_is_set_;
@@ -210,7 +213,7 @@ namespace wb {
           BoundingBox bbox_;
 
           int frame_;
-
+          
           int matched_id_;          
 
           //cv::KalmanFilter KF_;
@@ -240,7 +243,9 @@ namespace wb {
           std::list<cv::Point2f> trail_;
           
           void set_distance(float distance) { distance_ = distance; }
-          float distance() { return distance_; }              
+          float distance() { return distance_; }   
+
+          syllo::Stream *stream_;
 
      private:
      };

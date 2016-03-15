@@ -70,7 +70,8 @@ int main(int argc, char *argv[])
      int step_flag = 0;
      int c;
      //std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/sonar-avi/2014-01-24-ME-sonar-only-diver/2014_01_24_15_24_06.avi";
-     std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
+     //std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_29-Walking-Habitat/2015_07_29_13_28_17-hab-diver-fish.son";
+     std::string video_filename = "/home/syllogismrxs/Documents/Thesis/data/NEEMO/neemo-sonar/2015_07_25-Walking-Swimming-Habitat/2015_07_25_13_37_06.son";
      std::string plugin_name = "relative_detector";
      std::string xml_output_dir = "";
      std::string yaml_file = "";     

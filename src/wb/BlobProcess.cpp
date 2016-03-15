@@ -343,6 +343,7 @@ void BlobProcess::find_clusters(cv::Mat &input,
                     it2 != it1->second.end(); it2++) {
                     b.add_point(*(*it2));
                }
+               b.set_stream(stream_);
                b.init();
                clusters.push_back(b);
                blob_id++;
@@ -456,6 +457,7 @@ void BlobProcess::find_blobs(cv::Mat &input,
           // Only copy over blobs that are of a minimum size
           if (it_temp->second.size() >= min_blob_size) {
                it_temp->second.set_id(id++);
+               it_temp->second.set_stream(stream_);
                it_temp->second.init();
                blobs.push_back(it_temp->second);
           }
@@ -924,6 +926,13 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
                            make_vertex_writer(boost::get(&wb::Blob::mht_type, graph_),
                                               boost::get(&wb::Blob::id_, graph_),
                                               boost::get(&wb::Blob::norm_prob_, graph_)));
+}
+
+void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas, 
+                                        std::vector<wb::Blob> &tracks,
+                                        std::vector<wb::Blob> &fused)
+{
+     
 }
 
 void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas, 
@@ -1615,6 +1624,11 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
                // confirmed, ignore this track/blob.
                continue;
           }
+          
+          //cout << "-------" << endl;
+          //cout << "ID: " << it->id() << endl;
+          //cout << "Est Centroid: " << it->estimated_centroid() << endl;
+          //cout << "Est Pixel Centroid: " << it->estimated_pixel_centroid() << endl;
           
           if (flags & BLOBS) {
                cv::Vec3b point_color = cv::Vec3b(20,255,57);

@@ -54,6 +54,7 @@ void RelativeDetector::print()
 void RelativeDetector::set_stream(syllo::Stream *stream)
 {
      stream_ = stream;
+     blob_process_.set_stream(stream);
 }
 
 void RelativeDetector::color_conversion(const cv::Mat &src, cv::Mat &dst)

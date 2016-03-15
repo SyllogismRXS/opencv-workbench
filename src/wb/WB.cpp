@@ -22,6 +22,31 @@ namespace wb {
 
      #define PI 3.14159265359
 
+     void cartesian2polar(double x, double y, double &range, double &bearing)
+     {
+          range = sqrt( pow(x,2) + pow(y,2) );
+          bearing = atan2(y,x);
+     }
+
+     cv::Point2d rowcol2cartesian(syllo::Stream *stream, int r, int c)
+     {
+          // Get actual range and bearing
+          cv::Point2d point;
+          double range = stream->pixel_range(r,c); //row, col
+          double bearing = stream->pixel_bearing(r,c) * 0.017453293; // pi/180
+
+          point.x = range*sin(bearing);
+          point.y = range*cos(bearing);
+          return point;
+     }
+
+     cv::Point cartesian2rowcol(syllo::Stream *stream, cv::Point2d cart)
+     {
+          double range, bearing;
+          cartesian2polar(cart.x, cart.y, range, bearing);
+          return stream->get_pixel(range, bearing);
+     }
+     
      double gaussian_probability(Eigen::MatrixXd &x, 
                                  Eigen::MatrixXd &u, 
                                  Eigen::MatrixXd &cov)

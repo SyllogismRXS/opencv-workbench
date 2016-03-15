@@ -1,8 +1,9 @@
 #include <iostream>
-
+#include <limits.h>
 #include <boost/tokenizer.hpp>
 
 #include <opencv_workbench/syllo/syllo.h>
+#include <opencv_workbench/wb/WB.h>
 
 #include "Entity.h"
 
@@ -19,6 +20,10 @@ namespace wb {
                         occluded_(false), is_confirmed_(false), visited_(false), 
                         cluster_id_(0)
      {
+          est_centroid_ = cv::Point2d(-2,-2);
+
+          stream_ = NULL;
+          
           matched_ = false;
           //KF_ = cv::KalmanFilter(4, 2, 0);
           //transition_matrix_ = cv::Mat_<float>(4,4);
@@ -154,6 +159,7 @@ namespace wb {
           } else {
                return centroid_;
           }
+          return centroid_;
      }
 
      Ellipse Entity::error_ellipse(double confidence)
@@ -192,44 +198,56 @@ namespace wb {
           ////////////////////////////////////////////////////////
           // Compute Centroid and Bounding Box Rectangle
           ////////////////////////////////////////////////////////
-          int sum_x = 0, sum_y = 0, sum_value = 0;
-          int xmin = 999999999, ymin = 999999999, xmax = -999, ymax = -999;
+          int sum_x_pixel = 0, sum_y_pixel = 0, sum_value_pixel = 0;
+          int xmin_pixel = INT_MAX, ymin_pixel = INT_MAX;
+          int xmax_pixel = INT_MIN, ymax_pixel = INT_MIN;          
+          
           std::vector<Point>::iterator it = points_.begin();
           for (; it != points_.end(); it++) {
-               int x = it->position().x;
-               int y = it->position().y;
+               
+               // Calculate centroid in "image" space
+               int x_pixel = it->position().x;
+               int y_pixel = it->position().y;
 
-               int value = it->value();
-               sum_value += value;
+               int value_pixel = it->value();
+               sum_value_pixel += value_pixel;
 
-               sum_x += x * value;
-               sum_y += y * value;
+               sum_x_pixel += x_pixel * value_pixel;
+               sum_y_pixel += y_pixel * value_pixel;
 
-               if (x < xmin) {
-                    xmin = x;
+               if (x_pixel < xmin_pixel) {
+                    xmin_pixel = x_pixel;
                }
-               if (x > xmax) {
-                    xmax = x;
+               if (x_pixel > xmax_pixel) {
+                    xmax_pixel = x_pixel;
                }
-               if (y < ymin) {
-                    ymin = y;
+               if (y_pixel < ymin_pixel) {
+                    ymin_pixel = y_pixel;
                }
-               if (y > ymax) {
-                    ymax = y;
-               }
+               if (y_pixel > ymax_pixel) {
+                    ymax_pixel = y_pixel;
+               }                              
           }
 
-          //double avg_x = (double)sum_x / points_.size();
-          //double avg_y = (double)sum_y / points_.size();
-          double avg_x = (double)sum_x / (double)sum_value;
-          double avg_y = (double)sum_y / (double)sum_value;
+          double avg_x_pixel = (double)sum_x_pixel / (double)sum_value_pixel;
+          double avg_y_pixel = (double)sum_y_pixel / (double)sum_value_pixel;
 
-          pixel_centroid_ = cv::Point(round(avg_x), round(avg_y));
+          pixel_centroid_ = cv::Point(round(avg_x_pixel), round(avg_y_pixel));
           est_pixel_centroid_ = pixel_centroid_;
 
           // +1's to account for slight error in rectangle drawing?
           //bbox_ = cv::Rect rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);
-          bbox_.set_box(xmin, xmax+1, ymin, ymax+1);          
+          bbox_.set_box(xmin_pixel, xmax_pixel+1, ymin_pixel, ymax_pixel+1);
+          
+          // Get the centroid in X/Y Cartesian space
+          if (stream_ != NULL) {
+               centroid_ = wb::rowcol2cartesian(stream_, pixel_centroid_.y, pixel_centroid_.x);               
+               est_centroid_ = centroid_;
+          } else {
+               cout << "Missing stream object" << endl;
+               centroid_ = cv::Point2d(-1,-1);
+               est_centroid_ = cv::Point2d(-1,-1);               
+          }
      }
 
      cv::Rect Entity::rectangle()

@@ -4,7 +4,7 @@
 /// @file WB.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-28 13:47:26 syllogismrxs>
+/// Time-stamp: <2016-03-14 21:40:32 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 31 Aug 2015
@@ -83,6 +83,10 @@ namespace wb {
      double gaussian_probability(Eigen::MatrixXd &x, 
                                  Eigen::MatrixXd &u, 
                                  Eigen::MatrixXd &cov);
+
+     void cartesian2polar(double x, double y, double &range, double &bearing);
+     cv::Point2d rowcol2cartesian(syllo::Stream *stream, int r, int c);
+     cv::Point cartesian2rowcol(syllo::Stream *stream, cv::Point2d cart);
 }
 
 #endif
