@@ -932,7 +932,42 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                                         std::vector<wb::Blob> &tracks,
                                         std::vector<wb::Blob> &fused)
 {
+     // Determine if a new measurement falls within the gate of a previous
+     // track. Don't update kalman filter for each track until all measurements
+     // have been accounted for.     
+
+     // Key<int>     : ID of previous track
+     // Value <list> : Measurement blob pointers that match track ID
+     std::map<int, std::list<wb::Blob*> > track_matches;
      
+     for (std::vector<wb::Blob>::iterator it_meas = meas.begin(); 
+          it_meas != meas.end(); it_meas++) {
+          for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
+               it_prev != tracks.end(); it_prev++) {
+               
+               Eigen::MatrixXf Zm; Zm.resize(2,1);
+               Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
+               if (it_prev->tracker().is_within_region(Zm,3)) {
+                    track_matches[it_prev->id()].push_back(&(*it_meas));
+               }
+          }
+     }     
+
+     // For each track ID with matches, use kalman filter to integrate position
+     for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
+               it_prev != tracks.end(); it_prev++) {
+
+          if (track_matches.count(it_prev->id()) > 0) {          
+               for (std::map<int, std::list<wb::Blob*> >::iterator it_match = track_matches.begin();
+                    it_match != track_matches.end(); it_match++) {
+                    
+               }
+          } else {
+               // Missed track measurement?
+               it_prev->missed_track();
+               fused.push_back(*it_prev);
+          }
+     }
 }
 
 void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas, 
