@@ -407,7 +407,21 @@ void AnnotationParser::write_header()
                char * y = doc.allocate_string(syllo::double2str(object_it->second.centroid().y).c_str());
                xml_node<> *y_node = doc.allocate_node(node_element, "y", y);
                centroid_node->append_node(y_node);
-               
+
+               // "pixel_centroid" node
+               xml_node<> *pixel_centroid_node = doc.allocate_node(node_element, "pixel_centroid");
+               object_node->append_node(pixel_centroid_node);
+
+               // "x" position node
+               char * pixel_x = doc.allocate_string(syllo::double2str(object_it->second.pixel_centroid().x).c_str());
+               xml_node<> *pixel_x_node = doc.allocate_node(node_element, "x", pixel_x);
+               pixel_centroid_node->append_node(pixel_x_node);
+
+               // "y" position node
+               char * pixel_y = doc.allocate_string(syllo::double2str(object_it->second.pixel_centroid().y).c_str());
+               xml_node<> *pixel_y_node = doc.allocate_node(node_element, "y", pixel_y);
+               pixel_centroid_node->append_node(pixel_y_node);
+                              
                // "bndbox" node               
                xml_node<> *bndbox_node = doc.allocate_node(node_element, "bndbox");
                object_node->append_node(bndbox_node);
@@ -750,6 +764,19 @@ int AnnotationParser::ParseFile(std::string file)
                     y = syllo::str2double(centroid->first_node("y")->value());                    
                     object.set_centroid(cv::Point2d(x,y));
                }
+
+               // Get pixel centroid info
+               xml_node<> *pixel_centroid = object_node->first_node("pixel_centroid");
+               if (pixel_centroid == 0) {
+                    cout << "Missing pixel centroid" << endl;                    
+                    cv::Point p((xmin + xmax)/2, (ymin + ymax) / 2);
+                    object.set_pixel_centroid(p);
+               } else {
+                    double x, y;
+                    x = syllo::str2double(pixel_centroid->first_node("x")->value());
+                    y = syllo::str2double(pixel_centroid->first_node("y")->value());                    
+                    object.set_pixel_centroid(cv::Point2d(x,y));
+               }
                
                positive_sample_count_++;
                frame.objects[object_name] = object;
@@ -878,7 +905,7 @@ std::vector<std::string> AnnotationParser::track_names()
 void AnnotationParser::plot_tracks(std::vector<std::string> &names, 
                                    int min_track_length)
 {
-     std::map<std::string, std::vector<cv::Point2d> > points;     
+     std::map<std::string, std::vector<cv::Point3d> > points;     
      
      // Loop through all frames, plotting tracks that match the user's input
      std::map<int,Frame>::iterator it_frame = frames.begin();
@@ -894,23 +921,33 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
                     // Push the point onto the appropriate points vector
                     //points[it_obj->first].push_back(it_obj->second.bbox().centroid());
                     //points[it_obj->first].push_back(it_obj->second.centroid());
-                    points[it_obj->first].push_back(it_obj->second.centroid());
+                    cv::Point3d p;
+                    //p.x = it_obj->second.centroid().x;
+                    //p.y = it_obj->second.centroid().y;
+                    p.x = it_obj->second.estimated_pixel_centroid().x;
+                    p.y = it_obj->second.estimated_pixel_centroid().y;                    
+                    p.z = frame.frame_number();
+                    //points[it_obj->first].push_back(it_obj->second.centroid());
+                    points[it_obj->first].push_back(p);
                }     
           }          
      }
 
      // Plot the tracks;
-     std::vector< std::vector<cv::Point2d> > vectors;
+     std::vector< std::vector<cv::Point3d> > vectors;
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;
 
-     std::map<std::string, std::vector<cv::Point2d> >::iterator it_points;
+     std::map<std::string, std::vector<cv::Point3d> >::iterator it_points;
      for (it_points = points.begin(); it_points != points.end(); it_points++) {          
           // Only plot tracks that have more points than the min track length
           if (it_points->second.size() < (unsigned int)min_track_length) { 
                continue;
           }
+          
+          //// Have to reverse order of points to show up correctly in 3d plot
+          //std::reverse(std::begin(it_points->second), std::end(it_points->second));
           
           vectors.push_back(it_points->second);
           labels.push_back(it_points->first);
@@ -922,11 +959,19 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      options = "set size ratio -1\n";
      options += "set view equal xy\n"; 
      options += "set size 1,1\n";
-     options += "set yrange [*:] reverse\n";
+     
+     options += "set xrange [*:*] reverse\n";
+     options += "set yrange [*:*] reverse\n";
+     options += "set zrange [*:*] reverse\n";
+     
+     options += "set xlabel \"X\"\n";
+     options += "set ylabel \"Y\"\n";
+     options += "set zlabel \"Frame\"\n";
+     options += "set ticslevel 0\n";
      //options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
      //options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
      options += "set key outside\n";
-     plot.plot(vectors, title, labels, styles, options);     
+     plot.plot(vectors, title, labels, styles, options, true);     
 }
 
 std::vector<wb::Entity> AnnotationParser::get_tracks(std::string name)

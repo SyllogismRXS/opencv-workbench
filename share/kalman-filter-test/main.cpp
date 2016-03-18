@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
      dyn.set_measurement_noise(0.1);
      
      dyn.compute_trajectory();     
-     std::vector<cv::Point2d> truth = dyn.truth_points();
-     std::vector<cv::Point2d> measured = dyn.measured_points();
+     std::vector<cv::Point3d> truth = syllo::point2d_to_point3d_vectors(dyn.truth_points());
+     std::vector<cv::Point3d> measured = syllo::point2d_to_point3d_vectors(dyn.measured_points());
 
      ////////////////////////////////////////////////////////
      // Setup Kalman Filter
@@ -125,13 +125,13 @@ int main(int argc, char *argv[])
 
      /////////////////////////////////////////////////////////
      // Process the measured points with the kalman filter
-     std::vector<cv::Point2d> kf_points;
-     std::vector<cv::Point2d> opencv_kf_points;
-     std::vector<cv::Point2d> kf_var_x;
-     std::vector<cv::Point2d> kf_var_y;
-     std::vector<cv::Point2d> error;
-     std::vector<cv::Point2d>::iterator it = measured.begin();
-     std::vector<cv::Point2d>::iterator it_truth = truth.begin();
+     std::vector<cv::Point3d> kf_points;
+     std::vector<cv::Point3d> opencv_kf_points;
+     std::vector<cv::Point3d> kf_var_x;
+     std::vector<cv::Point3d> kf_var_y;
+     std::vector<cv::Point3d> error;
+     std::vector<cv::Point3d>::iterator it = measured.begin();
+     std::vector<cv::Point3d>::iterator it_truth = truth.begin();
      double t = t0;
      for(; it != measured.end(); it++) {
           Eigen::MatrixXf u, z;
@@ -156,19 +156,19 @@ int main(int argc, char *argv[])
           measurement(1) = it->y;
           
           cv::Mat estimated = opencv_kf.correct(measurement);
-          cv::Point2d est_centroid = cv::Point2d(estimated.at<float>(0),estimated.at<float>(1));
+          cv::Point3d est_centroid = cv::Point3d(estimated.at<float>(0),estimated.at<float>(1),0);
           opencv_kf_points.push_back(est_centroid);
           ////////////////////////////////////////////
                     
           Eigen::MatrixXf state = kf.state();          
-          kf_points.push_back(cv::Point2d(state(0,0),state(1,0)));
+          kf_points.push_back(cv::Point3d(state(0,0),state(1,0),0));
 
           Eigen::MatrixXf covar = kf.covariance();
-          kf_var_x.push_back(cv::Point2d(t,covar(0,0)));
-          kf_var_y.push_back(cv::Point2d(t,covar(1,1)));
+          kf_var_x.push_back(cv::Point3d(t,covar(0,0),0));
+          kf_var_y.push_back(cv::Point3d(t,covar(1,1),0));
 
           double err = sqrt( pow(state(0,0) - it_truth->x, 2) + pow(state(1,0) - it_truth->y, 2) );
-          error.push_back(cv::Point2d(t,err));
+          error.push_back(cv::Point3d(t,err,0));
           
           it_truth++;          
           t += dt;
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
     
      /////////////////////////////////////////////////////////     
      // Plot the tracks
-     std::vector< std::vector<cv::Point2d> > vectors;     
+     std::vector< std::vector<cv::Point3d> > vectors;     
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
      styles.push_back("linespoints");
      
      syllo::Plot plot;
-     plot.plot(vectors, title, labels, styles);
+     plot.plot(vectors, title, labels, styles, false);
      
      ////////////////////////////////////////////////////
      vectors.clear() ; labels.clear(); styles.clear();
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
      styles.push_back("points");
      
      syllo::Plot plot_covar;
-     plot_covar.plot(vectors, title_covar, labels, styles);
+     plot_covar.plot(vectors, title_covar, labels, styles, false);
 
      std::string temp;
      std::cin >> temp;

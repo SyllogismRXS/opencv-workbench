@@ -29,6 +29,9 @@ namespace syllo
      std::string int2str(int x);
      std::string double2str(double x);
 
+     std::vector<cv::Point3d> point2d_to_point3d_vectors(std::vector<cv::Point2d> &p2);     
+     cv::Point3d point2d_to_point3d(cv::Point2d &p2);     
+
      // return the filenames of all files that have the specified extension
      // in the specified directory and all subdirectories
      void get_files_with_ext(const fs::path& root, const std::string& ext, 

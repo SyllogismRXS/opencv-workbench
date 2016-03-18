@@ -35,7 +35,8 @@ namespace syllo
           void plot(std::vector< std::vector<state_5d_type> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
-                    std::vector<std::string> &styles);
+                    std::vector<std::string> &styles,
+                    bool enable_3d);
 
           int plot(std::vector<int> &time , std::vector<cv::Point> &data, 
                    const std::string &title);
@@ -43,38 +44,44 @@ namespace syllo
           int plot(std::vector<double> &time, 
                    std::vector< std::vector<double> > &vectors, 
                    const std::string &title, 
-                   std::vector<std::string> &labels);
+                   std::vector<std::string> &labels,
+                   bool enable_3d);
           
-          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
-                    const std::string &title, 
-                    std::vector<std::string> &labels,
-                    std::vector<std::string> &styles);  
-
-          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+          void plot(std::vector< std::vector<cv::Point3d> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles,
-                    std::string options);
+                    bool enable_3d);  
 
-          void plot(std::map< std::string, std::vector<cv::Point2d> > &vectors,
+          void plot(std::vector< std::vector<cv::Point3d> > &vectors, 
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles,
                     std::string options,
-                    std::vector<std::string> &objects);
-          
-          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
-                    const std::string &title, 
-                    std::vector<std::string> &labels,
-                    std::vector<std::string> &styles,
-                    std::vector<std::string> &objects);
-          
-          void plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+                    bool enable_3d);
+
+          void plot(std::map< std::string, std::vector<cv::Point3d> > &vectors,
                     const std::string &title, 
                     std::vector<std::string> &labels,
                     std::vector<std::string> &styles,
                     std::string options,
-                    std::vector<std::string> &objects);
+                    std::vector<std::string> &objects,
+                    bool enable_3d);
+          
+          void plot(std::vector< std::vector<cv::Point3d> > &vectors, 
+                    const std::string &title, 
+                    std::vector<std::string> &labels,
+                    std::vector<std::string> &styles,
+                    std::vector<std::string> &objects,
+                    bool enable_3d);
+          
+          void plot(std::vector< std::vector<cv::Point3d> > &vectors, 
+                    const std::string &title, 
+                    std::vector<std::string> &labels,
+                    std::vector<std::string> &styles,
+                    std::string options,
+                    std::vector<std::string> &objects,
+                    bool enable_3d);
 
           void plot_heading_position(
                std::vector< std::vector<state_5d_type> > &vectors, 

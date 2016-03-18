@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
      }
      
      // Plot vectors
-     std::map< std::string, std::vector<cv::Point2d> > vectors;     
+     std::map< std::string, std::vector<cv::Point3d> > vectors;     
      const std::string title = "Tracks";
      std::vector<std::string> labels;
      std::vector<std::string> styles;               
@@ -324,8 +324,9 @@ int main(int argc, char *argv[])
                Dynamics::state_5d_type measurement = it_ent->measurement();
                
                cv::Point2d pos(measurement[0], measurement[1]);
+               cv::Point3d pos_3d(measurement[0], measurement[1], 0);
 
-               vectors[syllo::int2str(it_ent->id())].push_back(pos);
+               vectors[syllo::int2str(it_ent->id())].push_back(pos_3d);
                
                if (it_ent->type() == "sensor") {
                     // Skip if this is the sensor
@@ -488,7 +489,7 @@ int main(int argc, char *argv[])
           if (display_plot) {
                // Plot the tracks          
                std::vector<std::string> empty_objects;
-               plot.plot(vectors, title, labels, styles, options, empty_objects);
+               plot.plot(vectors, title, labels, styles, options, empty_objects, false);
           }          
           frame_number++;                              
      }     

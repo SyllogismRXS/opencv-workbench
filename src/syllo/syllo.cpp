@@ -87,6 +87,24 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
 
 namespace syllo {
 
+     std::vector<cv::Point3d> point2d_to_point3d_vectors(std::vector<cv::Point2d> &p2)
+     {
+          std::vector<cv::Point3d> p3;
+          for (std::vector<cv::Point2d>::iterator it = p2.begin(); it != p2.end(); it++) {
+               p3.push_back(point2d_to_point3d(*it));
+          }
+          return p3;
+     }
+
+     cv::Point3d point2d_to_point3d(cv::Point2d &p2)
+     {
+          cv::Point3d p;
+          p.x = p2.x;
+          p.y = p2.y;
+          p.z = 0;
+          return p;
+     }
+
      void get_files_with_ext(const fs::path& root, const std::string& ext, 
                              std::vector<fs::path>& ret, bool recursive)
      {

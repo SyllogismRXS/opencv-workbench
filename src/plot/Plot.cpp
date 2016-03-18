@@ -27,45 +27,50 @@ namespace syllo
      void Plot::plot(std::vector< std::vector<state_5d_type> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
-                     std::vector<std::string> &styles)
+                     std::vector<std::string> &styles,
+                     bool enable_3d)
      {
           
      }
 
-     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
-                     const std::string &title, 
-                     std::vector<std::string> &labels,
-                     std::vector<std::string> &styles)
-     {
-          std::vector<std::string> objects;
-          plot(vectors, title, labels, styles, std::string(""), objects);
-     }
-     
-     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point3d> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
-                     std::vector<std::string> &objects)
+                     bool enable_3d)
      {
-          plot(vectors, title, labels, styles, std::string(""), objects);
+          std::vector<std::string> objects;
+          plot(vectors, title, labels, styles, std::string(""), objects, enable_3d);
+     }
+     
+     void Plot::plot(std::vector< std::vector<cv::Point3d> > &vectors, 
+                     const std::string &title, 
+                     std::vector<std::string> &labels,
+                     std::vector<std::string> &styles,
+                     std::vector<std::string> &objects,
+                     bool enable_3d)
+     {
+          plot(vectors, title, labels, styles, std::string(""), objects, enable_3d);
      }
 
-     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point3d> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
-                     std::string options)
+                     std::string options, 
+                     bool enable_3d)
      {
           std::vector<std::string> objects;
-          plot(vectors, title, labels, styles, options, objects);
+          plot(vectors, title, labels, styles, options, objects, enable_3d);
      }
      
-     void Plot::plot(std::vector< std::vector<cv::Point2d> > &vectors, 
+     void Plot::plot(std::vector< std::vector<cv::Point3d> > &vectors, 
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
                      std::string options,
-                     std::vector<std::string> &objects)
+                     std::vector<std::string> &objects,
+                     bool enable_3d)
      {
           //gp_ << "plot sin(x)" << endl;                   
           //return;
@@ -100,22 +105,32 @@ namespace syllo
                (*gp_) << *it << endl;               
           }
           
-          (*gp_) << "plot";
+          if (enable_3d) {
+               (*gp_) << "splot";
+          } else {
+               (*gp_) << "plot";
+          }
 
           int count = 0;
-          std::vector< std::vector<cv::Point2d> >::iterator it;
+          std::vector< std::vector<cv::Point3d> >::iterator it;
           for (it = vectors.begin(); it != vectors.end(); it++) {
                std::vector<double> xLocs;
                std::vector<double> yLocs;
+               std::vector<double> zLocs;
         	    
-               std::vector<cv::Point2d>::iterator it2;
+               std::vector<cv::Point3d>::iterator it2;
                for (it2 = it->begin() ; it2 != it->end() ; it2++) {
                     xLocs.push_back(it2->x);
                     yLocs.push_back(it2->y);
+                    zLocs.push_back(it2->z);
                } 
-
-               (*gp_) << (*gp_).file1d(std::make_pair(xLocs,yLocs)) 
-                   << "with " << styles[count]  << " title '" << labels[count] << "'";
+               
+               if (enable_3d) {
+                    (*gp_) << (*gp_).file1d(std::make_tuple(xLocs,yLocs,zLocs));
+               } else {
+                    (*gp_) << (*gp_).file1d(std::make_pair(xLocs,yLocs));
+               }
+               (*gp_) << "with " << styles[count]  << " title '" << labels[count] << "'";
 
                if (++it != vectors.end()) {
                     (*gp_) << ",";
@@ -126,12 +141,13 @@ namespace syllo
           (*gp_) << endl;
      }
 
-     void Plot::plot(std::map< std::string, std::vector<cv::Point2d> > &vectors,
+     void Plot::plot(std::map< std::string, std::vector<cv::Point3d> > &vectors,
                      const std::string &title, 
                      std::vector<std::string> &labels,
                      std::vector<std::string> &styles,
                      std::string options,
-                     std::vector<std::string> &objects)
+                     std::vector<std::string> &objects,
+                     bool enable_3d)
      {
           //(*gp_) << "plot sin(x)" << endl;                   
           //return;
@@ -169,12 +185,12 @@ namespace syllo
           (*gp_) << "plot";
 
           int count = 0;
-          std::map< std::string, std::vector<cv::Point2d> >::iterator it;
+          std::map< std::string, std::vector<cv::Point3d> >::iterator it;
           for (it = vectors.begin(); it != vectors.end(); it++) {
                std::vector<double> xLocs;
                std::vector<double> yLocs;
         	    
-               std::vector<cv::Point2d>::iterator it2;
+               std::vector<cv::Point3d>::iterator it2;
                for (it2 = it->second.begin() ; it2 != it->second.end() ; it2++) {
                     xLocs.push_back(it2->x);
                     yLocs.push_back(it2->y);
