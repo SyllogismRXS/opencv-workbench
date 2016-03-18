@@ -926,7 +926,7 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
      //options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
      //options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
      options += "set key outside\n";
-     plot.plot(vectors, title, labels, styles, options);
+     plot.plot(vectors, title, labels, styles, options);     
 }
 
 std::vector<wb::Entity> AnnotationParser::get_tracks(std::string name)

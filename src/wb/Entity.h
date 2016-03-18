@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-14 21:32:23 syllogismrxs>
+/// Time-stamp: <2016-03-18 14:48:12 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -50,6 +50,7 @@
 #include <opencv_workbench/track/KalmanFilter.h>
 #include <opencv_workbench/utils/Ellipse.h>
 #include <opencv_workbench/utils/Stream.h>
+#include <opencv_workbench/wb/ScalarTracker.h>
 
 namespace wb {
 
@@ -193,6 +194,14 @@ namespace wb {
 
           void set_stream(syllo::Stream *stream) { stream_ = stream; }
           
+          float avg_pixel_value() { return avg_pixel_value_; }
+
+          int estimated_pixel_value();
+          int estimated_blob_size();
+
+          int lower_pixel_value(float num_stds);
+          int lower_blob_size(float num_stds);
+          
      protected:          
           bool prob_is_set_;
           std::string name_;
@@ -246,6 +255,11 @@ namespace wb {
           float distance() { return distance_; }   
 
           syllo::Stream *stream_;
+
+          ScalarTracker pixel_value_tracker_;
+          ScalarTracker size_tracker_;
+
+          float avg_pixel_value_;
 
      private:
      };

@@ -23,8 +23,11 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
+     //syllo::Plot plot;
+     //plot.gnuplot_test();
+     //plot.gnuplot_test_2();
      cout << "Plot Tracks" << endl;     
-
+     
      if (argc < 2) {
           cout << "Usage: " << argv[0] << " <input-file>" << endl;
           return -1;
@@ -77,7 +80,7 @@ int main(int argc, char *argv[])
      //to_plot.push_back("unknown:1");
      //to_plot.push_back("unknown:4");
      
-     parser.plot_tracks(to_plot, min_track_length);     
+     parser.plot_tracks(to_plot, min_track_length);        
      
      return 0;
 }

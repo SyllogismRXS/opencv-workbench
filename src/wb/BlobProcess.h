@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-14 23:09:09 syllogismrxs>
+/// Time-stamp: <2016-03-18 15:38:21 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -103,7 +103,7 @@ public:
      
      int process_frame(cv::Mat &input, cv::Mat &original, int thresh);
      void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
-                            int min_blob_size);
+                     int min_blob_size, bool show);
 
      void find_clusters(cv::Mat &input, std::vector<wb::Blob> &clusters, 
                             unsigned int min_cluster_size);
@@ -206,6 +206,9 @@ protected:
      std::list<vertex_t> prev_hyps_;
 
      syllo::Stream * stream_;
+
+     cv::Mat original_;
+     int curr_thresh_;
      
 private:
      int count_;

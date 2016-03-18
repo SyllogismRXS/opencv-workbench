@@ -15,6 +15,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   OpticalFlow.cpp
   RunningGaussian.cpp
   Parameters.cpp
+  ScalarTracker.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 

@@ -12,11 +12,17 @@
 #include <opencv_workbench/plot/Plot.h>
 #include <opencv_workbench/math/types.h>
 
+#include <boost/make_shared.hpp>
+
 using std::cout;
 using std::endl;
 
 namespace syllo
 {
+     Plot::Plot()
+     {
+          gp_ = boost::make_shared<Gnuplot>("gnuplot -persist");
+     }
 
      void Plot::plot(std::vector< std::vector<state_5d_type> > &vectors, 
                      const std::string &title, 
@@ -75,26 +81,26 @@ namespace syllo
           /// gp_ << "set yrange [*:] reverse\n";          
           /// gp_ << "plot";
 
-          gp_ << "reset\n";
-          gp_ << "set title '" << title << "'\n";          
-          gp_ << "set grid xtics ytics\n";   
+          (*gp_) << "reset\n";
+          (*gp_) << "set title '" << title << "'\n";          
+          (*gp_) << "set grid xtics ytics\n";   
 
           if (options != "") {
-               gp_ << options;
+               (*gp_) << options;
           }
 
-          //gp_ << "set size ratio -1\n";
-          //gp_ << "set view equal xy\n";
-          //gp_ << "set size 1,1\n";
-          //gp_ << "set yrange [*:] reverse\n";          
+          //(*gp_) << "set size ratio -1\n";
+          //(*gp_) << "set view equal xy\n";
+          //(*gp_) << "set size 1,1\n";
+          //(*gp_) << "set yrange [*:] reverse\n";          
 
           // Draw objects
           for(std::vector<std::string>::iterator it = objects.begin(); 
               it != objects.end(); it++) {
-               gp_ << *it << endl;               
+               (*gp_) << *it << endl;               
           }
           
-          gp_ << "plot";
+          (*gp_) << "plot";
 
           int count = 0;
           std::vector< std::vector<cv::Point2d> >::iterator it;
@@ -108,16 +114,16 @@ namespace syllo
                     yLocs.push_back(it2->y);
                } 
 
-               gp_ << gp_.file1d(std::make_pair(xLocs,yLocs)) 
+               (*gp_) << (*gp_).file1d(std::make_pair(xLocs,yLocs)) 
                    << "with " << styles[count]  << " title '" << labels[count] << "'";
 
                if (++it != vectors.end()) {
-                    gp_ << ",";
+                    (*gp_) << ",";
                }
                --it;
                ++count;                    
           }
-          gp_ << endl;
+          (*gp_) << endl;
      }
 
      void Plot::plot(std::map< std::string, std::vector<cv::Point2d> > &vectors,
@@ -127,40 +133,40 @@ namespace syllo
                      std::string options,
                      std::vector<std::string> &objects)
      {
-          //gp_ << "plot sin(x)" << endl;                   
+          //(*gp_) << "plot sin(x)" << endl;                   
           //return;
 
           // used to plot "tracks"
-          /// gp_ << "reset\n";
-          /// //gp_ << "set terminal wxt\n";
-          /// gp_ << "set title '" << title << "'\n";
-          /// gp_ << "set size ratio -1\n";
-          /// //gp_ << "set view equal xy\n";
-          /// gp_ << "set grid xtics ytics\n";
-          /// gp_ << "set size 1,1\n";
-          /// gp_ << "set yrange [*:] reverse\n";          
-          /// gp_ << "plot";
+          /// (*gp_) << "reset\n";
+          /// //(*gp_) << "set terminal wxt\n";
+          /// (*gp_) << "set title '" << title << "'\n";
+          /// (*gp_) << "set size ratio -1\n";
+          /// //(*gp_) << "set view equal xy\n";
+          /// (*gp_) << "set grid xtics ytics\n";
+          /// (*gp_) << "set size 1,1\n";
+          /// (*gp_) << "set yrange [*:] reverse\n";          
+          /// (*gp_) << "plot";
 
-          gp_ << "reset\n";
-          gp_ << "set title '" << title << "'\n";          
-          gp_ << "set grid xtics ytics\n";   
+          (*gp_) << "reset\n";
+          (*gp_) << "set title '" << title << "'\n";          
+          (*gp_) << "set grid xtics ytics\n";   
 
           if (options != "") {
-               gp_ << options;
+               (*gp_) << options;
           }
 
-          //gp_ << "set size ratio -1\n";
-          //gp_ << "set view equal xy\n";
-          //gp_ << "set size 1,1\n";
-          //gp_ << "set yrange [*:] reverse\n";          
+          //(*gp_) << "set size ratio -1\n";
+          //(*gp_) << "set view equal xy\n";
+          //(*gp_) << "set size 1,1\n";
+          //(*gp_) << "set yrange [*:] reverse\n";          
 
           // Draw objects
           for(std::vector<std::string>::iterator it = objects.begin(); 
               it != objects.end(); it++) {
-               gp_ << *it << endl;               
+               (*gp_) << *it << endl;               
           }
           
-          gp_ << "plot";
+          (*gp_) << "plot";
 
           int count = 0;
           std::map< std::string, std::vector<cv::Point2d> >::iterator it;
@@ -174,16 +180,16 @@ namespace syllo
                     yLocs.push_back(it2->y);
                } 
 
-               gp_ << gp_.file1d(std::make_pair(xLocs,yLocs)) 
+               (*gp_) << (*gp_).file1d(std::make_pair(xLocs,yLocs)) 
                    << "with linespoints title '" << it->first << "'";
 
                if (++it != vectors.end()) {
-                    gp_ << ",";
+                    (*gp_) << ",";
                }
                --it;
                ++count;                    
           }
-          gp_ << endl;
+          (*gp_) << endl;
      }
 
      void Plot::plot_heading_position(
@@ -193,7 +199,7 @@ namespace syllo
           std::vector<std::string> &styles)
      {
           
-          gp_ << "set title '" << title << "'\n";
+          (*gp_) << "set title '" << title << "'\n";
           
           //// Plot arrows first;
           std::vector< std::vector<state_5d_type> >::iterator it;
@@ -211,11 +217,11 @@ namespace syllo
                     double hyp = 3;
                     double x = hyp*cos(state[2]);
                     double y = hyp*sin(state[2]);
-                    gp_ << "set arrow from " << state[0] << "," << state[1] << " to " << state[0]+x << "," << state[1]+y << endl;
+                    (*gp_) << "set arrow from " << state[0] << "," << state[1] << " to " << state[0]+x << "," << state[1]+y << endl;
                }
           }
           
-          gp_ << "plot";
+          (*gp_) << "plot";
           
           int count = 0;
           for (it = vectors.begin(); it != vectors.end(); it++) {
@@ -229,17 +235,17 @@ namespace syllo
                     yLocs.push_back(state[1]);                    
                } 
           
-               gp_ << gp_.file1d(std::make_pair(xLocs,yLocs)) 
+               (*gp_) << (*gp_).file1d(std::make_pair(xLocs,yLocs)) 
                    << "with " << styles[count]  << " title '" 
                    << labels[count] << "'";
                
                if (++it != vectors.end()) {
-                    gp_ << ",";
+                    (*gp_) << ",";
                } 
                --it;
                ++count;                    
           }
-          gp_ << endl;
+          (*gp_) << endl;
      }
      
      void Plot::gnuplot_test_2()          
@@ -254,11 +260,12 @@ namespace syllo
                vec.push_back(std::make_pair(*it,sin(2*3.14159265359*(*it))));
           }
           
-          gp_ << "plot" << gp_.file1d(vec) << "with lines title 'My Title'" << endl;
+          (*gp_) << "plot" << (*gp_).file1d(vec) << "with lines title 'My Title'" << endl;
      }
      void Plot::gnuplot_test()
      {
-          Gnuplot gp;
+          //Gnuplot gp;
+          Gnuplot gp("gnuplot -persist");
           // Create a script which can be manually fed into gnuplot later:
           //    Gnuplot gp(">script.gp");
           // Create script and also feed to gnuplot:

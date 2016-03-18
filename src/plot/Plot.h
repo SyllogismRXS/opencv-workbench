@@ -12,11 +12,14 @@
 #include <opencv_workbench/plot/gnuplot-iostream.h>
 #include <opencv_workbench/math/types.h>
 
+#include <boost/shared_ptr.hpp>
+
 namespace syllo
 {
-
      class Plot {
      public:
+          Plot();
+          
           static void gnuplot_test();
 
           static void genTimeVector(double t0, double tStep, double tEnd, 
@@ -84,7 +87,8 @@ namespace syllo
           
 
      private:
-          Gnuplot gp_;
+          boost::shared_ptr<Gnuplot> gp_;
+          //Gnuplot gp_;
      };
 }
 

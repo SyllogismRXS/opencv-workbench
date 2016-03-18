@@ -18,7 +18,7 @@ namespace wb {
      Entity::Entity() : id_(-1), name_("unknown:-1"), 
                         type_(Unknown), age_(0), occluded_age_(0), 
                         occluded_(false), is_confirmed_(false), visited_(false), 
-                        cluster_id_(0)
+                        cluster_id_(0), avg_pixel_value_(-1)
      {
           est_centroid_ = cv::Point2d(-2,-2);
 
@@ -162,6 +162,26 @@ namespace wb {
           return centroid_;
      }
 
+     int Entity::estimated_pixel_value()
+     {
+          return floor(pixel_value_tracker_.value());
+     }
+     
+     int Entity::estimated_blob_size()
+     {
+          return floor(size_tracker_.value());
+     }
+
+     int Entity::lower_pixel_value(float num_stds)
+     {          
+          return pixel_value_tracker_.lower_end(num_stds);
+     }
+
+     int Entity::lower_blob_size(float num_stds)
+     {
+          return size_tracker_.lower_end(num_stds);
+     }
+
      Ellipse Entity::error_ellipse(double confidence)
      {
           return kf_.error_ellipse(confidence);
@@ -177,6 +197,12 @@ namespace wb {
           kf_.predict(u);
           state = kf_.state();
           est_pixel_centroid_ = cv::Point(cvRound(state(0,0)),cvRound(state(1,0)));
+
+          pixel_value_tracker_.predict();
+          size_tracker_.predict();
+
+          //cout << "Update - Track: " << id_ << " , size=" << size_tracker_.value()
+          //     << ", value=" << pixel_value_tracker_.value() << endl;
      }
 
      void Entity::correct_tracker()
@@ -185,7 +211,7 @@ namespace wb {
           z << pixel_centroid_.x, pixel_centroid_.y;
           kf_.update(z);
           state = kf_.state();
-          est_pixel_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));
+          est_pixel_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));          
      }
 
      void Entity::update_trail()
@@ -201,9 +227,9 @@ namespace wb {
           int sum_x_pixel = 0, sum_y_pixel = 0, sum_value_pixel = 0;
           int xmin_pixel = INT_MAX, ymin_pixel = INT_MAX;
           int xmax_pixel = INT_MIN, ymax_pixel = INT_MIN;          
-          
-          std::vector<Point>::iterator it = points_.begin();
-          for (; it != points_.end(); it++) {
+                    
+          for (std::vector<Point>::iterator it = points_.begin(); 
+               it != points_.end(); it++) {
                
                // Calculate centroid in "image" space
                int x_pixel = it->position().x;
@@ -232,6 +258,11 @@ namespace wb {
           double avg_x_pixel = (double)sum_x_pixel / (double)sum_value_pixel;
           double avg_y_pixel = (double)sum_y_pixel / (double)sum_value_pixel;
 
+          avg_pixel_value_ = (double)sum_value_pixel / (double)points_.size();
+          
+          pixel_value_tracker_.set_value(avg_pixel_value_);
+          size_tracker_.set_value((float)points_.size());
+                    
           pixel_centroid_ = cv::Point(round(avg_x_pixel), round(avg_y_pixel));
           est_pixel_centroid_ = pixel_centroid_;
 
@@ -293,7 +324,7 @@ namespace wb {
      }
 
      void Entity::missed_track()
-     {
+     {                    
           this->set_occluded(true);
           this->inc_occluded_age();
      }
@@ -305,6 +336,15 @@ namespace wb {
 
           // Update the Kalman Filter Tracker
           this->correct_tracker();
+
+          //cout << "Detected - Track: " << id_ << " , size=" << points_.size()
+          //     << ", value=" << avg_pixel_value_ << endl;
+          
+          // Correct average pixel value tracker
+          pixel_value_tracker_.set_value(avg_pixel_value_);
+
+          // Correct blob size tracker
+          size_tracker_.set_value((float)points_.size());
      }
 
      void Entity::new_track(int id)
@@ -340,6 +380,8 @@ namespace wb {
           this->pixel_centroid_ = other.pixel_centroid();
           this->bbox_ = other.bbox();
           this->points_ = other.points();
+          
+          this->avg_pixel_value_ = other.avg_pixel_value();
      }
 
      void Entity::matched_track(Entity &match)
