@@ -230,8 +230,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.frame_ents(frame_ents_);
      
      cv::Mat blob_img;     
-     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
-     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS);
+     blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
+     //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS);
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);     
      
      // cv::Mat short_lived;

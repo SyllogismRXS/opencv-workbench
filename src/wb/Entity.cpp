@@ -339,6 +339,7 @@ namespace wb {
           this->centroid_ = other.centroid();
           this->pixel_centroid_ = other.pixel_centroid();
           this->bbox_ = other.bbox();
+          this->points_ = other.points();
      }
 
      void Entity::matched_track(Entity &match)

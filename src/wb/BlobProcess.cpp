@@ -47,6 +47,7 @@ typedef bgi::rtree< point_value, bgi::dynamic_rstar > rtree_point_t;
 BlobProcess::BlobProcess()
 {
      min_blob_size_ = 30;//15, 20, 30;
+     //min_blob_size_ = 1;
      //min_blob_size_ = 5;//15, 20, 30;
      next_id_ = 0;
 
@@ -942,14 +943,31 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
      
      for (std::vector<wb::Blob>::iterator it_meas = meas.begin(); 
           it_meas != meas.end(); it_meas++) {
+          bool matched = false;
           for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
                it_prev != tracks.end(); it_prev++) {
                
+               // Do any of the blob's points fall within 3-sigma region of the
+               // track?
                Eigen::MatrixXf Zm; Zm.resize(2,1);
-               Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
-               if (it_prev->tracker().is_within_region(Zm,3)) {
-                    track_matches[it_prev->id()].push_back(&(*it_meas));
+               for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin(); it_point != it_meas->points().end(); it_point++) {
+                    //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
+                    Zm << it_point->x(), it_point->y();
+                    if (it_prev->tracker().is_within_region(Zm,3)) {
+                         track_matches[it_prev->id()].push_back(&(*it_meas));
+                         matched = true;
+                         break;
+                    }
                }
+               
+               //TODO: tracks are right on top of each other sometimes.
+          }
+          
+          // If the measurement doesn't fall within any previous track,
+          // initiate a new one.
+          if (!matched) {               
+               it_meas->new_track(next_available_id());
+               fused.push_back(*it_meas);
           }
      }     
 
@@ -958,16 +976,19 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                it_prev != tracks.end(); it_prev++) {
 
           if (track_matches.count(it_prev->id()) > 0) {          
-               for (std::map<int, std::list<wb::Blob*> >::iterator it_match = track_matches.begin();
-                    it_match != track_matches.end(); it_match++) {
-                    
-               }
+               for (std::list<wb::Blob*>::iterator it_match = track_matches[it_prev->id()].begin();
+                    it_match != track_matches[it_prev->id()].end(); it_match++) {
+
+                    // Integrate the matched measurement
+                    it_prev->copy_meas_info(*(*it_match));
+                    it_prev->detected_track();                    
+               }               
           } else {
                // Missed track measurement?
-               it_prev->missed_track();
-               fused.push_back(*it_prev);
+               it_prev->missed_track();               
           }
-     }
+          fused.push_back(*it_prev);
+     }     
 }
 
 void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas, 
@@ -1246,8 +1267,8 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 {
      //std::vector<wb::Blob> new_blobs;
      frame_blobs_.clear();
-     //this->find_blobs(input, frame_blobs_, min_blob_size_);
-     this->find_clusters(input, frame_blobs_, 1);
+     this->find_blobs(input, frame_blobs_, min_blob_size_);
+     //this->find_clusters(input, frame_blobs_, 1);
 
      //cv::Mat out;
      //double eps = 10;
@@ -1275,7 +1296,8 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
      // This has some bug that crashes with too many blobs
      //this->assign_hungarian(frame_blobs_, prev_blobs_, blobs_);
-     this->assign_munkres(frame_blobs_, prev_blobs_, blobs_);
+     //this->assign_munkres(frame_blobs_, prev_blobs_, blobs_);
+     this->assign_gate_aggregate(frame_blobs_, prev_blobs_, blobs_);
 
      blob_maintenance();
 
