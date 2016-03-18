@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-18 15:38:21 syllogismrxs>
+/// Time-stamp: <2016-03-18 18:49:36 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -209,6 +209,8 @@ protected:
 
      cv::Mat original_;
      int curr_thresh_;
+
+     std::vector<wb::Blob> tracks_;
      
 private:
      int count_;
