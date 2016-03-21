@@ -470,7 +470,7 @@ void BlobProcess::find_blobs(cv::Mat &input,
           this->overlay_blobs(temp_img, temp_img, blobs);
           cv::imshow("Frame Blobs", temp_img);
      }
-     }
+}
 
 int** array_to_matrix(int* m, int rows, int cols) {
      int i,j;
@@ -513,7 +513,7 @@ void delete_matrix(int **array, int rows, int cols)
 //
 //               Eigen::MatrixXf Zm; Zm.resize(2,1);
 //               Zm << it1->pixel_centroid().x, it1->pixel_centroid().y;
-//               if (it2->tracker().is_within_region(Zm,3)) {
+//               if (it2->pixel_tracker().is_within_region(Zm,3)) {
 //                    // It is within the gate
 //               }
 //          }
@@ -575,9 +575,10 @@ void BlobProcess::build_tree(vertex_t &vertex,
 
           // Has the track been matched to a measurement yet?
           if (!it->matched()) {
-               Eigen::MatrixXf Zm; Zm.resize(2,1);
-               Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
-               if (it->tracker().is_within_region(Zm,3)) {
+               //Eigen::MatrixXf Zm; Zm.resize(2,1);
+               //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
+               //if (it->pixel_tracker().is_within_region(Zm,3)) {
+               if (it->pixel_tracker().is_within_region(it_meas->pixel_centroid(),3)) {
 
                     Eigen::MatrixXd u, cov;
                     Eigen::MatrixXd zero_mean;
@@ -587,11 +588,19 @@ void BlobProcess::build_tree(vertex_t &vertex,
                     u.resize(2,1);
                     cov.resize(2,2);
 
-                    Eigen::MatrixXd state = it->tracker().state().cast<double>();
-                    u << state(0,0), state(1,0);
+                    //Eigen::MatrixXd state = it->pixel_tracker().state().cast<double>();
+                    //cv::Point2d p = pixel_tracker_.position();
+                    cv::Point2d pos = it->pixel_tracker().position();
+                    u << pos.x, pos.y;
+                    //u << state(0,0), state(1,0);
 
-                    Eigen::MatrixXd B = it->tracker().meas_covariance().cast<double>();
-                    Eigen::MatrixXd diff = Zm.cast<double>() - u;
+                    //Eigen::MatrixXd B = it->pixel_tracker().meas_covariance().cast<double>();
+                    Eigen::MatrixXd B = it->pixel_tracker().meas_covariance();
+
+                    Eigen::MatrixXd Zm; Zm.resize(2,1);
+                    Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
+                    
+                    Eigen::MatrixXd diff = Zm - u;
                     double mahal_dist = wb::gaussian_probability(diff, zero_mean, B);
                     double mahal_max = wb::gaussian_probability(zero_mean, zero_mean, B);
                     cout << "mahal_dist: " << mahal_dist << endl;
@@ -901,7 +910,7 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      // 
      //      for (std::list<vertex_t>::iterator it2 = hyps_.begin();
      //      it2 != hyps_.end(); it2++) {
-     //           if (it1->tracker() == graph_[*it2].tracker()) {
+     //           if (it1->pixel_tracker() == graph_[*it2].pixel_tracker()) {
      //                // Track hyp supported.
      //                prob_sum += graph_[*it2].prob();
      //           }
@@ -969,13 +978,14 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                
                // Do any of the blob's points fall within 3-sigma region of the
                // track?
-               Eigen::MatrixXf Zm; Zm.resize(2,1);
-               for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin(); it_point != it_meas->points().end(); it_point++) {
+               //Eigen::MatrixXf Zm; Zm.resize(2,1);
+               for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin(); 
+                    it_point != it_meas->points().end(); it_point++) {
                     //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
-                    Zm << it_point->x(), it_point->y();
-                    if (it_prev->tracker().is_within_region(Zm,3)) {
+                    //Zm << it_point->x(), it_point->y();
+                    if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
                          track_matches[it_prev->id()].push_back(&(*it_meas));
-                         matched = true;
+                         matched = true;                         
                          break;
                     }
                }                              
@@ -993,17 +1003,33 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
      for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
                it_prev != tracks.end(); it_prev++) {
 
+          //cout << "Track: " << it_prev->id() << " , " << it_prev->estimated_pixel_centroid()<< " matches..." << endl;
+          
           if (track_matches.count(it_prev->id()) > 0) {          
                for (std::list<wb::Blob*>::iterator it_match = track_matches[it_prev->id()].begin();
                     it_match != track_matches[it_prev->id()].end(); it_match++) {
 
+                    //cout << "\tID: " << (*it_match)->id() << " , " << (*it_match)->estimated_pixel_centroid() << endl;
+                    
+                    // Only increment the age and set occluded one time!
+                    if (it_match == track_matches[it_prev->id()].begin()) {
+                         it_prev->set_occluded(false);
+                         it_prev->inc_age();
+                    }
+                    
                     // Integrate the matched measurement
                     it_prev->copy_meas_info(*(*it_match));
-                    it_prev->detected_track();                    
+                    it_prev->correct_tracker();                    
                }               
           } else {               
                
-               int thresh_value = it_prev->lower_pixel_value(3); //TODO
+               // Perform a deep search... lower thresholds and blob size constraint..
+               
+               //int thresh_value = it_prev->lower_pixel_value(3); //TODO
+               
+               //use estimated blob threshold-1 for threshold...
+               //int thresh_value = it_prev->estimated_pixel_value()-1;
+               int thresh_value = curr_thresh_;
                
                // If the average blob threshold is above the current threshold,
                // the blob was probably missed due to the blob size restriction
@@ -1075,10 +1101,13 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
           intermediate.push_back(&(*it_prev));
      }  
 
+
+     //cout << "intermediate size: " << intermediate.size() << endl;
+
      // Are any of the tracks very similar? If so, keep the oldest one
      // Determine if the centroids of any tracks are within 1 std of each
      // other.
-     Eigen::MatrixXf Zm1, Zm2; Zm1.resize(2,1); Zm2.resize(2,1);
+     //Eigen::MatrixXf Zm1, Zm2; Zm1.resize(2,1); Zm2.resize(2,1);
      
      for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin(); 
           it1 != intermediate.end(); it1++) {
@@ -1096,29 +1125,25 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                     continue;
                }
 
-               // Are the track's centroids within 1 std of each other?
-               Zm1 << (*it1)->estimated_pixel_centroid().x, (*it1)->estimated_pixel_centroid().y;
-               Zm2 << (*it2)->estimated_pixel_centroid().x, (*it2)->estimated_pixel_centroid().y;
-
-               //cout << "-----" << endl;
-               //cout << "Track: " << (*it1)->id() << " @ " << (*it1)->estimated_pixel_centroid() << endl;
-               //cout << "Track: " << (*it2)->id() << " @ " << (*it2)->estimated_pixel_centroid() << endl;
-               
-               if ((*it1)->tracker().is_within_region(Zm2,3) && (*it2)->tracker().is_within_region(Zm1,3)) {
-                    //cout << "===> Matched: " << (*it1)->id() << " and " << (*it2)->id() << endl;                    
+               //// Are the track's centroids within 3 std of each other?
+               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) && 
+                   (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),3)) {
+                    
                     // Found similar tracks. Save the oldest track
                     if ((*it1)->age() > (*it2)->age()) {
                          // Integrate younger track into older track
                          (*it1)->copy_meas_info(*(*it2));
-                         (*it1)->detected_track();
-
+                         (*it1)->set_occluded(false);
+                         (*it1)->correct_tracker();
+                         
                          // Mark the younger track as matched, so it is overlooked later
                          (*it2)->set_matched(true);
                     } else {
                          // Integrate younger track into older track
                          (*it2)->copy_meas_info(*(*it1));
-                         (*it2)->detected_track();
-
+                         (*it2)->set_occluded(false);
+                         (*it2)->correct_tracker();
+                         
                          // Mark the younger track as matched, so it is overlooked later
                          (*it1)->set_matched(true);
                     }
@@ -1130,7 +1155,7 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
      // similar to another track. Copy them to the final fused vector
      for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin(); 
           it1 != intermediate.end(); it1++) {
-          if (!(*it1)->matched()) {
+          if (!(*it1)->matched()) {               
                fused.push_back(*(*it1));
           }
      }     
@@ -1435,9 +1460,9 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      //////////////////////////////////////////////////////////////////////////
      std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
      for(; it != prev_blobs_.end(); it++) {
-          if (it->is_confirmed()) {
+          //if (it->is_confirmed()) {
                it->predict_tracker();
-          }
+               //}
      }
 
      blobs_.clear();
@@ -1887,7 +1912,7 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      dst = src.clone();
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for (; it != blobs_.end(); it++) {
-          if (it->is_confirmed()) {
+          //if (it->is_confirmed()) {
                cv::Point est_centroid = it->estimated_pixel_centroid();
                //cv::Rect rect = (*it)->rectangle();
 
@@ -1896,7 +1921,7 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
                //const std::string& text = convert.str();
 
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
-          }
+               //}
      }
 }
 

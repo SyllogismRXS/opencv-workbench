@@ -72,6 +72,11 @@ namespace syllo {
      {
 	  return x_;
      }
+
+     void KalmanFilter::set_state(const Eigen::MatrixXf &x)
+     {
+          x_ = x;
+     }
      
      Eigen::MatrixXf KalmanFilter::covariance() const
      {

@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-06 11:56:32 syllogismrxs>
+/// Time-stamp: <2016-03-21 10:58:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -70,6 +70,8 @@ namespace syllo {
 		       const Eigen::MatrixXf &R);
 
 	  int init(const Eigen::MatrixXf &x0, const Eigen::MatrixXf &P0);
+
+          void set_state(const Eigen::MatrixXf &x0);
 
 	  int predict(const Eigen::MatrixXf &u);
 	  int update(const Eigen::MatrixXf &z);

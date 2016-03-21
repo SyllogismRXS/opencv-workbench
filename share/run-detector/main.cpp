@@ -339,7 +339,8 @@ int main(int argc, char *argv[])
           frame.set_frame_number(frame_number);
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
-               cv::Point point = it->centroid();
+               //cv::Point point = it->centroid();
+               cv::Point point = it->pixel_centroid();
                //cv::Point point = it->estimated_centroid();
                
                frame.objects[it->name()] = *it;

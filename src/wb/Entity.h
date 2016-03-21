@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-18 14:48:12 syllogismrxs>
+/// Time-stamp: <2016-03-21 11:26:39 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -47,10 +47,11 @@
 //#include <opencv2/video/tracking.hpp>
 
 #include <opencv_workbench/wb/Point.h>
-#include <opencv_workbench/track/KalmanFilter.h>
+//#include <opencv_workbench/track/KalmanFilter.h>
 #include <opencv_workbench/utils/Ellipse.h>
 #include <opencv_workbench/utils/Stream.h>
 #include <opencv_workbench/wb/ScalarTracker.h>
+#include <opencv_workbench/wb/PositionTracker.h>
 
 namespace wb {
 
@@ -140,13 +141,15 @@ namespace wb {
           void copy_meas_info(Entity &other);
           
           bool occluded() { return occluded_; }
-          void set_occluded(bool occluded);
-          // TODO: reset occluded age at this point?
+          void set_occluded(bool occluded);          
 
-          //void set_tracker(cv::KalmanFilter KF) { KF_ = KF;}          
-          //cv::KalmanFilter tracker() { return KF_; }
-          void set_tracker(syllo::KalmanFilter kf) { kf_ = kf; }
-          syllo::KalmanFilter &tracker() { return kf_; }
+          //void set_tracker(syllo::KalmanFilter kf) { kf_ = kf; }
+          //syllo::KalmanFilter &tracker() { return kf_; }
+          void set_pixel_tracker(PositionTracker t) { pixel_tracker_ = t; }
+          PositionTracker &pixel_tracker() { return pixel_tracker_; }
+
+          void set_tracker(PositionTracker t) { tracker_ = t; }
+          PositionTracker &tracker() { return tracker_; }
 
           void init();
           void predict_tracker();
@@ -154,8 +157,8 @@ namespace wb {
           cv::Point estimated_pixel_centroid();
           cv::Point2d estimated_centroid();
           
-          void set_estimated_pixel_centroid(cv::Point p) {est_pixel_centroid_ = p;}
-          void set_estimated_centroid(cv::Point2d p) {est_centroid_ = p;}
+          void set_estimated_pixel_centroid(cv::Point p);
+          void set_estimated_centroid(cv::Point2d p);
           
           Ellipse error_ellipse(double confidence);
           
@@ -189,8 +192,8 @@ namespace wb {
           }
           double prob() { return prob_; }          
 
-          void set_R(double r);
-          void set_P(double p);
+          //void set_R(double r);
+          //void set_P(double p);
 
           void set_stream(syllo::Stream *stream) { stream_ = stream; }
           
@@ -208,13 +211,9 @@ namespace wb {
           EntityType_t type_;
           std::vector<wb::Point> points_;
           
-          cv::Point est_pixel_centroid_;          
-          cv::Point2d est_centroid_;          
-
           cv::Point pixel_centroid_; // image (col,row) location
           cv::Point2d centroid_;     // x/y coordinate in space
           
-          //cv::Rect rectangle_;
           int age_;
           int occluded_age_;
           bool occluded_;
@@ -225,20 +224,23 @@ namespace wb {
           
           int matched_id_;          
 
-          //cv::KalmanFilter KF_;
-          cv::Mat_<float> transition_matrix_;
-
-          syllo::KalmanFilter kf_;
-          Eigen::MatrixXf A;     // system matrix
-          Eigen::MatrixXf B;     // input matrix
-          Eigen::MatrixXf H;     // measurement matrix
-          Eigen::MatrixXf Q;     // process noise matrix
-          Eigen::MatrixXf R;     // measurement noise matrix
-          Eigen::MatrixXf x0;    // initial position
-          Eigen::MatrixXf covar; // initial state covariance matrix 
-          Eigen::MatrixXf u; // Input acceleration 
-          Eigen::MatrixXf z; // Measurement (position)
-          Eigen::MatrixXf state; // estimated state
+          PositionTracker pixel_tracker_;
+          PositionTracker tracker_;
+          
+          ////cv::KalmanFilter KF_;
+          ////cv::Mat_<float> transition_matrix_;
+          //
+          //syllo::KalmanFilter kf_;
+          //Eigen::MatrixXf A;     // system matrix
+          //Eigen::MatrixXf B;     // input matrix
+          //Eigen::MatrixXf H;     // measurement matrix
+          //Eigen::MatrixXf Q;     // process noise matrix
+          //Eigen::MatrixXf R;     // measurement noise matrix
+          //Eigen::MatrixXf x0;    // initial position
+          //Eigen::MatrixXf covar; // initial state covariance matrix 
+          //Eigen::MatrixXf u; // Input acceleration 
+          //Eigen::MatrixXf z; // Measurement (position)
+          //Eigen::MatrixXf state; // estimated state
 
           float distance_;
           bool matched_;
@@ -263,7 +265,6 @@ namespace wb {
 
      private:
      };
-
 }
 
 #endif

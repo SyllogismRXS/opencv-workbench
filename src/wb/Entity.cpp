@@ -11,7 +11,7 @@ using std::cout;
 using std::endl;
 
 #define CONFIRMED_AGE 3
-#define DEAD_OCCLUDED_AGE 5
+#define DEAD_OCCLUDED_AGE 8//5
 
 namespace wb {
 
@@ -20,8 +20,6 @@ namespace wb {
                         occluded_(false), is_confirmed_(false), visited_(false), 
                         cluster_id_(0), avg_pixel_value_(-1)
      {
-          est_centroid_ = cv::Point2d(-2,-2);
-
           stream_ = NULL;
           
           matched_ = false;
@@ -36,92 +34,76 @@ namespace wb {
           // X-velocity : 2
           // Y-velocity : 3
 
-          A.resize(4,4);     // State transition
-          B.resize(4,2);     // Input matrix
-          H.resize(2,4);     // Measurement matrix
-          Q.resize(4,4);     // Process noise
-          R.resize(2,2);     // Measurement noise
-          x0.resize(4,1);    // Initial state
-          covar.resize(4,4); // Covariance matrix
-
-          double T = 0.066666667;//; dt
-          //double T = 1;//; dt
-          //double T = 0.05;
-          A << 1, 0, T, 0,
-               0, 1, 0, T,
-               0, 0, 1, 0,
-               0, 0, 0, 1;
-
-          // Inputs are from velocity
-          B << 0, 0,
-               0, 0,
-               1, 0,
-               0, 1;
-
-          // Measurements are from x/y positions
-          H << 1, 0, 0, 0,
-               0, 1, 0, 0;
-
-          double q = 1 * T;
-          Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * q;
-
-          //double r = 0.04;
-          //double r = 50;
+          //A.resize(4,4);     // State transition
+          //B.resize(4,2);     // Input matrix
+          //H.resize(2,4);     // Measurement matrix
+          //Q.resize(4,4);     // Process noise
+          //R.resize(2,2);     // Measurement noise
+          //x0.resize(4,1);    // Initial state
+          //covar.resize(4,4); // Covariance matrix
+          //
+          //double T = 0.066666667;//; dt
+          ////double T = 1;//; dt
+          ////double T = 0.05;
+          //A << 1, 0, T, 0,
+          //     0, 1, 0, T,
+          //     0, 0, 1, 0,
+          //     0, 0, 0, 1;
+          //
+          //// Inputs are from velocity
+          //B << 0, 0,
+          //     0, 0,
+          //     1, 0,
+          //     0, 1;
+          //
+          //// Measurements are from x/y positions
+          //H << 1, 0, 0, 0,
+          //     0, 1, 0, 0;
+          //
+          //double q = 1 * T;
+          //Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * q;
+          //
+          ////double r = 0.04;
+          ////double r = 50;
+          ////double r = 10;
+          /////double r = 0.04;
           //double r = 10;
-          ///double r = 0.04;
-          double r = 10;
-          R << r, 0,
-               0, r;
-          
-          //double v = 0.01;
-          //double v = 10;
-          double v = 100;
-          //double v = 2;
-          covar << v, 0, 0, 0,
-                   0, v, 0, 0,
-                   0, 0, v, 0,
-                   0, 0, 0, v;
+          //R << r, 0,
+          //     0, r;
+          //
+          ////double v = 0.01;
+          ////double v = 10;
+          //double v = 100;
+          ////double v = 2;
+          //covar << v, 0, 0, 0,
+          //         0, v, 0, 0,
+          //         0, 0, v, 0,
+          //         0, 0, 0, v;
+          //
+          //z.resize(2,1);
+          //u.resize(2,1);
+          //
+          //kf_.setModel(A,B,H,Q,R);
+     }     
 
-          z.resize(2,1);
-          u.resize(2,1);
-
-          kf_.setModel(A,B,H,Q,R);
+     void Entity::set_estimated_pixel_centroid(cv::Point p)
+     {
+          pixel_tracker_.set_position(p);
      }
 
-     void Entity::set_R(double r)
+     void Entity::set_estimated_centroid(cv::Point2d p)
      {
-          Eigen::MatrixXf R;
-          R.resize(2,2);
-          
-          R << r, 0,
-               0, r;
-          kf_.set_R(R);
-     }
-
-     void Entity::set_P(double p)
-     {
-          Eigen::MatrixXf covar;
-          covar.resize(4,4);
-          
-          covar << p, 0, 0, 0,
-                   0, p, 0, 0,
-                   0, 0, p, 0,
-                   0, 0, 0, p;
-          kf_.set_P(covar);
+          tracker_.set_position(p);
      }
 
      void Entity::init()
      {
           compute_metrics();
 
-          x0 << pixel_centroid_.x,
-                pixel_centroid_.y,
-                0,
-                0;
-
           start_pixel_centroid_ = pixel_centroid_;
 
-          kf_.init(x0, covar);
+          pixel_tracker_.set_measurement(pixel_centroid_);
+          tracker_.set_measurement(centroid_);          
      }
 
      cv::Point Entity::trail_history(int past)
@@ -143,22 +125,23 @@ namespace wb {
      {
           // the Kalman filter's estimate centroid. Otherwise, use the entity's
           // current centroid if it isn't confirmed yet
-          if (this->is_confirmed()) {               
-               return est_pixel_centroid_;
-          } else {
-               return pixel_centroid_;
-          }
+          //if (this->is_confirmed()) {               
+               return pixel_tracker_.position();
+          //     //return est_pixel_centroid_;
+          //} else {
+          //     return pixel_centroid_;
+          //}
      }
 
      cv::Point2d Entity::estimated_centroid()
      {
           // the Kalman filter's estimate centroid. Otherwise, use the entity's
           // current centroid if it isn't confirmed yet
-          if (this->is_confirmed()) {               
-               return est_centroid_;
-          } else {
-               return centroid_;
-          }
+          //if (this->is_confirmed()) {               
+               return tracker_.position();
+          //} else {
+          //     return centroid_;
+          //}
           return centroid_;
      }
 
@@ -184,20 +167,15 @@ namespace wb {
 
      Ellipse Entity::error_ellipse(double confidence)
      {
-          return kf_.error_ellipse(confidence);
+          //return kf_.error_ellipse(confidence);
+          return pixel_tracker_.error_ellipse(confidence);
      }
 
      void Entity::predict_tracker()
      {
-          //cv::Mat prediction = KF_.predict();
-          //est_centroid_ = cv::Point(prediction.at<float>(0),prediction.at<float>(1));
-
-          // TODO: better input velocity?
-          u << 0,0;
-          kf_.predict(u);
-          state = kf_.state();
-          est_pixel_centroid_ = cv::Point(cvRound(state(0,0)),cvRound(state(1,0)));
-
+          pixel_tracker_.predict();          
+          tracker_.predict();
+          
           pixel_value_tracker_.predict();
           size_tracker_.predict();
 
@@ -207,11 +185,15 @@ namespace wb {
 
      void Entity::correct_tracker()
      {          
-          // correct tracker update using the newly computed centroid.
-          z << pixel_centroid_.x, pixel_centroid_.y;
-          kf_.update(z);
-          state = kf_.state();
-          est_pixel_centroid_ = cv::Point(round(state(0,0)),round(state(1,0)));          
+          //// correct tracker update using the newly computed centroid.
+          pixel_tracker_.set_measurement(pixel_centroid_);
+          tracker_.set_measurement(centroid_);
+
+          // Correct average pixel value tracker
+          pixel_value_tracker_.set_value(avg_pixel_value_);
+
+          // Correct blob size tracker
+          size_tracker_.set_value((float)points_.size());
      }
 
      void Entity::update_trail()
@@ -263,9 +245,8 @@ namespace wb {
           pixel_value_tracker_.set_value(avg_pixel_value_);
           size_tracker_.set_value((float)points_.size());
                     
-          pixel_centroid_ = cv::Point(round(avg_x_pixel), round(avg_y_pixel));
-          est_pixel_centroid_ = pixel_centroid_;
-
+          pixel_centroid_ = cv::Point(cvRound(avg_x_pixel), cvRound(avg_y_pixel));
+          
           // +1's to account for slight error in rectangle drawing?
           //bbox_ = cv::Rect rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1);
           bbox_.set_box(xmin_pixel, xmax_pixel+1, ymin_pixel, ymax_pixel+1);
@@ -273,11 +254,9 @@ namespace wb {
           // Get the centroid in X/Y Cartesian space
           if (stream_ != NULL) {
                centroid_ = wb::rowcol2cartesian(stream_, pixel_centroid_.y, pixel_centroid_.x);               
-               est_centroid_ = centroid_;
           } else {
                cout << "Missing stream object" << endl;
-               centroid_ = cv::Point2d(-1,-1);
-               est_centroid_ = cv::Point2d(-1,-1);               
+               centroid_ = cv::Point2d(-1,-1);               
           }
      }
 
@@ -309,7 +288,7 @@ namespace wb {
      }
 
      void Entity::inc_age()
-     {
+     {          
           age_++;          
      }
 
@@ -338,13 +317,7 @@ namespace wb {
           this->correct_tracker();
 
           //cout << "Detected - Track: " << id_ << " , size=" << points_.size()
-          //     << ", value=" << avg_pixel_value_ << endl;
-          
-          // Correct average pixel value tracker
-          pixel_value_tracker_.set_value(avg_pixel_value_);
-
-          // Correct blob size tracker
-          size_tracker_.set_value((float)points_.size());
+          //     << ", value=" << avg_pixel_value_ << endl;                    
      }
 
      void Entity::new_track(int id)
@@ -371,6 +344,7 @@ namespace wb {
           this->set_start_centroid(other.start_centroid());
           this->set_start_pixel_centroid(other.start_pixel_centroid());
           this->set_tracker(other.tracker());
+          this->set_pixel_tracker(other.pixel_tracker());
           this->trail_ = other.trail_;
      }
 
