@@ -10,9 +10,6 @@
 using std::cout;
 using std::endl;
 
-#define CONFIRMED_AGE 3
-#define DEAD_OCCLUDED_AGE 8//5
-
 namespace wb {
 
      Entity::Entity() : id_(-1), name_("unknown:-1"), 
@@ -20,70 +17,11 @@ namespace wb {
                         occluded_(false), is_confirmed_(false), visited_(false), 
                         cluster_id_(0), avg_pixel_value_(-1)
      {
-          stream_ = NULL;
-          
-          matched_ = false;
-          //KF_ = cv::KalmanFilter(4, 2, 0);
-          //transition_matrix_ = cv::Mat_<float>(4,4);
-          //transition_matrix_  << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1;
-          //KF_.transitionMatrix = transition_matrix_;
+          stream_ = NULL;          
+          matched_ = false;    
 
-          // Kalman Filter State Description:
-          // X-position : 0
-          // Y-position : 1
-          // X-velocity : 2
-          // Y-velocity : 3
-
-          //A.resize(4,4);     // State transition
-          //B.resize(4,2);     // Input matrix
-          //H.resize(2,4);     // Measurement matrix
-          //Q.resize(4,4);     // Process noise
-          //R.resize(2,2);     // Measurement noise
-          //x0.resize(4,1);    // Initial state
-          //covar.resize(4,4); // Covariance matrix
-          //
-          //double T = 0.066666667;//; dt
-          ////double T = 1;//; dt
-          ////double T = 0.05;
-          //A << 1, 0, T, 0,
-          //     0, 1, 0, T,
-          //     0, 0, 1, 0,
-          //     0, 0, 0, 1;
-          //
-          //// Inputs are from velocity
-          //B << 0, 0,
-          //     0, 0,
-          //     1, 0,
-          //     0, 1;
-          //
-          //// Measurements are from x/y positions
-          //H << 1, 0, 0, 0,
-          //     0, 1, 0, 0;
-          //
-          //double q = 1 * T;
-          //Q = Eigen::MatrixXf::Identity(A.rows(), A.cols()) * q;
-          //
-          ////double r = 0.04;
-          ////double r = 50;
-          ////double r = 10;
-          /////double r = 0.04;
-          //double r = 10;
-          //R << r, 0,
-          //     0, r;
-          //
-          ////double v = 0.01;
-          ////double v = 10;
-          //double v = 100;
-          ////double v = 2;
-          //covar << v, 0, 0, 0,
-          //         0, v, 0, 0,
-          //         0, 0, v, 0,
-          //         0, 0, 0, v;
-          //
-          //z.resize(2,1);
-          //u.resize(2,1);
-          //
-          //kf_.setModel(A,B,H,Q,R);
+          confirmed_age_ = 3;
+          dead_occluded_age_ = 8;
      }     
 
      void Entity::set_estimated_pixel_centroid(cv::Point p)
@@ -269,7 +207,7 @@ namespace wb {
      {
           if (is_confirmed_) return true;
 
-          if (age_ >= CONFIRMED_AGE) {
+          if (age_ >= confirmed_age_) {
                is_confirmed_ = true;
                return true;
           } else {
@@ -280,7 +218,7 @@ namespace wb {
 
      bool Entity::is_dead()
      {
-          if (occluded_age_ >= DEAD_OCCLUDED_AGE) {
+          if (occluded_age_ >= dead_occluded_age_) {
                return true;
           } else {
                return false;
@@ -365,6 +303,26 @@ namespace wb {
 
           // Update track variables
           this->detected_track();
+     }
+
+     void Entity::set_pixel_R(double r)
+     {
+          pixel_tracker_.set_R(r);
+     }
+
+     void Entity::set_pixel_P(double p)
+     {
+          pixel_tracker_.set_P(p);
+     }
+
+     void Entity::set_R(double r)
+     {
+          tracker_.set_R(r);
+     }
+
+     void Entity::set_P(double p)
+     {
+          tracker_.set_P(p);
      }
 
      void Entity::remove_point(wb::Point &p)

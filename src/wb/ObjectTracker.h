@@ -1,13 +1,13 @@
-#ifndef POSITIONTRACKER_H_
-#define POSITIONTRACKER_H_
+#ifndef OBJECTTRACKER_H_
+#define OBJECTTRACKER_H_
 /// ---------------------------------------------------------------------------
-/// @file PositionTracker.h
+/// @file ObjectTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 18:53:51 syllogismrxs>
+/// Time-stamp: <2016-03-21 19:13:43 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 20 Mar 2016
+/// Created: 21 Mar 2016
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,44 +35,18 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The PositionTracker class ...
+/// The ObjectTracker class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <opencv_workbench/track/KalmanFilter.h>
-#include <Eigen/Dense>
+#include <opencv_workbench/wb/PositionTracker.h>
+#include <opencv_workbench/wb/Blob.h>
 
-class PositionTracker {
+class ObjectTracker {
 public:
-     PositionTracker();     
-
-     void set_measurement(cv::Point2d m);
-     void predict();
-     cv::Point2d position();
-     cv::Point2d velocity();
-     Ellipse error_ellipse(double confidence);
-     bool is_within_region(cv::Point2d z, double std);
-     Eigen::MatrixXd meas_covariance();
-     void set_position(cv::Point2d p);
-     void set_R(double r);
-     void set_P(double p);
-     
+     ObjectTracker();
+     void process_frame(std::vector<wb::Blob> &blobs);
 protected:
-     syllo::KalmanFilter kf_;
-     Eigen::MatrixXf A_;     // system matrix
-     Eigen::MatrixXf B_;     // input matrix
-     Eigen::MatrixXf H_;     // measurement matrix
-     Eigen::MatrixXf Q_;     // process noise matrix
-     Eigen::MatrixXf R_;     // measurement noise matrix
-     
-     Eigen::MatrixXf x0_;    // initial position
-     Eigen::MatrixXf P0_;     // initial state covariance matrix 
-     
-     Eigen::MatrixXf u_;     // Input acceleration 
-     Eigen::MatrixXf z_;     // Measurement (position)     
-
-     bool initialized_;
-
-     double p_;
+     PositionTracker pixel_tracker_;
 private:
 };
 

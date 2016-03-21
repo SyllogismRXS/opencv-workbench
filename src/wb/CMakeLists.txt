@@ -17,6 +17,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   Parameters.cpp
   ScalarTracker.cpp
   PositionTracker.cpp
+  ObjectTracker.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 

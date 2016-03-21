@@ -682,129 +682,6 @@ make_vertex_writer(TypeMap t, IDMap w,ProbMap c) {
      return vertex_writer<TypeMap,IDMap,ProbMap>(t,w,c);
 }
 
-//void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
-//                             std::vector<wb::Blob> &tracks,
-//                             std::vector<wb::Blob> &fused)
-//{
-//     cout << "Number of measurements: " << meas.size() << endl;
-//     //vertex_t node = boost::add_vertex(graph_);
-//     //graph_[node].set_id(4);
-//     //
-//     //wb::Blob b;
-//     //graph_[node] = b;
-//
-//     // Each measurement can be:
-//     // 1. A New Track
-//     // 2. A Detected Track
-//     // 3. A False Positive Track
-//
-//     N_tgt_ = tracks.size(); // Number of previous fused targets
-//
-//     //// Clear out the old graph and add back the previous hyps
-//     //graph_.clear();
-//     //for (std::list<vertex_t>::iterator it = prev_hyps_.begin();
-//     //     it != prev_hyps_.end(); it++) {
-//     //     boost::add_vertex(*it,graph_);
-//     //}
-//
-//     hyps_.clear();
-//     if (prev_hyps_.size() == 0) {
-//          vertex_t root = boost::add_vertex(graph_);
-//          graph_[root].set_id(-1);
-//          graph_[root].set_prob(1, true);
-//          graph_[root].mht_type = wb::Entity::root;
-//          prev_hyps_.push_back(root);
-//     }
-//
-//     // Pre-multiply all prev hyps by (1-Pd)^N_tgt / find highest id
-//     for (std::list<vertex_t>::iterator it = prev_hyps_.begin();
-//          it != prev_hyps_.end(); it++) {
-//
-//          graph_[*it].set_prob( graph_[*it].prob() * pow(1.0-Pd_,N_tgt_) );
-//
-//          // Assign next_mht_id_ to highest current ID + 1
-//          if (graph_[*it].id() >= next_mht_id_) {
-//               next_mht_id_ = graph_[*it].id() + 1;
-//          }
-//     }
-//
-//     cout << "Hyp Size: " << prev_hyps_.size() << endl;
-//     cout << "N_tgt: " << N_tgt_ << endl;
-//     cout << "Pd: " << Pd_ << endl;
-//     cout << "B_ft_" << B_ft_ << endl;
-//     cout << "B_nt_" << B_nt_ << endl;
-//
-//     // Expand each hypothesis based on received measurements
-//     for (std::list<vertex_t>::iterator it = prev_hyps_.begin();
-//          it != prev_hyps_.end(); it++) {
-//          std::vector<wb::Blob> meas_copy = meas;
-//          std::vector<wb::Blob> tracks_copy = tracks;
-//
-//          std::vector<wb::Blob>::iterator it_meas = meas_copy.begin();
-//          std::vector<wb::Blob>::iterator it_tracks = tracks_copy.begin();
-//          build_tree(*it, it_meas, meas_copy, tracks_copy, next_mht_id_);
-//     }
-//
-//     // Calculate sum of hyp probabilities for normalization
-//     double hyp_sum = 0;
-//     for (std::list<vertex_t>::iterator it = hyps_.begin();
-//          it != hyps_.end(); it++) {
-//          hyp_sum += graph_[*it].prob();
-//     }
-//
-//     // Normalize all probabilities, remove low prob hyps
-//     {
-//          int new_targets = 0;
-//          int hyps_size = hyps_.size();
-//
-//          std::list<vertex_t>::iterator it = hyps_.begin();
-//          while (it != hyps_.end()) {
-//
-//               double new_prob = graph_[*it].prob() / hyp_sum;
-//               graph_[*it].set_prob(new_prob,true);
-//
-//               if (graph_[*it].mht_type == wb::Entity::nt) {
-//                    new_targets++;
-//               }
-//
-//               //// Low prob hypothesis, remove it
-//               //if (new_prob < 0.08) {
-//               //     hyps_.erase(it++);
-//               //} else {
-//               // Add to fused tracks if it's not a FP
-//               if (graph_[*it].mht_type != wb::Entity::fp) {
-//                    fused.push_back(graph_[*it]);
-//               }
-//               ++it;
-//               //}
-//          }
-//
-//          B_nt_ = (double)new_targets / (double)hyps_size;
-//     }
-//
-//     cout << "Returning Fused Tracks: " << fused.size() << endl;
-//
-//     // copy over current hyps to next frame
-//     prev_hyps_ = hyps_;
-//
-//     //// write graph to console
-//     //cout << "\n-- graphviz output START --" << endl;
-//     //boost::write_graphviz(std::cout, graph_,
-//     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
-//     //cout << "\n------------" << endl;
-//     //
-//     //std::ofstream dotfile ("/home/syllogismrxs/test.dot");
-//     //boost::write_graphviz(dotfile, graph_,
-//     //                      boost::make_label_writer(boost::get(&wb::Blob::id_, graph_)));
-//
-//     std::ofstream dotfile ("/home/syllogismrxs/test.dot");
-//     boost::write_graphviz(dotfile, graph_,
-//                           make_vertex_writer(boost::get(&wb::Blob::mht_type, graph_),
-//                                              boost::get(&wb::Blob::id_, graph_),
-//                                              boost::get(&wb::Blob::norm_prob_, graph_)));
-//
-//}
-
 void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
                              std::vector<wb::Blob> &tracks,
                              std::vector<wb::Blob> &track_hyps)
@@ -1100,7 +977,6 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
           }
           intermediate.push_back(&(*it_prev));
      }  
-
 
      //cout << "intermediate size: " << intermediate.size() << endl;
 

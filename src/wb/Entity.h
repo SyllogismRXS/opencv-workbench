@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 11:26:39 syllogismrxs>
+/// Time-stamp: <2016-03-21 18:56:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -192,8 +192,11 @@ namespace wb {
           }
           double prob() { return prob_; }          
 
-          //void set_R(double r);
-          //void set_P(double p);
+          void set_pixel_R(double r);
+          void set_pixel_P(double p);
+
+          void set_R(double r);
+          void set_P(double p);
 
           void set_stream(syllo::Stream *stream) { stream_ = stream; }
           
@@ -204,6 +207,9 @@ namespace wb {
 
           int lower_pixel_value(float num_stds);
           int lower_blob_size(float num_stds);
+
+          void set_confirmed_age(int a) { confirmed_age_ = a; }
+          void set_dead_occluded_age(int a) { dead_occluded_age_ = a; }
           
      protected:          
           bool prob_is_set_;
@@ -262,6 +268,9 @@ namespace wb {
           ScalarTracker size_tracker_;
 
           float avg_pixel_value_;
+
+          int confirmed_age_;
+          int dead_occluded_age_;
 
      private:
      };

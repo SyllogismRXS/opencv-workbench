@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-14 21:34:15 syllogismrxs>
+/// Time-stamp: <2016-03-21 19:08:30 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -49,6 +49,7 @@
 #include <opencv_workbench/utils/Stream.h>
 #include <opencv_workbench/wb/Entity.h>
 #include <opencv_workbench/wb/OpticalFlow.h>
+#include <opencv_workbench/wb/ObjectTracker.h>
 #include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
 
 class RelativeDetector : public Detector{
@@ -68,6 +69,7 @@ protected:
      int grad_thresh_value_;
      BlobProcess blob_process_;
      ClusterProcess cluster_process_;
+     ObjectTracker obj_tracker_;
      NDT ndt_;
 
      cv::Mat erosionConfig_;
