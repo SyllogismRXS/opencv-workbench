@@ -320,6 +320,11 @@ namespace wb {
           tracker_.set_R(r);
      }
 
+     void Entity::set_R(double r0, double r1, double r2, double r3)
+     {
+          tracker_.set_R(r0, r1, r2, r3);
+     }
+
      void Entity::set_P(double p)
      {
           tracker_.set_P(p);

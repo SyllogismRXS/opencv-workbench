@@ -239,7 +239,12 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.overlay_short_lived(gray, short_lived);     
 
      // Hand Blobs to high-level ObjectTracker
-     obj_tracker_.process_frame(blob_process_.blobs());
+     obj_tracker_.process_frame(gray, blob_process_.blobs());
+     
+     
+     cv::Mat object_img;
+     obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE);
+     cv::imshow("Objects", object_img);
        
      //cv::Mat blob_consolidate;
      //blob_process_.consolidate_tracks(gray, blob_consolidate);     

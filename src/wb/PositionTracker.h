@@ -4,7 +4,7 @@
 /// @file PositionTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 18:53:51 syllogismrxs>
+/// Time-stamp: <2016-03-22 16:56:40 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 20 Mar 2016
@@ -54,7 +54,10 @@ public:
      Eigen::MatrixXd meas_covariance();
      void set_position(cv::Point2d p);
      void set_R(double r);
+     void set_R(double r0, double r1, double r2, double r3);
      void set_P(double p);
+     void set_Q(double q);
+     void print();
      
 protected:
      syllo::KalmanFilter kf_;
@@ -65,14 +68,12 @@ protected:
      Eigen::MatrixXf R_;     // measurement noise matrix
      
      Eigen::MatrixXf x0_;    // initial position
-     Eigen::MatrixXf P0_;     // initial state covariance matrix 
+     Eigen::MatrixXf P_;     // initial state covariance matrix 
      
      Eigen::MatrixXf u_;     // Input acceleration 
      Eigen::MatrixXf z_;     // Measurement (position)     
 
      bool initialized_;
-
-     double p_;
 private:
 };
 

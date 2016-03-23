@@ -146,8 +146,15 @@ namespace syllo {
      }
 
      Eigen::MatrixXf KalmanFilter::meas_covariance()
-     {
+     {          
           return H_ * P_ * H_.transpose() + R_;
-     }     
+     }
+
+     void KalmanFilter::print()
+     {
+          cout << "State: " << endl << x_ << endl;
+          cout << "Covar: " << endl << P_ << endl;
+          cout << "R: " << endl << R_ << endl;
+     }
 }
 

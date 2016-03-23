@@ -13,7 +13,7 @@ PositionTracker::PositionTracker() : initialized_(false)
      Q_.resize(4,4);     // Process noise
      R_.resize(2,2);     // Measurement noise
      x0_.resize(4,1);    // Initial state
-     P0_.resize(4,4);    // Covariance matrix
+     P_.resize(4,4);    // Covariance matrix
      
      double T = 0.066666667;//; dt
      //double T = 1;//; dt
@@ -46,23 +46,36 @@ PositionTracker::PositionTracker() : initialized_(false)
      u_.resize(2,1);
      u_ << 0, 0;     
 
-     p_ = 10; // covariance diagonal value
+     P_ << Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * 10;
      
      kf_.setModel(A_, B_, H_, Q_, R_);
 }
 
+void PositionTracker::set_Q(double q)
+{
+     Q_ = Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * q;
+     kf_.setModel(A_, B_, H_, Q_, R_);
+}
 void PositionTracker::set_R(double r)
 {
      R_ << r, 0,
           0, r;
+
+     kf_.setModel(A_, B_, H_, Q_, R_);
+}
+
+void PositionTracker::set_R(double r0, double r1, double r2, double r3)
+{
+     R_ << r0, r1,
+          r2, r3;
+
+     kf_.setModel(A_, B_, H_, Q_, R_);
 }
 
 void PositionTracker::set_P(double p)
 {
-     if (initialized_) {
-          cout << "Warning: Covariance matrix already initialized." << endl;
-     }
-     p_ = p;     
+     P_ << Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * p;
+     kf_.init(kf_.state(), P_);
 }
 
 void PositionTracker::set_measurement(cv::Point2d m)
@@ -72,9 +85,8 @@ void PositionTracker::set_measurement(cv::Point2d m)
           kf_.update(z_);
      } else {
           initialized_ = true;
-          x0_ << m.x , m.y, 0, 0;
-          P0_ << Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * p_;
-          kf_.init(x0_,P0_);
+          x0_ << m.x , m.y, 0, 0;          
+          kf_.init(x0_,P_);
      }
 }
 
@@ -120,4 +132,9 @@ void PositionTracker::set_position(cv::Point2d p)
      Eigen::MatrixXf x(4,1);
      x << p.x, p.y, 0, 0;
      kf_.set_state(x);
+}
+
+void PositionTracker::print()
+{
+     kf_.print();
 }

@@ -1,13 +1,13 @@
-#ifndef OBJECTTRACKER_H_
-#define OBJECTTRACKER_H_
+#ifndef MATRIXTRACKER_H_
+#define MATRIXTRACKER_H_
 /// ---------------------------------------------------------------------------
-/// @file ObjectTracker.h
+/// @file MatrixTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 19:40:38 syllogismrxs>
+/// Time-stamp: <2016-03-22 20:06:46 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 21 Mar 2016
+/// Created: 22 Mar 2016
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,30 +35,25 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The ObjectTracker class ...
+/// The MatrixTracker class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <opencv_workbench/wb/PositionTracker.h>
-#include <opencv_workbench/wb/Blob.h>
-#include <opencv_workbench/wb/MatrixTracker.h>
+#include <opencv_workbench/wb/ScalarTracker.h>
+#include <Eigen/Dense>
 
-
-class ObjectTracker {
+class MatrixTracker {
 public:
-     ObjectTracker();
-     void process_frame(cv::Mat &src, std::vector<wb::Blob> &blobs);
-     int next_available_id();
-
-     void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);
-
-protected:          
-     std::vector<wb::Blob> tracks_;
-     std::vector<wb::Blob> prev_tracks_;
-     
-     MatrixTracker covar_tracker_;
-     
-     int next_id_;
-private:
+     MatrixTracker();     
+     void init(int rows, int cols);
+     void set_values(Eigen::MatrixXd &vals);
+     void set_values(std::vector<double> &vals);
+     void predict();
+     Eigen::MatrixXd values();
+protected:
+     std::vector<ScalarTracker> elems_;
+private:     
+     int rows_;
+     int cols_;
 };
 
 #endif

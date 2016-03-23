@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-18 18:49:36 syllogismrxs>
+/// Time-stamp: <2016-03-22 10:25:53 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -53,21 +53,6 @@
 #include <opencv_workbench/utils/Stream.h>
 
 #include "Blob.h"
-
-typedef enum OverlayFlags {
-     BLOBS          = 1 << 0,
-     RECTS          = 1 << 1,
-     TRACKS         = 1 << 2,
-     IDS            = 1 << 3,
-     ERR_ELLIPSE    = 1 << 4,
-     CONFIRMED_ONLY = 1 << 5
-}OverlayFlags_t;
-     
-inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)
-{
-     return static_cast<OverlayFlags_t>(static_cast<int>(a) | 
-                                        static_cast<int>(b));
-}
 
 ////////////////////////////////////////
 // Definitions for Boost Graph Library

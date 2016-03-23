@@ -43,7 +43,9 @@ void ScalarTracker::set_value(float value)
 
 void ScalarTracker::predict()
 {          
-     kf_.predict(u_);
+     if (initialized_) {
+          kf_.predict(u_);
+     }
 }
 
 float ScalarTracker::value()

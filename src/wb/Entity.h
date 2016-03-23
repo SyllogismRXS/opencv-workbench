@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 18:56:23 syllogismrxs>
+/// Time-stamp: <2016-03-22 16:55:49 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -53,8 +53,24 @@
 #include <opencv_workbench/wb/ScalarTracker.h>
 #include <opencv_workbench/wb/PositionTracker.h>
 
-namespace wb {
+     typedef enum OverlayFlags {
+          BLOBS          = 1 << 0,
+          RECTS          = 1 << 1,
+          TRACKS         = 1 << 2,
+          IDS            = 1 << 3,
+          ERR_ELLIPSE    = 1 << 4,
+          CONFIRMED_ONLY = 1 << 5
+     }OverlayFlags_t;
+     
+     inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)
+     {
+          return static_cast<OverlayFlags_t>(static_cast<int>(a) | 
+                                             static_cast<int>(b));
+     }
 
+
+namespace wb {
+     
      class Entity {
      public:
 
@@ -196,6 +212,7 @@ namespace wb {
           void set_pixel_P(double p);
 
           void set_R(double r);
+          void set_R(double r0, double r1, double r2, double r3);
           void set_P(double p);
 
           void set_stream(syllo::Stream *stream) { stream_ = stream; }

@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 10:58:56 syllogismrxs>
+/// Time-stamp: <2016-03-22 10:55:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -95,6 +95,8 @@ namespace syllo {
           
                return (state_check && covar_check);
           }
+
+          void print();
      };     
 }
 
