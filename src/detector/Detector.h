@@ -4,7 +4,7 @@
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-14 20:44:29 syllogismrxs>
+/// Time-stamp: <2016-03-23 15:09:50 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
