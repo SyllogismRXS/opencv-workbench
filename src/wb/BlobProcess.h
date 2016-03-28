@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 10:25:53 syllogismrxs>
+/// Time-stamp: <2016-03-28 13:32:46 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -153,7 +153,9 @@ public:
      }     
 
      void set_stream(syllo::Stream *stream) { stream_ = stream; }
-     
+
+     bool smaller_blob_search(std::vector<wb::Blob>::iterator prev, wb::Blob &blob_result);
+          
 protected:
      
      static uchar valueAt(cv::Mat &img, int row, int col);

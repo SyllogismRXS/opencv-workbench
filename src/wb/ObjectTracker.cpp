@@ -185,11 +185,11 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                          }
                     }
 
-                    cout << "Covar Measurement: " << endl << covar << endl;
+                    //cout << "Covar Measurement: " << endl << covar << endl;
                     covar_tracker_.predict();
                     covar_tracker_.set_values(covar);
                     covar = covar_tracker_.values();
-                    cout << "Filtered Covar: " << endl << covar << endl;
+                    //cout << "Filtered Covar: " << endl << covar << endl;
                     
                     //it_prev->pixel_tracker().set_R(sqrt(abs(covar(0,0)))*10, sqrt(abs(covar(0,1)))*10,
                     //                               sqrt(abs(covar(1,0)))*10, sqrt(abs(covar(1,1)))*10);                                                            

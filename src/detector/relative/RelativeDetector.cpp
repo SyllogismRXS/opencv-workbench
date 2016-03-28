@@ -235,22 +235,21 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS);
      //blob_process_.overlay(gray, blob_img, BLOBS | RECTS | IDS | ERR_ELLIPSE);     
      
+     cv::Mat blob_consolidate;
+     blob_process_.consolidate_tracks(gray, blob_consolidate);     
+      
+     cv::Mat original_rects = original.clone();
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
+     
      cv::Mat short_lived;
      blob_process_.overlay_short_lived(gray, short_lived);     
 
      // Hand Blobs to high-level ObjectTracker
      obj_tracker_.process_frame(gray, blob_process_.blobs());
-     
-     
+          
      cv::Mat object_img;
      obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE);
-     cv::imshow("Objects", object_img);
-       
-     //cv::Mat blob_consolidate;
-     //blob_process_.consolidate_tracks(gray, blob_consolidate);     
-      
-     //cv::Mat original_rects = original.clone();
-     //blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
+     cv::imshow("Objects", object_img);           
       
      // Add undistorted centroids and compute trajectory analysis
      std::map<int, wb::Blob> tracks_frame;
@@ -305,7 +304,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           cv::imshow("Dilate", dilate);      
           cv::imshow("Blobs", blob_img);        
           cv::imshow("Tracking Tracks",short_lived);
-          //cv::imshow("Consolidate", blob_consolidate);      
+          cv::imshow("Consolidate", blob_consolidate);      
           //cv::imshow("Tracks", original_rects);          
           //cv::imshow("Traj", blob_consolidate);
      }

@@ -67,7 +67,7 @@ int BlobProcess::next_available_id()
 uchar BlobProcess::valueAt(cv::Mat &img, int row, int col)
 {
      if (col >= 0 && col < img.cols && row >= 0 && row < img.rows) {
-	       return img.at<uchar>(row,col);
+          return img.at<uchar>(row,col);
      }
      // Return 0 if outside of the image bounds
      return 0;
@@ -364,10 +364,10 @@ void BlobProcess::find_blobs(cv::Mat &input,
                              int min_blob_size, bool show)
 {
      blobs.clear();
-     
+
      std::vector<uchar> labelTable;
      labelTable.push_back(0);
-     
+
      cv::Mat img;
      input.copyTo(img);
 
@@ -599,7 +599,7 @@ void BlobProcess::build_tree(vertex_t &vertex,
 
                     Eigen::MatrixXd Zm; Zm.resize(2,1);
                     Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
-                    
+
                     Eigen::MatrixXd diff = Zm - u;
                     double mahal_dist = wb::gaussian_probability(diff, zero_mean, B);
                     double mahal_max = wb::gaussian_probability(zero_mean, zero_mean, B);
@@ -633,7 +633,7 @@ void BlobProcess::build_tree(vertex_t &vertex,
                     // Add to the configuration ("trackID:measurementID")
                     std::string config_str = syllo::int2str(it->id()) + ":" + syllo::int2str(it_meas->id());
                     config[config_str] = config_str;
-                    
+
                     // recurse
                     build_tree(dt, it_meas+1, meas, tracks, config, next_id+1);
                }
@@ -686,7 +686,7 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
                              std::vector<wb::Blob> &tracks,
                              std::vector<wb::Blob> &track_hyps)
 {
-     hyps_.clear();     
+     hyps_.clear();
 
      // Determine the next_mht_id_ and...
      // Determine number of unique target IDs
@@ -720,7 +720,7 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
 
      // Expand each hypothesis based on received measurements
      std::vector<wb::Blob>::iterator it_meas = meas.begin();
-     std::map<std::string,std::string> config;     
+     std::map<std::string,std::string> config;
      build_tree(root, it_meas, meas, tracks, config, next_mht_id_);
 
      // // Calculate sum of hyp probabilities for normalization
@@ -729,14 +729,14 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      //      it != hyps_.end(); it++) {
      //      hyp_sum += graph_[*it].prob();
      // }
-     
+
      // Calculate sum of hyp probabilities for normalization
      double hyp_sum = 0;
      for (std::list<TracksHypothesis>::iterator it = track_hyps_.begin();
           it != track_hyps_.end(); it++) {
           hyp_sum += it->probability;
-     }     
-     // Calculate sum of hyp probabilities for normalization     
+     }
+     // Calculate sum of hyp probabilities for normalization
      cout << "Prob Sum: " << hyp_sum << endl;
 
      // // Normalize all hyps probabilities
@@ -744,14 +744,14 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      // int hyps_size = hyps_.size();
      // for (std::list<vertex_t>::iterator it = hyps_.begin();
      //      it != hyps_.end(); it++) {
-     // 
+     //
      //      double new_prob = graph_[*it].prob() / hyp_sum;
      //      graph_[*it].set_prob(new_prob,true);
-     // 
+     //
      //      if (graph_[*it].mht_type == wb::Entity::nt) {
      //           new_targets++;
      //      }
-     // 
+     //
      //      // Add to track_hyp  if it's not a FP
      //      if (graph_[*it].mht_type != wb::Entity::fp) {
      //           track_hyps.push_back(graph_[*it]);
@@ -784,7 +784,7 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      // for (std::vector<wb::Blob>::iterator it1 = track_hyps.begin();
      //      it1 != track_hyps.end(); it1++) {
      //      double prob_sum = 0;
-     // 
+     //
      //      for (std::list<vertex_t>::iterator it2 = hyps_.begin();
      //      it2 != hyps_.end(); it2++) {
      //           if (it1->pixel_tracker() == graph_[*it2].pixel_tracker()) {
@@ -795,10 +795,10 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
      //      it1->set_prob(prob_sum);
      //      track_hyp_sum += prob_sum;
      // }
-     // 
+     //
      // cout << "--------------------------------------" << endl;
      // cout << "Number of Track Hyps: " << track_hyps.size() << endl;
-     // 
+     //
      // // Normalize all track hyps:
      // for (std::vector<wb::Blob>::iterator it = track_hyps.begin();
      //      it != track_hyps.end(); it++) {
@@ -820,141 +820,200 @@ void BlobProcess::assign_mht(std::vector<wb::Blob> &meas,
 int erosionElem = cv::MORPH_ELLIPSE;
 int erosionSize = 1;
 int dilationElem = cv::MORPH_ELLIPSE; // MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE
-int dilationSize = 1;          
+int dilationSize = 1;
 cv::Mat erosionConfig = cv::getStructuringElement( erosionElem,
-                                                 cv::Size(2*erosionSize+1, 2*erosionSize+1),
-                                                 cv::Point(erosionSize, erosionSize) );    
+                                                   cv::Size(2*erosionSize+1, 2*erosionSize+1),
+                                                   cv::Point(erosionSize, erosionSize) );
 cv::Mat dilationConfig = cv::getStructuringElement( dilationElem,
-                                                  cv::Size(2*dilationSize+1, 2*dilationSize+1),
-                                                  cv::Point(dilationSize, dilationSize) );
+                                                    cv::Size(2*dilationSize+1, 2*dilationSize+1),
+                                                    cv::Point(dilationSize, dilationSize) );
+#define ENABLE_DEEP_SEARCH_DEBUG 1
+bool BlobProcess::smaller_blob_search(std::vector<wb::Blob>::iterator prev, wb::Blob &blob_result)
+{
+     // Perform a deep search... lower blob size constraint..
+     // Search with a smaller blob size
 
-#define ENABLE_DEEP_SEARCH_DEBUG 0
+     //cout << "prev.rectangle(): " << prev.rectangle() << endl;
+     //cout << "Est pos: " << prev->estimated_pixel_centroid() << endl;
 
-void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas, 
+     cv::Mat roi(original_,prev->rectangle());
+     cv::Mat roi_original = roi.clone();
+
+     cv::threshold(roi, roi, curr_thresh_, 255, cv::THRESH_TOZERO);
+
+#if ENABLE_DEEP_SEARCH_DEBUG
+     cv::Mat where = original_.clone();
+     cv::rectangle(where, prev->rectangle(), cv::Scalar(0,255,0), 1, 8, 0);
+
+     cv::Mat roi_large;
+     cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
+     cv::imshow("Where", where);
+     cv::imshow("Orig", roi_large);
+
+     cout << "----" << endl;
+     cout << "ID: " << prev->id() << endl;
+     cout << "Current Threshold: " << curr_thresh_ << endl;
+#endif
+     cv::erode(roi, roi, erosionConfig);
+     cv::dilate(roi, roi, dilationConfig);
+
+     std::vector<wb::Blob> blobs;
+     int min_blob_size = prev->lower_blob_size(2);        // TODO
+
+#if ENABLE_DEEP_SEARCH_DEBUG
+     cout << "Estimated Blob Size: " << prev->estimated_blob_size() << endl;
+     cout << "Lower Blob Size: " << min_blob_size << endl;
+
+     cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
+     cv::imshow("Process", roi_large);
+#endif
+     this->find_blobs(roi,blobs, min_blob_size, false);
+     if (blobs.size() == 1) {
+          // Found a match, create a temporary blob from the ROI, just
+          // for a simple match
+#if ENABLE_DEEP_SEARCH_DEBUG
+          cout << "================> DEEP MATCH" << endl;
+#endif
+          for (int r = 0; r < roi_original.rows; r++) {
+               for (int c = 0; c < roi_original.cols; c++) {
+                    wb::Point p;
+                    p.set_position(cv::Point(c+prev->rectangle().x,r+prev->rectangle().y));
+                    p.set_value(roi_original.at<uchar>(c,r));
+                    blob_result.add_point(p);
+               }
+          }
+          blob_result.set_stream(stream_);
+          blob_result.init();
+          return true;
+     }
+     return false;
+}
+
+void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                                         std::vector<wb::Blob> &tracks,
                                         std::vector<wb::Blob> &fused)
 {
      // Determine if a new measurement falls within the gate of a previous
      // track. Don't update kalman filter for each track until all measurements
-     // have been accounted for.     
+     // have been accounted for.
 
      // Key<int>     : ID of previous track
      // Value <list> : Measurement blob pointers that match track ID
      std::map<int, std::list<wb::Blob*> > track_matches;
-     
+
      std::vector<wb::Blob*> intermediate;
 
 #if ENABLE_DEEP_SEARCH_DEBUG
      cout << "================" << endl;
 #endif
-     for (std::vector<wb::Blob>::iterator it_meas = meas.begin(); 
+     for (std::vector<wb::Blob>::iterator it_meas = meas.begin();
           it_meas != meas.end(); it_meas++) {
           bool matched = false;
-          for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
+          for (std::vector<wb::Blob>::iterator it_prev = tracks.begin();
                it_prev != tracks.end(); it_prev++) {
-               
+
                // Do any of the blob's points fall within 3-sigma region of the
                // track?
                //Eigen::MatrixXf Zm; Zm.resize(2,1);
-               for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin(); 
+               for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin();
                     it_point != it_meas->points().end(); it_point++) {
                     //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
                     //Zm << it_point->x(), it_point->y();
                     if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
                          track_matches[it_prev->id()].push_back(&(*it_meas));
-                         matched = true;                         
+                         matched = true;
                          break;
                     }
-               }                              
+               }
           }
-          
+
           // If the measurement doesn't fall within any previous track,
           // initiate a new one.
-          if (!matched) {               
+          if (!matched) {
                it_meas->new_track(next_available_id());
                intermediate.push_back(&(*it_meas));
           }
-     }     
+     }
 
      // For each track ID with matches, use kalman filter to integrate position
-     for (std::vector<wb::Blob>::iterator it_prev = tracks.begin(); 
-               it_prev != tracks.end(); it_prev++) {
+     for (std::vector<wb::Blob>::iterator it_prev = tracks.begin();
+          it_prev != tracks.end(); it_prev++) {
 
           //cout << "Track: " << it_prev->id() << " , " << it_prev->estimated_pixel_centroid()<< " matches..." << endl;
-          
-          if (track_matches.count(it_prev->id()) > 0) {          
+
+          if (track_matches.count(it_prev->id()) > 0) {
                for (std::list<wb::Blob*>::iterator it_match = track_matches[it_prev->id()].begin();
                     it_match != track_matches[it_prev->id()].end(); it_match++) {
 
                     //cout << "\tID: " << (*it_match)->id() << " , " << (*it_match)->estimated_pixel_centroid() << endl;
-                    
+
                     // Only increment the age and set occluded one time!
                     if (it_match == track_matches[it_prev->id()].begin()) {
                          it_prev->set_occluded(false);
                          it_prev->inc_age();
                     }
-                    
+
                     // Integrate the matched measurement
                     it_prev->copy_meas_info(*(*it_match));
-                    it_prev->correct_tracker();                    
-               }               
-          } else {               
-               
+                    it_prev->correct_tracker();
+               }
+          } else {
+
                // Perform a deep search... lower thresholds and blob size constraint..
-               
+
                //int thresh_value = it_prev->lower_pixel_value(3); //TODO
-               
+
                //use estimated blob threshold-1 for threshold...
                //int thresh_value = it_prev->estimated_pixel_value()-1;
                int thresh_value = curr_thresh_;
-               
+
                // If the average blob threshold is above the current threshold,
                // the blob was probably missed due to the blob size restriction
                if (it_prev->estimated_pixel_value() > curr_thresh_) {
                     thresh_value = curr_thresh_;
                }
-               
+
                // Search with a lowered-threshold and smaller blob size
                cv::Mat roi(original_,it_prev->rectangle());
                cv::Mat roi_original = roi.clone();
 
                cv::threshold(roi, roi, thresh_value, 255, cv::THRESH_TOZERO);
-               
+
 #if ENABLE_DEEP_SEARCH_DEBUG
                cv::Mat where = original_.clone();
-               cv::rectangle(where, it_prev->rectangle(), cv::Scalar(0,255,0), 1, 8, 0);               
+               cv::rectangle(where, it_prev->rectangle(), cv::Scalar(0,255,0), 1, 8, 0);
 
                cv::Mat roi_large;
-               cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);               
+               cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
                cv::imshow("Where", where);
-               cv::imshow("Orig", roi_large);                              
+               cv::imshow("Orig", roi_large);
 
                cout << "----" << endl;
                cout << "ID: " << it_prev->id() << endl;
                cout << "Current Threshold: " << curr_thresh_ << endl;
                cout << "Track Avg Thresh: " << it_prev->estimated_pixel_value() << endl;
                cout << "Lower Thresh: " << thresh_value << endl;
-#endif               
+#endif
                cv::erode(roi, roi, erosionConfig);
                cv::dilate(roi, roi, dilationConfig);
-               
+
                std::vector<wb::Blob> blobs;
-               int min_blob_size = it_prev->lower_blob_size(2);        // TODO       
+               int min_blob_size = it_prev->lower_blob_size(2);        // TODO
 
 #if ENABLE_DEEP_SEARCH_DEBUG
                cout << "Estimated Blob Size: " << it_prev->estimated_blob_size() << endl;
                cout << "Lower Blob Size: " << min_blob_size << endl;
-               
+
                cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
-               cv::imshow("Process", roi_large);               
-#endif               
-               this->find_blobs(roi,blobs, min_blob_size, false);               
+               cv::imshow("Process", roi_large);
+#endif
+               this->find_blobs(roi,blobs, min_blob_size, false);
                if (blobs.size() == 1) {
                     // Found a match, create a temporary blob from the ROI, just
                     // for a simple match
-#if ENABLE_DEEP_SEARCH_DEBUG                    
+#if ENABLE_DEEP_SEARCH_DEBUG
                     cout << "================> DEEP MATCH" << endl;
-#endif                    
+#endif
                     wb::Blob b;
                     for (int r = 0; r < roi_original.rows; r++) {
                          for (int c = 0; c < roi_original.cols; c++) {
@@ -965,33 +1024,33 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                          }
                     }
                     b.set_stream(stream_);
-                    b.init();                                        
+                    b.init();
                     it_prev->copy_meas_info(b);
                     it_prev->detected_track();
-               } else {                                      
+               } else {
                     // Missed track measurement?
                     // If we have multiple blobs, probably uncertain, missed
-                    it_prev->missed_track();               
+                    it_prev->missed_track();
                }
                //cv::waitKey(0);
           }
           intermediate.push_back(&(*it_prev));
-     }  
+     }
 
-     //cout << "intermediate size: " << intermediate.size() << endl;
+//cout << "intermediate size: " << intermediate.size() << endl;
 
-     // Are any of the tracks very similar? If so, keep the oldest one
-     // Determine if the centroids of any tracks are within 1 std of each
-     // other.
-     //Eigen::MatrixXf Zm1, Zm2; Zm1.resize(2,1); Zm2.resize(2,1);
-     
-     for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin(); 
+// Are any of the tracks very similar? If so, keep the oldest one
+// Determine if the centroids of any tracks are within 1 std of each
+// other.
+//Eigen::MatrixXf Zm1, Zm2; Zm1.resize(2,1); Zm2.resize(2,1);
+
+     for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin();
           it1 != intermediate.end(); it1++) {
-          for (std::vector<wb::Blob*>::iterator it2 = intermediate.begin(); 
+          for (std::vector<wb::Blob*>::iterator it2 = intermediate.begin();
                it2 != intermediate.end(); it2++) {
-               
+
                // If it's the same ID, move on to next track
-               if ((*it1)->id() == (*it2)->id()) {                    
+               if ((*it1)->id() == (*it2)->id()) {
                     continue;
                }
 
@@ -1002,16 +1061,16 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                }
 
                //// Are the track's centroids within 3 std of each other?
-               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) && 
+               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) &&
                    (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),3)) {
-                    
+
                     // Found similar tracks. Save the oldest track
                     if ((*it1)->age() > (*it2)->age()) {
                          // Integrate younger track into older track
                          (*it1)->copy_meas_info(*(*it2));
                          (*it1)->set_occluded(false);
                          (*it1)->correct_tracker();
-                         
+
                          // Mark the younger track as matched, so it is overlooked later
                          (*it2)->set_matched(true);
                     } else {
@@ -1019,25 +1078,25 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                          (*it2)->copy_meas_info(*(*it1));
                          (*it2)->set_occluded(false);
                          (*it2)->correct_tracker();
-                         
+
                          // Mark the younger track as matched, so it is overlooked later
                          (*it1)->set_matched(true);
                     }
                }
-          }          
-     }     
+          }
+     }
 
-     // Any track that wasn't marked as "matched" was either older or wasn't
-     // similar to another track. Copy them to the final fused vector
-     for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin(); 
+// Any track that wasn't marked as "matched" was either older or wasn't
+// similar to another track. Copy them to the final fused vector
+     for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin();
           it1 != intermediate.end(); it1++) {
-          if (!(*it1)->matched()) {               
+          if (!(*it1)->matched()) {
                fused.push_back(*(*it1));
           }
-     }     
+     }
 }
 
-void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas, 
+void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                                  std::vector<wb::Blob> &tracks,
                                  std::vector<wb::Blob> &fused)
 {
@@ -1054,14 +1113,14 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
           rows = cols = meas_count;
      } else if (meas_count > tracks_count) {
           // More measurements than tracks
-          rows = cols = meas_count;          
+          rows = cols = meas_count;
      } else {
           // More tracks than measurements
-          rows = cols = tracks_count;          
+          rows = cols = tracks_count;
      }
 
      Matrix<double> matrix(rows, cols);
-  
+
      // New blob measurements are along the Y-axis (left hand side)
      // Old Blob tracks are along x-axis (top-side)
      std::vector<wb::Blob>::iterator it = meas.begin();
@@ -1075,12 +1134,10 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                int dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
 
                int curr_cost = dist;
-               if (curr_cost > 1000) {
-                    curr_cost = INT_MAX;
-               }
-
+               //if (curr_cost > 1000) {
+               //     curr_cost = INT_MAX;
+               //}
                matrix(r,c) = curr_cost;
-                              
                c++;
           }
           r++;
@@ -1097,14 +1154,22 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
           std::vector<wb::Blob>::iterator it_prev = tracks.begin();
           for (int c = 0; c < cols; c++) {
                if (matrix(r,c) == 0) {
+
                     if (r < meas_count && c < tracks_count) {
+                         // Do any of the blob's points fall within 3-sigma region of the
+                         // previous track?
+                         bool matched = false;
+                         for (std::vector<wb::Point>::iterator it_point = it->points().begin();
+                              it_point != it->points().end(); it_point++) {
 
-                         cv::Point p1 = it->estimated_pixel_centroid();
-                         cv::Point p2 = it_prev->estimated_pixel_centroid();
-                         double dist = pow(p1.x-p2.x,2) + pow(p1.y-p2.y,2);
+                              if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
+                                   matched = true;
+                                   break;
+                              }
+                         }
 
-                         if (dist > 100) { // needs to be based off of covariance matrix
-                              // TOO MUCH OF A JUMP IN POSITION
+                         if (!matched) {
+                              // TOO MUCH OF A JUMP IN POSITION                                                            
                               // Probably a missed track
                               it_prev->missed_track();
                               fused.push_back(*it_prev);
@@ -1114,7 +1179,6 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                               fused.push_back(*it);
 
                               new_tracks_.push_back(*it);
-
                          } else {
                               // Found an assignment. Update the new measurement
                               // with the track ID and age of older track. Add
@@ -1129,7 +1193,6 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                          // Possible new track
                          it->new_track(next_available_id());
                          fused.push_back(*it);
-
                          new_tracks_.push_back(*it);
                     }
                     break; // There is only one assignment per row
@@ -1313,7 +1376,7 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 {
      curr_thresh_ = thresh;
      original_ = original;
-     
+
      //std::vector<wb::Blob> new_blobs;
      frame_blobs_.clear();
      this->find_blobs(input, frame_blobs_, min_blob_size_, true);
@@ -1330,23 +1393,23 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
      //this->overlay_blobs(input,cluster_img);
      //overlay(input, cluster_img, RECTS | IDS);
      //cv::imshow("Clustered",cluster_img);
-     
+
      //////////////////////////////////////////////////////////////////////////
      // Run Kalman filter update on blobs from previous iteration
      //////////////////////////////////////////////////////////////////////////
      std::vector<wb::Blob>::iterator it = prev_blobs_.begin();
      for(; it != prev_blobs_.end(); it++) {
           //if (it->is_confirmed()) {
-               it->predict_tracker();
-               //}
+          it->predict_tracker();
+          //}
      }
 
      blobs_.clear();
 
      // This has some bug that crashes with too many blobs
      //this->assign_hungarian(frame_blobs_, prev_blobs_, blobs_);
-     //this->assign_munkres(frame_blobs_, prev_blobs_, blobs_);
-     this->assign_gate_aggregate(frame_blobs_, prev_blobs_, blobs_);
+     this->assign_munkres(frame_blobs_, prev_blobs_, blobs_);
+     //this->assign_gate_aggregate(frame_blobs_, prev_blobs_, blobs_);
 
      blob_maintenance();
 
@@ -1459,29 +1522,67 @@ bool BlobProcess::consolidate_tracks(cv::Mat &in, cv::Mat &out)
      for (std::map<int, std::list<wb::Blob*> >::iterator it = matches.begin();
           it != matches.end(); it++) {
           int max_age = INT_MIN;
-          wb::Blob *champ_blob = NULL;
-          wb::Blob blob;
+          std::list<wb::Blob*>::iterator champ_blob;
+          bool champ_blob_found = false;
+
+          // Find the oldest blob
           for(std::list<wb::Blob*>::iterator it_blob = it->second.begin();
               it_blob != it->second.end(); it_blob++) {
 
                if ((*it_blob)->age() > max_age) {
                     max_age = (*it_blob)->age();
-                    champ_blob = *it_blob;
+                    champ_blob = it_blob;
+                    champ_blob_found = true;
+               }
+          }
+
+          if (!champ_blob_found) {
+               break;
+          }
+
+          // Update the oldest blob with measurements from the other matches
+          for(std::list<wb::Blob*>::iterator it_blob = it->second.begin();
+              it_blob != it->second.end(); it_blob++) {
+
+               // Skip the "oldest" blob
+               if (it_blob == champ_blob) {
+                    continue;
                }
 
-               blob.add_points((*it_blob)->points());
+               (*champ_blob)->copy_meas_info(*(*it_blob));
+               (*champ_blob)->set_occluded(false);
+               (*champ_blob)->correct_tracker();
           }
-
-          if (champ_blob != NULL) {
-               blob.copy_track_info(*champ_blob);
-               blob.compute_metrics();
-               blob.detected_track();
-
-               temp_blobs.push_back(blob);
-          } else {
-               cout << "Error: Couldn't find champ blob" << endl;
-          }
+          temp_blobs.push_back(*(*champ_blob));
      }
+
+     //std::vector<wb::Blob> temp_blobs;
+     //for (std::map<int, std::list<wb::Blob*> >::iterator it = matches.begin();
+     //     it != matches.end(); it++) {
+     //     int max_age = INT_MIN;
+     //     wb::Blob *champ_blob = NULL;
+     //     wb::Blob blob;
+     //     for(std::list<wb::Blob*>::iterator it_blob = it->second.begin();
+     //         it_blob != it->second.end(); it_blob++) {
+     //
+     //          if ((*it_blob)->age() > max_age) {
+     //               max_age = (*it_blob)->age();
+     //               champ_blob = *it_blob;
+     //          }
+     //
+     //          blob.add_points((*it_blob)->points());
+     //     }
+     //
+     //     if (champ_blob != NULL) {
+     //          blob.copy_track_info(*champ_blob);
+     //          blob.compute_metrics();
+     //          blob.detected_track();
+     //
+     //          temp_blobs.push_back(blob);
+     //     } else {
+     //          cout << "Error: Couldn't find champ blob" << endl;
+     //     }
+     //}
 
      // Add the blobs that had no overlap
      for(std::vector<wb::Blob>::iterator it = blobs_.begin();
@@ -1730,12 +1831,12 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
                // confirmed, ignore this track/blob.
                continue;
           }
-          
+
           //cout << "-------" << endl;
           //cout << "ID: " << it->id() << endl;
           //cout << "Est Centroid: " << it->estimated_centroid() << endl;
           //cout << "Est Pixel Centroid: " << it->estimated_pixel_centroid() << endl;
-          
+
           if (flags & BLOBS) {
                cv::Vec3b point_color = cv::Vec3b(20,255,57);
                if (it->occluded()) {
@@ -1749,7 +1850,7 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
                     dst.at<cv::Vec3b>(it_points->y(), it_points->x()) = point_color;
                }
           }
-         
+
           cv::Rect rect = it->bbox().rectangle();
 
           if (flags & RECTS) {
@@ -1789,15 +1890,15 @@ void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)
      std::vector<wb::Blob>::iterator it = blobs_.begin();
      for (; it != blobs_.end(); it++) {
           //if (it->is_confirmed()) {
-               cv::Point est_centroid = it->estimated_pixel_centroid();
-               //cv::Rect rect = (*it)->rectangle();
+          cv::Point est_centroid = it->estimated_pixel_centroid();
+          //cv::Rect rect = (*it)->rectangle();
 
-               std::ostringstream convert;
-               convert << it->id();
-               //const std::string& text = convert.str();
+          std::ostringstream convert;
+          convert << it->id();
+          //const std::string& text = convert.str();
 
-               wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
-               //}
+          wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
+          //}
      }
 }
 
