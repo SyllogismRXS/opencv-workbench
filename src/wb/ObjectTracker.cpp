@@ -185,17 +185,58 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                          }
                     }
 
-                    //cout << "Covar Measurement: " << endl << covar << endl;
-                    covar_tracker_.predict();
-                    covar_tracker_.set_values(covar);
-                    covar = covar_tracker_.values();
-                    //cout << "Filtered Covar: " << endl << covar << endl;
+                    //covar_tracker_.predict();
+                    //covar_tracker_.set_values(covar);
+                    //covar = covar_tracker_.values();
+                    //it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
+                    //                               covar(1,0), covar(1,1));
+               } else {
+                    // If only a single measurement, decrease size of
+                    // measurement, generate measurement that is "circular"
+                    //covar_tracker_.predict();                    
+                    covar = it_prev->pixel_tracker().R().cast<double>();                    
                     
-                    //it_prev->pixel_tracker().set_R(sqrt(abs(covar(0,0)))*10, sqrt(abs(covar(0,1)))*10,
-                    //                               sqrt(abs(covar(1,0)))*10, sqrt(abs(covar(1,1)))*10);                                                            
-                    it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
-                                                   covar(1,0), covar(1,1));
+                    Eigen::VectorXcd eigvals = covar.eigenvalues();
+                    double eig1 = eigvals(0).real();
+                    double eig2 = eigvals(1).real();
+                    
+                    if (eig1 < eig2) {
+                         eig1 *= 0.90;
+                         eig2 = eig1;
+
+                         Eigen::EigenSolver<Eigen::MatrixXd> es(covar);
+                         Eigen::MatrixXcd ev = es.eigenvectors();
+                         Eigen::MatrixXd ev_real = ev.real();
+
+                         Eigen::MatrixXd eigs_corrected(2,2);
+                         eigs_corrected << eig1, 0 , 0, eig2;
+                         covar = ev_real * eigs_corrected * ev_real.inverse();                              
+                         
+                    } else {
+                         eig2 *= 0.90;
+                         eig1 = eig2;
+                         Eigen::EigenSolver<Eigen::MatrixXd> es(covar);
+                         Eigen::MatrixXcd ev = es.eigenvectors();
+                         Eigen::MatrixXd ev_real = ev.real();
+                         
+                         Eigen::MatrixXd eigs_corrected(2,2);
+                         eigs_corrected << eig1, 0 , 0, eig2;
+                         covar = ev_real * eigs_corrected * ev_real.inverse();                              
+                    }                    
+                    
+                    //covar_tracker_.set_values(covar);
+
+                    //covar = covar_tracker_.values();
+                    //it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
+                    //                               covar(1,0), covar(1,1));
                }
+               // TODO: create minimum / maximum covariance possibilities
+               covar_tracker_.predict();
+               covar_tracker_.set_values(covar);
+               covar = covar_tracker_.values();
+               it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
+                                              covar(1,0), covar(1,1));               
+               // Define maximum and minimum size for object in scene?
                
           } else {                              
                // Missed track measurement?

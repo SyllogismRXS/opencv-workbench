@@ -46,8 +46,8 @@ typedef bgi::rtree< point_value, bgi::dynamic_rstar > rtree_point_t;
 
 BlobProcess::BlobProcess()
 {
-     min_blob_size_ = 30;//15, 20, 30;
-     //min_blob_size_ = 1;
+     //min_blob_size_ = 30;//15, 20, 30;
+     min_blob_size_ = 1;
      //min_blob_size_ = 10;
      //min_blob_size_ = 5;//15, 20, 30;
      next_id_ = 0;

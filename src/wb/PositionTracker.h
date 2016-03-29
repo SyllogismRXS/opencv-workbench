@@ -4,7 +4,7 @@
 /// @file PositionTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 16:56:40 syllogismrxs>
+/// Time-stamp: <2016-03-28 23:33:22 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 20 Mar 2016
@@ -57,6 +57,7 @@ public:
      void set_R(double r0, double r1, double r2, double r3);
      void set_P(double p);
      void set_Q(double q);
+     Eigen::MatrixXf R();
      void print();
      
 protected:
