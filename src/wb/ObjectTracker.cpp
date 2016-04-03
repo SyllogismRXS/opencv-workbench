@@ -106,7 +106,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     sum.y += (*it_match)->estimated_pixel_centroid().y;
                     count++;
                                         
-                    wb::drawCross(img, (*it_match)->estimated_pixel_centroid(), cv::Scalar(255,0,0), 5);
+                    wb::drawCross(img, (*it_match)->estimated_pixel_centroid(), cv::Scalar(0,255,0), 8);
                }               
 
                cv::Point2d avg_weighted;
@@ -148,7 +148,8 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                Eigen::MatrixXd covar(2,2);
                covar = covar_sum / ((double)count);
                //covar = covar.Eigen::sqrt();               
-               covar *= 10;               
+               //covar *= 10;               
+               covar *= 5;
                
                double eig_scale = 0.1;
                if (count > 1) {
@@ -230,12 +231,28 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     //it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
                     //                               covar(1,0), covar(1,1));
                }
+
+               //// Clamp minimum and maximum size for covar elements:
+               //for (int r = 0; r < 2; r++) {
+               //     for (int c = 0; c < 2; c++) {
+               //          if (covar(r,c) > 1500) {
+               //               covar(r,c) = 1500;
+               //          }
+               //          if (covar(r,c) < 50) {
+               //               covar(r,c) = 50;
+               //          }
+               //     }
+               //}
+               
                // TODO: create minimum / maximum covariance possibilities
                covar_tracker_.predict();
                covar_tracker_.set_values(covar);
                covar = covar_tracker_.values();
                it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
-                                              covar(1,0), covar(1,1));               
+                                              covar(1,0), covar(1,1));   
+
+               //cout << it_prev->id() << "-covar:" << endl << covar << endl;
+               
                // Define maximum and minimum size for object in scene?
                
           } else {                              
