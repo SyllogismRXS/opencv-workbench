@@ -1495,6 +1495,7 @@ bool BlobProcess::consolidate_tracks(cv::Mat &in, cv::Mat &out)
                          matches[it2->matched_id()].push_back(&(*it1));
                          //} else if (it1->id() < it2->id()) {
                     } else if (it1->age() > it2->age()) {
+                         // TODO: is this age check necessary? I don't think so.
                          it1->set_matched(true);
                          it1->set_matched_id(next_id);
                          it2->set_matched(true);
