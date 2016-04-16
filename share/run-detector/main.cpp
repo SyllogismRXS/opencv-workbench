@@ -83,9 +83,13 @@ int main(int argc, char *argv[])
      MLStageType_t ml_stage = learning;     
      std::string last_stage_str = "detection";
      double neg_to_pos_ratio = 1;
+     int print_frame_number = 0;
      
-     while ((c = getopt (argc, argv, "r:g:m:k:tf:hp:o:sy:")) != -1) {
+     while ((c = getopt (argc, argv, "r:g:m:k:tf:hp:o:sy:n")) != -1) {
           switch (c) {               
+          case 'n':
+               print_frame_number = 1;
+               break;
           case 'r':
                neg_to_pos_ratio = syllo::str2double(std::string(optarg));
                break;
@@ -275,7 +279,11 @@ int main(int argc, char *argv[])
      
      cv::Mat original;
      while (stream.read(original)) {
-          int frame_number = stream.frame_number();          
+          int frame_number = stream.frame_number();    
+
+          if (print_frame_number) {
+               cout << "Frame: " << frame_number << endl;
+          }
           
           // Was a frame_types yaml file passed?
           if (frame_types.size() > 0) { 
@@ -359,17 +367,15 @@ int main(int argc, char *argv[])
                cv::imshow("Detection", original);
                
                if (step_flag) {
-                    int key = cv::waitKey(0);    
-                    if (key == 'q' || key == 1048689) { // 'q' key
-                         //cout << "Ending early." << endl;
+                    int key = cv::waitKey(0);                                            
+                    if (key == 'q' || key == 1048689) { // 'q' key                         
                          break;
                     } else if (key == 'p' || key == 1048688) {
                          step_flag = 0;
                     }     
                } else {
                     int key = cv::waitKey(1);               
-                    if (key == 'q' || key == 1048689) {
-                         cout << "Ending early." << endl;
+                    if (key == 'q' || key == 1048689) {                         
                          break;
                     } else if (key == 'p' || key == 1048688) {
                          step_flag = 1;
