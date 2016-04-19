@@ -49,7 +49,8 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
 
           // Don't use blobs unless they are of a certain age or not occluded
           //if (it_meas->age() < 5 || it_meas->occluded()) {
-          if (it_meas->age() < 2 || it_meas->occluded()) {
+          //if (it_meas->age() < 2 || it_meas->occluded()) {
+          if (it_meas->occluded()) {
                continue;
           }
           
