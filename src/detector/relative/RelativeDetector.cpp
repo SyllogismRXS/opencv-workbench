@@ -106,9 +106,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      wb::get_sonar_mask(original, mask_);
 
      if (!hide_windows_) {       
-          cv::imshow("Sonar Image", original);
+          cv::imshow("SonarImage", original);
           cv::imshow("Gray", gray);  
-          cv::imshow("Sonar Mask", mask_*255);          
+          cv::imshow("SonarMask", mask_*255);          
      }     
      if (last_stage_ < thresh) {
           return 0;
@@ -300,9 +300,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      if (!hide_windows_) {       
           //cv::imshow("Range", range_image);
           //cv::imshow("blend", blend);
-          cv::imshow("erode", erode);
+          cv::imshow("Erode", erode);
           cv::imshow("Dilate", dilate);      
-          cv::imshow("Blobs", blob_img);        
+          cv::imshow("BlobTracks", blob_img);        
           cv::imshow("Tracking Tracks",short_lived);
           cv::imshow("Consolidate", blob_consolidate);      
           //cv::imshow("Tracks", original_rects);          

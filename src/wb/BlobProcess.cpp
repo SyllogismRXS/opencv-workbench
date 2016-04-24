@@ -182,7 +182,7 @@ void new_label(cv::Mat &img, int r, int c)
      cv::circle(temp, cv::Point(c,r), 7, cv::Scalar(0,255,0), 1, 8, 0);
      temp.at<cv::Vec3b>(r,c) = cv::Vec3b(0,255,0);
      cv::resize(temp, temp, cv::Size(0,0),5,5,cv::INTER_NEAREST);
-     cv::imshow("new label!", temp);
+     cv::imshow("new-label!", temp);
      cv::waitKey(0);
 }
 
@@ -355,7 +355,7 @@ void BlobProcess::find_clusters(cv::Mat &input,
 #if 1
      cv::Mat temp_img = input.clone();
      this->overlay_blobs(temp_img, temp_img, clusters);
-     cv::imshow("Frame Clusters", temp_img);
+     cv::imshow("FrameClusters", temp_img);
 #endif
 }
 
@@ -468,7 +468,7 @@ void BlobProcess::find_blobs(cv::Mat &input,
      if (show) {
           cv::Mat temp_img = input.clone();
           this->overlay_blobs(temp_img, temp_img, blobs);
-          cv::imshow("Frame Blobs", temp_img);
+          cv::imshow("FrameBlobs", temp_img);
      }
 }
 
