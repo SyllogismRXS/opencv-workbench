@@ -239,10 +239,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.consolidate_tracks(gray, blob_consolidate);     
       
      cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);     
-     
-     cv::Mat short_lived;
-     blob_process_.overlay_short_lived(gray, short_lived);     
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);               
 
      // Hand Blobs to high-level ObjectTracker
      obj_tracker_.process_frame(gray, blob_process_.blobs());
@@ -250,6 +247,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::Mat object_img;
      obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE);
      cv::imshow("Objects", object_img);           
+
+     cv::Mat short_lived;
+     blob_process_.overlay_short_lived(object_img, short_lived);     
       
      // Add undistorted centroids and compute trajectory analysis
      std::map<int, wb::Blob> tracks_frame;
