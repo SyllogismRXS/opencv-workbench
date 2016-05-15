@@ -14,7 +14,7 @@ using std::endl;
 
 ObjectTracker::ObjectTracker()
 {     
-     next_id_ = 0;
+     next_id_ = 1;
      covar_tracker_.init(2,2);
 }
 
@@ -74,7 +74,9 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
           // If the measurement doesn't fall within any previous track,
           // initiate a new one.
           if (!matched) {               
-               it_meas->new_track(next_available_id());               
+               int id = next_available_id();
+               cout << "NEW OBJECT: " << id << endl;
+               it_meas->new_track(id);
                it_meas->pixel_tracker().set_R(1000,0,0,1000);
                it_meas->pixel_tracker().set_P(100);
                it_meas->pixel_tracker().set_Q(10);
@@ -289,8 +291,25 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) && 
                    (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),3)) {
                     
-                    // Found similar tracks. Save the oldest track
+                    bool save_it1;
                     if ((*it1)->age() > (*it2)->age()) {
+                         save_it1 = true;
+                    } else if ((*it1)->age() < (*it2)->age()) {
+                         save_it1 = false;
+                    } else {
+                         // equal ages...
+                         if ((*it1)->id() < (*it2)->id()) {
+                              save_it1 = true;
+                         } else if ((*it1)->id() > (*it2)->id()) {
+                              save_it1 = false;
+                         } else {
+                              save_it1 = true;
+                              cout << "WARNING: unexpected object ID" << endl;
+                         }
+                    }
+                    
+                    // Found similar tracks. Save the oldest track
+                    if (save_it1) {
                          // Integrate younger track into older track
                          (*it1)->copy_meas_info(*(*it2));
                          (*it1)->set_occluded(false);

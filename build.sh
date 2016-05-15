@@ -8,7 +8,7 @@ pushd build >& /dev/null
 
 cmake ..
 
-make
+make -j
 BUILD_RESULT=$?
 
 popd >& /dev/null
