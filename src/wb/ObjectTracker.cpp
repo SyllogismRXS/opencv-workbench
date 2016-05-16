@@ -74,8 +74,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
           // If the measurement doesn't fall within any previous track,
           // initiate a new one.
           if (!matched) {               
-               int id = next_available_id();
-               cout << "NEW OBJECT: " << id << endl;
+               int id = next_available_id();               
                it_meas->new_track(id);
                it_meas->pixel_tracker().set_R(1000,0,0,1000);
                it_meas->pixel_tracker().set_P(100);
@@ -152,6 +151,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                covar = covar_sum / ((double)count);
                //covar = covar.Eigen::sqrt();               
                //covar *= 10;               
+               //covar *= 5;
                covar *= 5;
                
                double eig_scale = 0.1;

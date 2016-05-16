@@ -135,10 +135,11 @@ namespace syllo {
      {
           Eigen::MatrixXf B = this->meas_covariance();
           Eigen::MatrixXf diff = Zm - H_*x_;
-          Eigen::MatrixXf dist_mat = diff.transpose()*B.inverse()*diff;          
+          Eigen::MatrixXf dist_mat = diff.transpose()*B.inverse()*diff;
           double dist = dist_mat(0,0);
-          //if (dist <= pow(nsigma,2)) {
-          if (dist <= std) {
+          // TODO: pow(std,2) looks correct in object tracker, is it correct?
+          if (dist <= pow(std,2)) {
+               //if (dist <= std) {
                return true;
           } else {
                return false;
