@@ -4,7 +4,7 @@
 /// @file KalmanFilter.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 10:55:56 syllogismrxs>
+/// Time-stamp: <2016-05-16 16:42:14 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 16 Jan 2013
@@ -80,7 +80,7 @@ namespace syllo {
 	  Eigen::MatrixXf covariance() const;
           Eigen::MatrixXf R() { return R_; }
           Ellipse error_ellipse(double confidence);
-          bool is_within_region(Eigen::MatrixXf Zm, double std);          
+          bool is_within_region(Eigen::MatrixXf Zm, double confidence);
 
           void set_R(Eigen::MatrixXf R) { R_ = R; }
           void set_P(Eigen::MatrixXf P) { P_ = P; }

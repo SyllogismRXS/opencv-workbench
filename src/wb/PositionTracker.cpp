@@ -121,10 +121,10 @@ Ellipse PositionTracker::error_ellipse(double confidence)
      return kf_.error_ellipse(confidence);
 }
 
-bool PositionTracker::is_within_region(cv::Point2d z, double std)
+bool PositionTracker::is_within_region(cv::Point2d z, double confidence)
 {
      z_ << z.x , z.y;
-     return kf_.is_within_region(z_, std);
+     return kf_.is_within_region(z_, confidence);
 }
 
 Eigen::MatrixXd PositionTracker::meas_covariance()

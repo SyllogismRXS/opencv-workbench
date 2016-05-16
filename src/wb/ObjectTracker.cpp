@@ -63,7 +63,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                for (std::vector<wb::Point>::iterator it_point = it_meas->points().begin(); 
                     it_point != it_meas->points().end(); it_point++) {
                     
-                    if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
+                    if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),0.9973)) {
                          track_matches[it_prev->id()].push_back(&(*it_meas));
                          matched = true;                                              
                          break;
@@ -73,8 +73,9 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
           
           // If the measurement doesn't fall within any previous track,
           // initiate a new one.
-          if (!matched) {               
+          if (!matched) {                     
                int id = next_available_id();               
+               cout << "New Object" << id << endl;
                it_meas->new_track(id);
                it_meas->pixel_tracker().set_R(1000,0,0,1000);
                it_meas->pixel_tracker().set_P(100);
@@ -83,13 +84,12 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                intermediate.push_back(&(*it_meas));
           }
      }     
-
+     
      // For each track ID with matches, use kalman filter to integrate position
      for (std::vector<wb::Blob>::iterator it_prev = prev_tracks_.begin(); 
           it_prev != prev_tracks_.end(); it_prev++) {          
 
-          if (track_matches.count(it_prev->id()) > 0) {          
-               
+          if (track_matches.count(it_prev->id()) > 0) {                                        
                cv::Point2d sum_weighted(0,0); 
                int count_weighted = 0;
 
@@ -98,8 +98,8 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                               
                // Find "centroid" of all measurements
                for (std::list<wb::Blob*>::iterator it_match = track_matches[it_prev->id()].begin();
-                    it_match != track_matches[it_prev->id()].end(); it_match++) {
-          
+                    it_match != track_matches[it_prev->id()].end(); it_match++) {                             
+                    
                     sum_weighted.x += (*it_match)->estimated_pixel_centroid().x * (*it_match)->age();
                     sum_weighted.y += (*it_match)->estimated_pixel_centroid().y * (*it_match)->age();
                     count_weighted += (*it_match)->age();
@@ -111,7 +111,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     wb::drawCross(img, (*it_match)->estimated_pixel_centroid(), cv::Scalar(0,255,0), 8);
                }               
 
-               cv::Point2d avg_weighted;
+               cv::Point2d avg_weighted(0,0);
                avg_weighted.x = sum_weighted.x / (double)count_weighted;
                avg_weighted.y = sum_weighted.y / (double)count_weighted;               
 
@@ -139,8 +139,8 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     it_match != track_matches[it_prev->id()].end(); it_match++) {
                     
                     Eigen::MatrixXd diff(2,1);
-                    diff << (*it_match)->estimated_pixel_centroid().x - avg.x, 
-                         avg.y - (*it_match)->estimated_pixel_centroid().y;
+                    diff << (*it_match)->estimated_pixel_centroid().x - avg.x,
+                            (*it_match)->estimated_pixel_centroid().y - avg.y;
 
                     covar_sum += (diff * diff.transpose());
                     
@@ -152,7 +152,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                //covar = covar.Eigen::sqrt();               
                //covar *= 10;               
                //covar *= 5;
-               covar *= 5;
+               covar *= 3;
                
                double eig_scale = 0.1;
                if (count > 1) {
@@ -198,7 +198,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     // If only a single measurement, decrease size of
                     // measurement, generate measurement that is "circular"
                     //covar_tracker_.predict();                    
-                    covar = it_prev->pixel_tracker().R().cast<double>();                    
+                    covar = it_prev->pixel_tracker().R().cast<double>();
                     
                     Eigen::VectorXcd eigvals = covar.eigenvalues();
                     double eig1 = eigvals(0).real();
@@ -225,7 +225,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                          
                          Eigen::MatrixXd eigs_corrected(2,2);
                          eigs_corrected << eig1, 0 , 0, eig2;
-                         covar = ev_real * eigs_corrected * ev_real.inverse();                              
+                         covar = ev_real * eigs_corrected * ev_real.inverse();                         
                     }                    
                     
                     //covar_tracker_.set_values(covar);
@@ -236,23 +236,24 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                }
 
                //// Clamp minimum and maximum size for covar elements:
+               //double max_covar = 2000;
                //for (int r = 0; r < 2; r++) {
                //     for (int c = 0; c < 2; c++) {
-               //          if (covar(r,c) > 1500) {
-               //               covar(r,c) = 1500;
+               //          if (covar(r,c) > max_covar) {
+               //               covar(r,c) = max_covar;
                //          }
-               //          if (covar(r,c) < 50) {
-               //               covar(r,c) = 50;
-               //          }
+               //          //if (covar(r,c) < 50) {
+               //          //     covar(r,c) = 50;
+               //          //}
                //     }
-               //}
+               //}                                             
                
                // TODO: create minimum / maximum covariance possibilities
                covar_tracker_.predict();
                covar_tracker_.set_values(covar);
                covar = covar_tracker_.values();
                it_prev->pixel_tracker().set_R(covar(0,0), covar(0,1),
-                                              covar(1,0), covar(1,1));   
+                                              covar(1,0), covar(1,1));               
 
                //cout << it_prev->id() << "-covar:" << endl << covar << endl;
                
@@ -297,8 +298,8 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                }
 
                //// Are the track's centroids within 3 std of each other?
-               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) && 
-                   (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),3)) {
+               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),0.9973) && 
+                   (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),0.9973)) {
                     
                     bool save_it1;
                     if ((*it1)->age() > (*it2)->age()) {
@@ -388,7 +389,6 @@ void ObjectTracker::overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat
           color = src;
      }
      dst = color;
-
      
      for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
          it != tracks.end(); it++) {
@@ -439,7 +439,8 @@ void ObjectTracker::overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat
                cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                //The -angle is used because OpenCV defines the angle clockwise instead of anti-clockwise
-               cv::ellipse(dst, center, axes, -cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+               //cv::ellipse(dst, center, axes, -cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+               cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
           }
 
           if (flags & VELOCITIES) {

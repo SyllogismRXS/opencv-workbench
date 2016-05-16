@@ -1,6 +1,6 @@
 add_subdirectory(track-analysis)
 #add_subdirectory(munkres-test)
-#add_subdirectory(error-ellipse-test)
+add_subdirectory(error-ellipse-test)
 add_subdirectory(aggregate-test)
 add_subdirectory(roc-average)
 add_subdirectory(fold-aggregate)

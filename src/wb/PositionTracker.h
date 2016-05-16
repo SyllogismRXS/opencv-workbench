@@ -4,7 +4,7 @@
 /// @file PositionTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-28 23:33:22 syllogismrxs>
+/// Time-stamp: <2016-05-16 16:41:43 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 20 Mar 2016
@@ -50,7 +50,7 @@ public:
      cv::Point2d position();
      cv::Point2d velocity();
      Ellipse error_ellipse(double confidence);
-     bool is_within_region(cv::Point2d z, double std);
+     bool is_within_region(cv::Point2d z, double confidence);
      Eigen::MatrixXd meas_covariance();
      void set_position(cv::Point2d p);
      void set_R(double r);

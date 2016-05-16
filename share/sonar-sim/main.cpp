@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
                          Zm.resize(2,1);
                          Zm << measurements.back().pixel_centroid().x, measurements.back().pixel_centroid().y;
 
-                         if(tracks.back().tracker().is_within_region(Zm,3)) {
+                         if(tracks.back().tracker().is_within_region(Zm,0.99)) {
                               cout << "In region!" << endl;
                          } else {
                               cout << "Out of region!" << endl;

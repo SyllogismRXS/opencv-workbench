@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
 
 #include <Eigen/Dense>
 
@@ -131,15 +132,21 @@ namespace syllo {
           return Ellipse(center, cv::Vec2d(r0,r1), angle);
      }
 
-     bool KalmanFilter::is_within_region(Eigen::MatrixXf Zm, double std) 
+     bool KalmanFilter::is_within_region(Eigen::MatrixXf Zm, double confidence) 
      {
-          Eigen::MatrixXf B = this->meas_covariance();
-          Eigen::MatrixXf diff = Zm - H_*x_;
-          Eigen::MatrixXf dist_mat = diff.transpose()*B.inverse()*diff;
-          double dist = dist_mat(0,0);
-          // TODO: pow(std,2) looks correct in object tracker, is it correct?
-          if (dist <= pow(std,2)) {
-               //if (dist <= std) {
+          if (confidence > 1.0 || confidence < 0.0) {
+               cout << "Invalid confidence" << endl;
+               confidence = 0.9973;
+          }
+          
+          Eigen::MatrixXf B = this->meas_covariance();                             
+          Eigen::MatrixXf diff = Zm - H_*x_;                    
+          Eigen::MatrixXf dist_squared_mat = diff.transpose()*B.inverse()*diff;
+
+          double dist = sqrt(dist_squared_mat(0,0));
+          double thresh = sqrt(-2.0*log(1.0-confidence))/2;
+          
+          if (dist < thresh) {          
                return true;
           } else {
                return false;

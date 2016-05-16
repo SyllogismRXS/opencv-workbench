@@ -515,7 +515,7 @@ void delete_matrix(int **array, int rows, int cols)
 //
 //               Eigen::MatrixXf Zm; Zm.resize(2,1);
 //               Zm << it1->pixel_centroid().x, it1->pixel_centroid().y;
-//               if (it2->pixel_tracker().is_within_region(Zm,3)) {
+//               if (it2->pixel_tracker().is_within_region(Zm,0.9973)) {
 //                    // It is within the gate
 //               }
 //          }
@@ -579,8 +579,8 @@ void BlobProcess::build_tree(vertex_t &vertex,
           if (!it->matched()) {
                //Eigen::MatrixXf Zm; Zm.resize(2,1);
                //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
-               //if (it->pixel_tracker().is_within_region(Zm,3)) {
-               if (it->pixel_tracker().is_within_region(it_meas->pixel_centroid(),3)) {
+               //if (it->pixel_tracker().is_within_region(Zm,0.9973)) {
+               if (it->pixel_tracker().is_within_region(it_meas->pixel_centroid(),0.9973)) {
 
                     Eigen::MatrixXd u, cov;
                     Eigen::MatrixXd zero_mean;
@@ -921,7 +921,7 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                     it_point != it_meas->points().end(); it_point++) {
                     //Zm << it_meas->pixel_centroid().x, it_meas->pixel_centroid().y;
                     //Zm << it_point->x(), it_point->y();
-                    if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
+                    if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),0.9973)) {
                          track_matches[it_prev->id()].push_back(&(*it_meas));
                          matched = true;
                          break;
@@ -1063,8 +1063,8 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                }
 
                //// Are the track's centroids within 3 std of each other?
-               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),3) &&
-                   (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),3)) {
+               if ((*it1)->pixel_tracker().is_within_region((*it2)->estimated_pixel_centroid(),0.9973) &&
+                   (*it2)->pixel_tracker().is_within_region((*it1)->estimated_pixel_centroid(),0.9973)) {
 
                     // Found similar tracks. Save the oldest track
                     if ((*it1)->age() > (*it2)->age()) {
@@ -1164,7 +1164,7 @@ void BlobProcess::assign_munkres(std::vector<wb::Blob> &meas,
                          for (std::vector<wb::Point>::iterator it_point = it->points().begin();
                               it_point != it->points().end(); it_point++) {
 
-                              if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),3)) {
+                              if (it_prev->pixel_tracker().is_within_region(cv::Point2d(it_point->x(),it_point->y()),0.9973)) {
                                    matched = true;
                                    break;
                               }
