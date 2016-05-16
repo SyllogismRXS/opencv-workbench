@@ -143,6 +143,7 @@ namespace syllo {
           Eigen::MatrixXf diff = Zm - H_*x_;                    
           Eigen::MatrixXf dist_squared_mat = diff.transpose()*B.inverse()*diff;
 
+          //https://en.wikipedia.org/wiki/Mahalanobis_distance
           double dist = sqrt(dist_squared_mat(0,0));
           double thresh = sqrt(-2.0*log(1.0-confidence))/2;
           
