@@ -266,10 +266,19 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
           intermediate.push_back(&(*it_prev));
      }
 
+     // Plot intermediate tracks
+     cv::Mat intermediate_img;
+     this->overlay(intermediate, src, intermediate_img, TRACKS | IDS | ERR_ELLIPSE);
+     cv::imshow("Intermediate", intermediate_img);
+     
      // Are any of the tracks very similar? If so, keep the oldest one
      // Determine if the centroids of any tracks are within 1 std of each
      // other.
      //Eigen::MatrixXf Zm1, Zm2; Zm1.resize(2,1); Zm2.resize(2,1);
+     
+     // TODO : We can't integrate the Kalman filters until we find the track
+     // with the oldest age and smallest ID. First find tracks that "overlap"
+     // and then integrate them.
      
      for (std::vector<wb::Blob*>::iterator it1 = intermediate.begin(); 
           it1 != intermediate.end(); it1++) {
@@ -309,7 +318,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     }
                     
                     // Found similar tracks. Save the oldest track
-                    if (save_it1) {
+                    if (save_it1) {                                                  
                          // Integrate younger track into older track
                          (*it1)->copy_meas_info(*(*it2));
                          (*it1)->set_occluded(false);
@@ -317,7 +326,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                          
                          // Mark the younger track as matched, so it is overlooked later
                          (*it2)->set_matched(true);
-                    } else {
+                    } else {                         
                          // Integrate younger track into older track
                          (*it2)->copy_meas_info(*(*it1));
                          (*it2)->set_occluded(false);
@@ -355,7 +364,22 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
      prev_tracks_ = tracks_;
 }
 
+void ObjectTracker::overlay(std::vector<wb::Blob*> &tracks, cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
+{
+     std::vector<wb::Blob> tracks_temp;
+     for (std::vector<wb::Blob*>::iterator it = tracks.begin(); 
+          it != tracks.end(); it++) {
+          tracks_temp.push_back(*(*it));
+     }
+     overlay(tracks_temp,src,dst,flags);
+}
+
 void ObjectTracker::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
+{
+     overlay(tracks_,src,dst,flags);
+}
+
+void ObjectTracker::overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
 {
      cv::Mat color;
      if (src.channels() == 1) {
@@ -366,8 +390,8 @@ void ObjectTracker::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
      dst = color;
 
      
-     for(std::vector<wb::Blob>::iterator it = tracks_.begin(); 
-         it != tracks_.end(); it++) {
+     for(std::vector<wb::Blob>::iterator it = tracks.begin(); 
+         it != tracks.end(); it++) {
           
           if ((flags & CONFIRMED_ONLY) && !it->is_confirmed()) {
                // If we are only plotting confirmed tracks and it's not

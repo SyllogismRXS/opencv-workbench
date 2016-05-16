@@ -4,7 +4,7 @@
 /// @file ObjectTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 19:40:38 syllogismrxs>
+/// Time-stamp: <2016-05-15 12:47:18 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 Mar 2016
@@ -50,6 +50,10 @@ public:
      int next_available_id();
 
      void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);
+     void overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat &dst, 
+                  OverlayFlags_t flags);
+     void overlay(std::vector<wb::Blob*> &tracks, cv::Mat &src, cv::Mat &dst, 
+                  OverlayFlags_t flags);
 
 protected:          
      std::vector<wb::Blob> tracks_;
