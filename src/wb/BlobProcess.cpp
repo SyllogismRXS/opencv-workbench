@@ -46,6 +46,8 @@ typedef bgi::rtree< point_value, bgi::dynamic_rstar > rtree_point_t;
 
 BlobProcess::BlobProcess()
 {
+     stream_ = NULL;
+     
      //min_blob_size_ = 30;//15, 20, 30;
      min_blob_size_ = 1;
      //min_blob_size_ = 10;
@@ -416,9 +418,9 @@ void BlobProcess::find_blobs(cv::Mat &input,
                     // Find the smallest equivalent label to the label of the
                     // current pixel
                     int id = labelTable[img.at<uchar>(i,j)];
-                    //while (labelTable[id] != id) {
-                    //     id = labelTable[id];
-                    //}
+                    while (labelTable[id] != id) {
+                         id = labelTable[id];
+                    }
 
                     img.at<uchar>(i,j) = id;
 
@@ -1814,7 +1816,8 @@ void BlobProcess::overlay_short_lived(cv::Mat &src, cv::Mat &dst)
      }
 }
 
-void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
+void BlobProcess::overlay(std::vector<wb::Blob> &blobs, cv::Mat &src, 
+                          cv::Mat &dst, OverlayFlags_t flags)
 {
      cv::Mat color;
      if (src.channels() == 1) {
@@ -1824,8 +1827,8 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
      }
      dst = color;
 
-     std::vector<wb::Blob>::iterator it = blobs_.begin();
-     for(; it != blobs_.end(); it++) {
+     std::vector<wb::Blob>::iterator it = blobs.begin();
+     for(; it != blobs.end(); it++) {
 
           if ((flags & CONFIRMED_ONLY) && !it->is_confirmed()) {
                // If we are only plotting confirmed tracks and it's not
@@ -1880,6 +1883,11 @@ void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
                cv::ellipse(dst, center, axes, -cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
           }
      }
+}
+
+void BlobProcess::overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
+{
+     this->overlay(blobs_, src, dst, flags);
 }
 
 void BlobProcess::overlay_tracks(cv::Mat &src, cv::Mat &dst)

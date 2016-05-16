@@ -30,27 +30,22 @@ int main(int argc, char *argv[])
      cv::imshow("Input", img);
 
      cv::Mat gray;
-     cv::cvtColor(img, gray, CV_BGR2GRAY);
-     cv::imshow("gray", gray);
+     cv::cvtColor(img, gray, CV_BGR2GRAY);     
           
      std::vector<wb::Blob> blobs;
-     int min_blob_size = 30;
+     int min_blob_size = 1;
 
      BlobProcess blob_process;
-     blob_process.find_blobs(gray, blobs, min_blob_size);     
+     blob_process.find_blobs(gray, blobs, min_blob_size, false);          
+
+     cv::Mat blob_img;
+     blob_process.overlay(blobs, gray, blob_img, BLOBS | IDS | RECTS);     
      
-     //cv::SimpleBlobDetector::Params params; 
-     //params.minDistBetweenBlobs = 2.0;  // minimum 10 pixels between blobs
-     //params.filterByArea = true;         // filter my blobs by area of blob
-     //params.minArea = 5.0;              // min 20 pixels squared
-     //params.maxArea = 500.0;             // max 500 pixels squared
-     //cv::SimpleBlobDetector myBlobDetector(params);
-     //std::vector<cv::KeyPoint> myBlobs;
-     //myBlobDetector.detect(img, myBlobs);
-     //
-     //cv::Mat blobImg;    
-     //cv::drawKeypoints(img, myBlobs, blobImg);
-     //cv::imshow("CV::Blobs", blobImg);
+     // Resize gray and blob image and display
+     cv::resize(gray, gray, cv::Size(0,0), 5, 5, cv::INTER_NEAREST);     
+     cv::imshow("gray", gray);     
+     cv::resize(blob_img, blob_img, cv::Size(0,0), 5, 5, cv::INTER_NEAREST);
+     cv::imshow("blobs", blob_img);         
 
      cv::waitKey(0);
      
