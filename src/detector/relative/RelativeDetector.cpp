@@ -245,7 +245,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      obj_tracker_.process_frame(gray, blob_process_.blobs());
           
      cv::Mat object_img;
-     obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE);
+     obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE | VELOCITIES);
      cv::imshow("Objects", object_img);           
 
      cv::Mat short_lived;

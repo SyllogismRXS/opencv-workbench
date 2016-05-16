@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-22 16:55:49 syllogismrxs>
+/// Time-stamp: <2016-05-16 13:07:45 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -59,7 +59,8 @@
           TRACKS         = 1 << 2,
           IDS            = 1 << 3,
           ERR_ELLIPSE    = 1 << 4,
-          CONFIRMED_ONLY = 1 << 5
+          CONFIRMED_ONLY = 1 << 5,
+          VELOCITIES     = 1 << 6
      }OverlayFlags_t;
      
      inline OverlayFlags_t operator|(OverlayFlags_t a, OverlayFlags_t b)
@@ -172,6 +173,8 @@ namespace wb {
           void correct_tracker();
           cv::Point estimated_pixel_centroid();
           cv::Point2d estimated_centroid();
+
+          cv::Point estimated_pixel_velocity();
           
           void set_estimated_pixel_centroid(cv::Point p);
           void set_estimated_centroid(cv::Point2d p);

@@ -71,6 +71,11 @@ namespace wb {
           //}
      }
 
+     cv::Point Entity::estimated_pixel_velocity()
+     {
+          return pixel_tracker_.velocity();
+     }
+     
      cv::Point2d Entity::estimated_centroid()
      {
           // the Kalman filter's estimate centroid. Otherwise, use the entity's

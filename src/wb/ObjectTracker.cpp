@@ -426,11 +426,11 @@ void ObjectTracker::overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat
                const std::string& text = convert.str();
                cv::putText(dst, text, cv::Point(est_centroid.x-3,est_centroid.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 2, 8, false);
           }
-
+          
           if (flags & TRACKS) {
                //cv::Point est_centroid = it->estimated_pixel_centroid();
                wb::drawCross(dst, est_centroid, cv::Scalar(255,255,255), 5);
-          }
+          }          
 
           if (flags & ERR_ELLIPSE) {
                Ellipse ell = it->error_ellipse(0.9973); // 3 std
@@ -440,6 +440,17 @@ void ObjectTracker::overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                //The -angle is used because OpenCV defines the angle clockwise instead of anti-clockwise
                cv::ellipse(dst, center, axes, -cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+          }
+
+          if (flags & VELOCITIES) {
+               cv::Point pt1, pt2;
+               pt1 = est_centroid;
+               pt2 = est_centroid + it->estimated_pixel_velocity();
+
+               int thickness = 1;
+               double tip_length = 0.1;
+               wb::arrowedLine(dst, pt1, pt2, cv::Scalar(0,255,0), 
+                               thickness, 8, 0, tip_length);
           }
      }
 }

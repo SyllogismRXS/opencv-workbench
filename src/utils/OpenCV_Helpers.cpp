@@ -13,6 +13,24 @@ namespace wb{
           //cout << img.rows << "x" < img.cols << endl;
           printf("%dx%d\n",img.rows,img.cols);
      }
+     
+     void arrowedLine(cv::Mat & img, cv::Point pt1, cv::Point pt2, const cv::Scalar& color,
+                      int thickness, int line_type, int shift, double tipLength)
+     {
+          const double tipSize = cv::norm(pt1-pt2)*tipLength; // Factor to normalize the size of the tip depending on the length of the arrow
+
+          cv::line(img, pt1, pt2, color, thickness, line_type, shift);
+
+          const double angle = atan2( (double) pt1.y - pt2.y, (double) pt1.x - pt2.x );
+
+          cv::Point p(cvRound(pt2.x + tipSize * cos(angle + CV_PI / 4)),
+                      cvRound(pt2.y + tipSize * sin(angle + CV_PI / 4)));
+          cv::line(img, p, pt2, color, thickness, line_type, shift);
+
+          p.x = cvRound(pt2.x + tipSize * cos(angle - CV_PI / 4));
+          p.y = cvRound(pt2.y + tipSize * sin(angle - CV_PI / 4));
+          cv::line(img, p, pt2, color, thickness, line_type, shift);
+     }
 
      void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d)
      {

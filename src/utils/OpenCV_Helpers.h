@@ -4,7 +4,7 @@
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-28 20:45:11 syllogismrxs>
+/// Time-stamp: <2016-05-16 12:59:15 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -56,6 +56,9 @@ namespace wb
      void drawTriangle(cv::Mat &img, cv::Point &center, cv::Scalar color, int size);
 
      void show_nonzero(cv::Mat &img);
+
+     void arrowedLine(cv::Mat & img, cv::Point pt1, cv::Point pt2, const cv::Scalar& color,
+                      int thickness, int line_type, int shift, double tipLength);
 }
 
 #endif
