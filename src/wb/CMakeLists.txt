@@ -19,6 +19,7 @@ ADD_LIBRARY( ${LIBRARY_NAME_1} SHARED
   PositionTracker.cpp
   ObjectTracker.cpp
   MatrixTracker.cpp
+  FinDetector.cpp
   )
 
 target_link_libraries(${LIBRARY_NAME_1} 

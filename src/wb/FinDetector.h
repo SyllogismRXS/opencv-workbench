@@ -1,13 +1,13 @@
-#ifndef OBJECTTRACKER_H_
-#define OBJECTTRACKER_H_
+#ifndef FINDETECTOR_H_
+#define FINDETECTOR_H_
 /// ---------------------------------------------------------------------------
-/// @file ObjectTracker.h
+/// @file FinDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-18 15:17:28 syllogismrxs>
+/// Time-stamp: <2016-05-18 15:34:07 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 21 Mar 2016
+/// Created: 18 May 2016
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,34 +35,19 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The ObjectTracker class ...
+/// The FinDetector class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <opencv_workbench/wb/PositionTracker.h>
+#include <vector>
 #include <opencv_workbench/wb/Blob.h>
-#include <opencv_workbench/wb/MatrixTracker.h>
 
-
-class ObjectTracker {
+class FinDetector {
 public:
-     ObjectTracker();
-     void process_frame(cv::Mat &src, std::vector<wb::Blob> &blobs);
-     int next_available_id();
-
-     void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);
-     void overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat &dst, 
-                  OverlayFlags_t flags);
-     void overlay(std::vector<wb::Blob*> &tracks, cv::Mat &src, cv::Mat &dst, 
-                  OverlayFlags_t flags);
-
-     std::vector<wb::Blob> &tracks() { return tracks_; }
-protected:          
-     std::vector<wb::Blob> tracks_;
-     std::vector<wb::Blob> prev_tracks_;
-     
-     MatrixTracker covar_tracker_;
-     
-     int next_id_;
+     FinDetector();
+     void process_frame(cv::Mat &src, cv::Mat &dst, 
+                        std::vector<wb::Blob> &tracks, 
+                        std::vector<wb::Blob> &blobs);
+protected:
 private:
 };
 

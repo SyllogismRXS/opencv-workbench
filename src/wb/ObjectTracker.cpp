@@ -75,7 +75,6 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
           // initiate a new one.
           if (!matched) {                     
                int id = next_available_id();               
-               cout << "New Object" << id << endl;
                it_meas->new_track(id);
                it_meas->pixel_tracker().set_R(1000,0,0,1000);
                it_meas->pixel_tracker().set_P(100);
@@ -109,6 +108,11 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                     count++;
                                         
                     wb::drawCross(img, (*it_match)->estimated_pixel_centroid(), cv::Scalar(0,255,0), 8);
+
+                    std::ostringstream convert;
+                    convert << (*it_match)->id();
+                    const std::string& text = convert.str();
+                    cv::putText(img, text, cv::Point((*it_match)->estimated_pixel_centroid().x-3,(*it_match)->estimated_pixel_centroid().y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(255,255,255), 1, 8, false);
                }               
 
                cv::Point2d avg_weighted(0,0);
@@ -152,7 +156,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
                //covar = covar.Eigen::sqrt();               
                //covar *= 10;               
                //covar *= 5;
-               covar *= 3;
+               covar *= 4;
                
                double eig_scale = 0.1;
                if (count > 1) {

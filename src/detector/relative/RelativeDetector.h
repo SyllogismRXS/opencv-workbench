@@ -4,7 +4,7 @@
 /// @file RelativeDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-21 19:08:30 syllogismrxs>
+/// Time-stamp: <2016-05-18 15:15:42 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -51,6 +51,7 @@
 #include <opencv_workbench/wb/OpticalFlow.h>
 #include <opencv_workbench/wb/ObjectTracker.h>
 #include <opencv_workbench/trajectory/TrajectoryAnalysis.h>
+#include <opencv_workbench/wb/FinDetector.h>
 
 class RelativeDetector : public Detector{
 public:
@@ -79,6 +80,7 @@ protected:
      
      TrajectoryAnalysis traj_;
      OpticalFlow flow_;
+     FinDetector fin_detector_;
      
 private:
 };
