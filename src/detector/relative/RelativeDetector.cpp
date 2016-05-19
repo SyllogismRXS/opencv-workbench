@@ -249,7 +249,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      cv::imshow("Objects", object_img);    
 
      cv::Mat fin_img;
-     fin_detector_.process_frame(gray, fin_img, obj_tracker_.tracks(), blob_process_.blobs());
+     fin_detector_.process_frame(object_img, fin_img, obj_tracker_.tracks(), blob_process_.blobs());
      cv::imshow("Fins", fin_img);
 
      cv::Mat short_lived;
