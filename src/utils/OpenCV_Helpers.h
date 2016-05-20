@@ -4,7 +4,7 @@
 /// @file OpenCV_Helpers.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-16 12:59:15 syllogismrxs>
+/// Time-stamp: <2016-05-20 19:18:08 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 May 2014
@@ -50,6 +50,7 @@ using std::endl;
 
 namespace wb
 {    
+     bool rect_inside(cv::Rect &rect, cv::Mat &img);
      void show(const cv::Mat &img);
      void print_size(const cv::Mat &img);
      void drawCross(cv::Mat &img, cv::Point center, cv::Scalar color, int d);
@@ -59,6 +60,18 @@ namespace wb
 
      void arrowedLine(cv::Mat & img, cv::Point pt1, cv::Point pt2, const cv::Scalar& color,
                       int thickness, int line_type, int shift, double tipLength);
+     
+     template <typename T>
+     bool point_inside(T &p, cv::Mat &img)
+     {
+          if (p.x < 0) return false;
+          if (p.x >= img.cols) return false;
+          if (p.y < 0) return false;
+          if (p.y >= img.rows) return false;
+          
+          return true;
+     }
+
 }
 
 #endif

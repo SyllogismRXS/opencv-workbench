@@ -4,7 +4,7 @@
 /// @file FinDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-18 15:34:07 syllogismrxs>
+/// Time-stamp: <2016-05-20 18:09:24 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 18 May 2016
@@ -38,16 +38,24 @@
 /// The FinDetector class ...
 /// 
 /// ---------------------------------------------------------------------------
+#include <iostream>
+#include <fstream>
+
 #include <vector>
 #include <opencv_workbench/wb/Blob.h>
 
 class FinDetector {
 public:
      FinDetector();
-     void process_frame(cv::Mat &src, cv::Mat &dst, 
+void process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> &tracks, 
-                        std::vector<wb::Blob> &blobs);
+                             std::vector<wb::Blob> &blobs,
+                        int frame_number,
+                        std::vector<wb::Blob> &short_lived);
 protected:
+     
+     std::ofstream output_file_;
+     cv::Mat prev_roi_;     
 private:
 };
 

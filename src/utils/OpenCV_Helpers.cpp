@@ -2,6 +2,15 @@
 
 namespace wb{
 
+     bool rect_inside(cv::Rect &rect, cv::Mat &img)
+     {
+          cv::Rect rect_mat(0, 0, img.cols, img.rows);
+          if ((rect & rect_mat) == rect) {
+               return true;
+          }
+          return false;          
+     }     
+
      void show(const cv::Mat &img)
      {
           cv::imshow("DEBUG!",img);

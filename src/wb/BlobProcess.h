@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-16 11:35:11 syllogismrxs>
+/// Time-stamp: <2016-05-20 16:41:20 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -159,6 +159,7 @@ public:
 
      bool smaller_blob_search(std::vector<wb::Blob>::iterator prev, wb::Blob &blob_result);
           
+     std::vector<wb::Blob> &short_lived() { return short_lived_; }
 protected:
      
      static uchar valueAt(cv::Mat &img, int row, int col);

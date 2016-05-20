@@ -1,3 +1,4 @@
+add_subdirectory(fin-freq)
 add_subdirectory(track-analysis)
 #add_subdirectory(munkres-test)
 add_subdirectory(error-ellipse-test)
