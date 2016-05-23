@@ -43,12 +43,104 @@ bool path_compare (fs::path i, fs::path j)
      return (i.string() < j.string());     
 }
 
-void make_same_size(cv::Mat &img, std::list<cv::Mat> &original_imgs, 
-                    std::list<cv::Mat> adjusted_imgs, int depth)
+void make_same_size(std::vector<cv::Mat> &original_imgs, 
+                    std::vector<cv::Mat> &adjusted_imgs, int depth)
 {
      // Look back 'depth' frames and make sure all images are the same size as
      // the current img.
+     adjusted_imgs.clear();
+
+     // First compute the average frame size
+     int count = 0;
+     int rows_sum = 0;
+     int cols_sum = 0;
+     for (std::vector<cv::Mat>::reverse_iterator rit= original_imgs.rbegin(); 
+          rit != original_imgs.rend() && count < depth; ++rit, ++count) {
+          rows_sum += rit->rows;
+          cols_sum += rit->cols;          
+     }
+
+     int rows_avg = cvRound((double)rows_sum / (double) count);
+     int cols_avg = cvRound((double)cols_sum / (double) count);     
+     
+     //cout << "-----------" << endl;
+     //cout << "Rows Avg: " << rows_avg << endl;
+     //cout << "Cols Avg: " << cols_avg << endl;
+     
+     // Adjust size of images
+     // First compute the average frame size
+     count = 0;
+     for (std::vector<cv::Mat>::reverse_iterator rit= original_imgs.rbegin(); 
+          rit != original_imgs.rend() && count < depth; ++rit, ++count) {
+          
+          cv::Mat adjusted_img = rit->clone();
+          
+          //cout << "Count: " << count << endl;
+          //cout << "Frame rows: " << rit->rows << endl;
+          //cout << "Frame cols: " << rit->cols << endl;
+
+          int diff = rows_avg - rit->rows;
+          if (diff < 0) {                  
+               // Frame rows is larger than average, crop rows
+               cv::Rect roi(0, cvRound(abs(diff) / 2.0), adjusted_img.cols, adjusted_img.rows - cvRound(abs(diff) / 2.0));
+               adjusted_img = cv::Mat(adjusted_img, roi);
+          } else if (diff > 0) {               
+               // Frame rows is smaller than average, make border
+               cv::copyMakeBorder(adjusted_img, adjusted_img, cvRound(diff / 2.0), cvRound(diff / 2.0), 0, 0, cv::BORDER_REPLICATE);
+          }
+          
+          diff = cols_avg - rit->cols;
+          if (diff < 0) {                                      
+               // Frame cols is larger than average, crop cols               
+               cv::Rect roi(cvRound(abs(diff)/2.0), 0, adjusted_img.cols - cvRound(abs(diff)/2.0), adjusted_img.rows);
+               adjusted_img = cv::Mat(adjusted_img, roi);
+          } else if (diff > 0) {               
+               // Frame cols is smaller than average, make border
+               cv::copyMakeBorder(adjusted_img, adjusted_img, 0, 0, cvRound(diff / 2.0), cvRound(diff / 2.0), cv::BORDER_REPLICATE);
+          }                   
+          
+          //cv::imshow("Adjusted", adjusted_img);
+          //cv::waitKey(0);
+          adjusted_imgs.push_back(adjusted_img);
+     }     
 }
+
+int similarity(cv::Mat &img1, cv::Mat &img2)
+{
+     int sum = 0;
+     
+     int channels = img1.channels();
+     int nRows = img1.rows;
+     int nCols = img1.cols * channels;
+     if (img1.isContinuous()) {
+     	  nCols *= nRows;
+     	  nRows = 1; 
+     }
+     int i,j;
+     uchar *p1, *p2;
+     for( i = 0; i < nRows; ++i) {
+     	  p1 = img1.ptr<uchar>(i);
+     	  p2 = img2.ptr<uchar>(i);
+     	  for ( j = 0; j < nCols; ++j) {
+     	       sum += abs( p1[j] - p2[j] );
+     	  }
+     }
+     return sum;
+}
+
+void recurrence_plot(std::vector<cv::Mat> &imgs, cv::Mat &rp_dst)
+{
+     rp_dst = cv::Mat::zeros(imgs.size(), imgs.size(), CV_8UC1);
+     uchar *p;
+     for (unsigned int i = 0 ; i < imgs.size() ; i++) {
+     	  p = rp_dst.ptr<uchar>(i);
+     	  for (unsigned int j = 0 ; j < imgs.size() ; j++) {
+     	       int sum = similarity(imgs[i], imgs[j]);
+     	       p[j] = sum;
+     	  }
+     }     
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -63,12 +155,43 @@ int main(int argc, char *argv[])
 
      std::sort(files.begin(), files.end(), path_compare);      
      
-     for (std::vector<fs::path>::iterator it = files.begin();
-          it != files.end(); it++) {
+     std::vector<cv::Mat> imgs;     
+     
+     for (std::vector<fs::path>::iterator it1 = files.begin();
+          it1 != files.end(); it1++) {                   
           
-          cv::Mat img = cv::imread(it->string());
-          cv::imshow("img", img);                    
-          cv::waitKey(0);
+          cv::Mat img = cv::imread(it1->string());
+          imgs.push_back(img);
+          cv::imshow("Current Image", img);
+
+          std::vector<cv::Mat> adjusted_imgs;
+          make_same_size(imgs, adjusted_imgs, 20);
+
+          int i = 0;
+          for (std::vector<cv::Mat>::iterator it2 = adjusted_imgs.begin();
+               it2 != adjusted_imgs.end(); it2++, i++) {
+               //std::string win_name = std::string("Adjusted: ") + syllo::int2str(i);
+               //cv::imshow(win_name, *it2);               
+               cv::imshow("Adjusted", *it2);
+               cv::waitKey(25);                                            
+          }
+
+          //cv::Mat rp;
+          //recurrence_plot(adjusted_imgs, rp);         
+          //cv::imshow("Recurrence Plot",rp);
+          //
+          //cv::Mat rp_norm = rp.clone();
+          //cv::normalize(rp_norm, rp_norm, 0, 255, CV_MINMAX, CV_8UC1);
+          //cv::imshow("Normalized", rp_norm);
+          //
+          //cv::Mat rp_norm_thresh = rp_norm.clone();
+          //cv::threshold( rp_norm_thresh, rp_norm_thresh, 230, 255, cv::THRESH_TOZERO);
+          //cv::imshow("Norm,Thresh", rp_norm_thresh);
+                    
+          int key = cv::waitKey(0);          
+          if (key == 'q' || key == 1048689) {
+               break;
+          }
      }          
 }
 

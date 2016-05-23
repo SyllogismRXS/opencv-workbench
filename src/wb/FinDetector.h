@@ -4,7 +4,7 @@
 /// @file FinDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-20 18:09:24 syllogismrxs>
+/// Time-stamp: <2016-05-23 16:27:51 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 18 May 2016
@@ -47,9 +47,9 @@
 class FinDetector {
 public:
      FinDetector();
-void process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst, 
+     void process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst, 
                         std::vector<wb::Blob> &tracks, 
-                             std::vector<wb::Blob> &blobs,
+                        std::vector<wb::Blob> &blobs,
                         int frame_number,
                         std::vector<wb::Blob> &short_lived);
 protected:
