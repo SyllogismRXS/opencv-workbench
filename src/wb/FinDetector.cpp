@@ -12,10 +12,19 @@ using std::endl;
 FinDetector::FinDetector()
 {
      output_file_.open("/home/syllogismrxs/fins.csv");   
-     output_file_ << "Frame, ID, X, Y, AGE" << endl;     
+     output_file_ << "Frame, ID, X, Y, AGE" << endl;          
+     initialized_ = false;
 }
 
 #define RAD_2_DEG (180.0/3.14159)
+
+int sign(double v)
+{
+     if (v >= 0.0) {
+          return 1;
+     }
+     return -1;
+}
 
 void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst, 
                                 std::vector<wb::Blob> &tracks, 
@@ -41,7 +50,7 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           cv::Vec3d v3(v.x,v.y,0);
           
           cv::Vec2d vel2d(v.x, v.y);
-          cv::Vec2d vel_unit = vel2d / sqrt(pow(vel2d[0],2) + pow(vel2d[1],2));
+          cv::Vec2d vel_unit = vel2d / sqrt(pow(vel2d[0],2) + pow(vel2d[1],2));          
 
           // The velocity vector has to be above length threshold
           double v_norm = sqrt(pow(v3[0],2) + pow(v3[1],0));
@@ -66,6 +75,14 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           // Get rectangle around object
           double theta = atan2(vel_unit[1], vel_unit[0]);
           cv::RotatedRect rrect(cv::Point(track_centroid.x,track_centroid.y), cv::Size2f(2*ell.axes()(0),2*ell.axes()(1)), theta * RAD_2_DEG);
+          
+          // Line separating fins:
+          cv::Vec2d sep = vel_unit * -1 * ell.axes()(0);
+
+          cv::line(dst,cv::Point(track_centroid.x,track_centroid.y), 
+                   cv::Point(track_centroid.x + sep[0], 
+                             track_centroid.y + sep[1]), 
+                   cv::Scalar(21, 243, 243), 1, 8, 0);
           
           cv::Point2f vertices[4];
           rrect.points(vertices);
@@ -140,7 +157,7 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           
                // The blob relative norm distance can't be too small.
                double blob_relative_norm = sqrt(pow(blob_relative[0],2) + pow(blob_relative[1],2));               
-               if (blob_relative_norm < 10) {
+               if (blob_relative_norm < 20) {
                     continue;
                }
                
@@ -156,6 +173,24 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
                // Plot the used points on the image
                wb::drawCross(dst, it_blob->estimated_pixel_centroid(), cv::Scalar(0,0,255), 8);
           
+               cv::Vec3d sep_3d(sep[0],sep[1],0);
+               cv::Vec3d blob_relative_unit_3d(blob_relative_unit[0], blob_relative_unit[1], 0);
+               cv::Vec3d cross_value = sep_3d.cross(blob_relative_unit_3d);
+               //cout << cross_value << endl;
+               
+               int cross_sign = sign(cross_value[2]);
+               
+               // Is the cross on the left or right side of the segmenting line?
+               if (!initialized_) {
+                    initialized_ = true;
+                    cout << "Side Change" << endl;                    
+               } else {
+                    if (cross_sign != cross_sign_prev_) {
+                         cout << "Side change" << endl;
+                    }
+               }
+               cross_sign_prev_ = cross_sign;
+               
                cv::Point rel_p = it_blob->estimated_pixel_centroid() - it_obj->estimated_pixel_centroid();              
                
                //// Rotate point based on object's velocity

@@ -4,7 +4,7 @@
 /// @file FinDetector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-23 16:27:51 syllogismrxs>
+/// Time-stamp: <2016-05-24 12:09:22 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 18 May 2016
@@ -56,6 +56,8 @@ protected:
      
      std::ofstream output_file_;
      cv::Mat prev_roi_;     
+     int cross_sign_prev_;
+     bool initialized_;
 private:
 };
 
