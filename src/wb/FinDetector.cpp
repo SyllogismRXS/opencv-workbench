@@ -12,8 +12,12 @@ using std::endl;
 FinDetector::FinDetector()
 {
      output_file_.open("/home/syllogismrxs/fins.csv");   
-     output_file_ << "Frame, ID, X, Y, AGE" << endl;          
+     //output_file_ << "Frame, ID, X, Y, AGE" << endl;          
      initialized_ = false;
+
+     left_side_sign_ = 1;         
+
+     left_present_ = false;
 }
 
 #define RAD_2_DEG (180.0/3.14159)
@@ -110,7 +114,7 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           cv::Mat rot = getRotationMatrix2D(track_centroid, theta * RAD_2_DEG, 1.0);
           cv::Mat rot_img;
           cv::warpAffine(gray, rot_img, rot, cv::Size(gray.cols, gray.rows));
-          cv::imshow("Rot", rot_img);
+          //cv::imshow("Rot", rot_img);
           
           cv::RotatedRect rrect2(cv::Point(track_centroid.x,track_centroid.y), cv::Size2f(2*ell.axes()(0),2*ell.axes()(1)), 0);          
           cv::Rect bounding = rrect2.boundingRect();
@@ -118,17 +122,20 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
                cv::Mat rot_roi(rot_img, bounding);
                cv::imshow("rot roi", rot_roi);
 
-               cv::Mat thresh;
-               cv::threshold(rot_roi, thresh, 200, 255, cv::THRESH_TOZERO);
-               cv::imshow("rot thresh", thresh);               
+               //cv::Mat thresh;
+               //cv::threshold(rot_roi, thresh, 200, 255, cv::THRESH_TOZERO);
+               //cv::imshow("rot thresh", thresh);               
+               //
+               //if (it_obj->id() == 3) {                    
+               //     std::ostringstream convert;
+               //     convert << std::setw(4) << std::setfill('0') << frame_number;        
+               //     std::string filename = "/home/syllogismrxs/temp/fins/img-" + convert.str() + ".png";
+               //     cv::imwrite(filename,rot_roi);
+               //}
+          }     
 
-               if (it_obj->id() == 3) {                    
-                    std::ostringstream convert;
-                    convert << std::setw(4) << std::setfill('0') << frame_number;        
-                    std::string filename = "/home/syllogismrxs/temp/fins/img-" + convert.str() + ".png";
-                    cv::imwrite(filename,rot_roi);
-               }
-          }          
+          std::vector<wb::Blob> lefts;
+          std::vector<wb::Blob> rights;
           
           for (std::vector<wb::Blob>::iterator it_blob = blobs.begin();
                it_blob != blobs.end(); it_blob++) {
@@ -176,20 +183,27 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
                cv::Vec3d sep_3d(sep[0],sep[1],0);
                cv::Vec3d blob_relative_unit_3d(blob_relative_unit[0], blob_relative_unit[1], 0);
                cv::Vec3d cross_value = sep_3d.cross(blob_relative_unit_3d);
-               //cout << cross_value << endl;
                
-               int cross_sign = sign(cross_value[2]);
-               
-               // Is the cross on the left or right side of the segmenting line?
-               if (!initialized_) {
-                    initialized_ = true;
-                    cout << "Side Change" << endl;                    
+               int cross_value_sign = sign(cross_value[2]);
+               if (cross_value_sign == left_side_sign_) {
+                    lefts.push_back(*it_blob);
                } else {
-                    if (cross_sign != cross_sign_prev_) {
-                         cout << "Side change" << endl;
-                    }
-               }
-               cross_sign_prev_ = cross_sign;
+                    rights.push_back(*it_blob);
+               }               
+               
+               ////cout << cross_value << endl;               
+               //int cross_sign = sign(cross_value[2]);
+               //
+               //// Is the cross on the left or right side of the segmenting line?
+               //if (!initialized_) {
+               //     initialized_ = true;
+               //     cout << "Side Change" << endl;                    
+               //} else {
+               //     if (cross_sign != cross_sign_prev_) {
+               //          cout << "Side change" << endl;
+               //     }
+               //}
+               //cross_sign_prev_ = cross_sign;
                
                cv::Point rel_p = it_blob->estimated_pixel_centroid() - it_obj->estimated_pixel_centroid();              
                
@@ -200,14 +214,47 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
                rel_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
                rel_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;               
                
-               if (it_obj->id() == 3) {
-                    // Save the points to a text file               
-                    output_file_ << syllo::int2str(frame_number) << ", "
-                                 << syllo::int2str(it_blob->id()) << ", "
-                                 << syllo::double2str(rel_p.x) << ", "
-                                 << syllo::double2str(rel_p.y) << ", "
-                                 << syllo::int2str(it_blob->age()) << endl;                    
+               //if (it_obj->id() == 3) {
+               //     // Save the points to a text file               
+               //     output_file_ << syllo::int2str(frame_number) << ", "
+               //                  << syllo::int2str(it_blob->id()) << ", "
+               //                  << syllo::double2str(rel_p.x) << ", "
+               //                  << syllo::double2str(rel_p.y) << ", "
+               //                  << syllo::int2str(it_blob->age()) << endl;                    
+               //./}
+          } // For each blob                   
+
+          
+          //std::vector<wb::Blob>::iterator it_left = lefts.begin();
+          //for (std::vector<wb::Blob>::iterator it = lefts.begin();
+          //     it != lefts.end(); it++) {               
+          //     if (it->age() > it_left->age()) {
+          //          it_left = it;
+          //     }
+          //}
+          //std::vector<wb::Blob>::iterator it_right = rights.begin();
+          //for (std::vector<wb::Blob>::iterator it = rights.begin();
+          //     it != rights.end(); it++) {               
+          //     if (it->age() > it_right->age()) {
+          //          it_right = it;
+          //     }
+          //}
+
+          if (it_obj->id() == 3) {
+               output_file_ << syllo::int2str(frame_number) << ",";
+          
+               if (lefts.size() > 0) {
+                    output_file_ << "1,";
+               } else {
+                    output_file_ << "0,";
                }
+
+               if (rights.size() > 0) {
+                    output_file_ << "1";
+               } else {
+                    output_file_ << "0";
+               }
+               output_file_ << endl;
           }                    
-     }
+     } // For each object     
 }
