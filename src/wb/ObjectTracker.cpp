@@ -366,8 +366,57 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
      }
 
      cv::imshow("Used", img);
-     prev_tracks_ = tracks_;
+
+     this->diver_classification();
+     
+     prev_tracks_ = tracks_;     
 }
+
+bool ObjectTracker::is_diver(std::vector<wb::Entity> &objects, int id)
+{
+     for (std::vector<wb::Entity>::iterator it_obj = objects.begin(); 
+          it_obj != objects.end(); it_obj++) {
+          if (id == it_obj->id()) {
+               if (it_obj->type() == wb::Entity::Diver) {
+                    return true;
+               }
+               return false;
+          }
+     }
+     return false;
+}
+
+void ObjectTracker::diver_classification()
+{
+     estimated_divers_.clear();
+     
+     //////////////////////////////////////////////////////////////////////////
+     // Velocity Based Detection:
+     // Diver objects have a velocity within a threshold
+     for (std::vector<wb::Blob>::iterator it_obj = tracks_.begin(); 
+          it_obj != tracks_.end(); it_obj++) {
+
+          cv::Point v = it_obj->estimated_pixel_velocity();          
+                              
+          // The velocity vector has to be above length threshold
+          double v_norm = sqrt(pow(v.x,2) + pow(v.y,2));
+          cout << "ID: " << it_obj->id() << ", v: " << v_norm << endl;
+          if (v_norm > 9 && v_norm < 20) {
+               it_obj->set_type(wb::Entity::Diver);
+               estimated_divers_.push_back(*it_obj);
+          } else {
+               // If it was a diver in the past and it's velocity is below a
+               // threshold, it is still a diver:
+               if (v_norm < 20 && is_diver(prev_estimated_divers_,it_obj->id())) {
+                    it_obj->set_type(wb::Entity::Diver);
+                    estimated_divers_.push_back(*it_obj);
+               }
+          }
+     }
+
+     prev_estimated_divers_ = estimated_divers_;
+}
+
 
 void ObjectTracker::overlay(std::vector<wb::Blob*> &tracks, cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags)
 {

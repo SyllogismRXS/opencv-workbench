@@ -57,21 +57,22 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           cv::Vec2d vel_unit = vel2d / sqrt(pow(vel2d[0],2) + pow(vel2d[1],2));          
 
           // The velocity vector has to be above length threshold
-          double v_norm = sqrt(pow(v3[0],2) + pow(v3[1],0));
+          double v_norm = sqrt(pow(v3[0],2) + pow(v3[1],2));          
           if (v_norm < 2) {
                continue;
           }
           
-          cv::Vec3d z_unit(0,0,1);
-          cv::Vec3d orth3d = v3.cross(z_unit);
-          cv::Vec2d orth2d(cvRound(orth3d[0]),cvRound(orth3d[1]));
-          cv::Vec2d orth_unit = orth2d * 1.0 / sqrt(pow(orth2d[0],2) + pow(orth2d[1],2));
-          cv::Vec2d orth_20 = orth_unit * 20;
-
-          cv::line(dst,cv::Point(track_centroid.x,track_centroid.y), 
-                   cv::Point(track_centroid.x + orth_20[0], 
-                             track_centroid.y + orth_20[1]), 
-                   cv::Scalar(255,0,0), 1, 8, 0);
+          //// Display blue line orthogonal to velocity
+          //cv::Vec3d z_unit(0,0,1);
+          //cv::Vec3d orth3d = v3.cross(z_unit);
+          //cv::Vec2d orth2d(cvRound(orth3d[0]),cvRound(orth3d[1]));
+          //cv::Vec2d orth_unit = orth2d * 1.0 / sqrt(pow(orth2d[0],2) + pow(orth2d[1],2));
+          //cv::Vec2d orth_20 = orth_unit * 20;
+          //
+          //cv::line(dst,cv::Point(track_centroid.x,track_centroid.y), 
+          //         cv::Point(track_centroid.x + orth_20[0], 
+          //                   track_centroid.y + orth_20[1]), 
+          //         cv::Scalar(255,0,0), 1, 8, 0);
 
           // Get major and minor axes of error ellipse
           Ellipse ell = it_obj->error_ellipse(0.9973); // 3 std
@@ -86,7 +87,7 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
           cv::line(dst,cv::Point(track_centroid.x,track_centroid.y), 
                    cv::Point(track_centroid.x + sep[0], 
                              track_centroid.y + sep[1]), 
-                   cv::Scalar(21, 243, 243), 1, 8, 0);
+                   cv::Scalar(255,255,255), 1, 8, 0);
           
           cv::Point2f vertices[4];
           rrect.points(vertices);

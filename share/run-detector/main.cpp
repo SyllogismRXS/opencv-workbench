@@ -279,6 +279,9 @@ int main(int argc, char *argv[])
      
      cv::Mat original;
      while (stream.read(original)) {
+
+          cv::Mat detection_img = original.clone();
+          
           int frame_number = stream.frame_number();    
 
           if (print_frame_number) {
@@ -348,23 +351,29 @@ int main(int argc, char *argv[])
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
                //cv::Point point = it->centroid();
-               cv::Point point = it->pixel_centroid();
-               //cv::Point point = it->estimated_centroid();
-               
+               //cv::Point point = it->pixel_centroid();                              
                frame.objects[it->name()] = *it;
 
                if (it->type() == wb::Entity::Diver) {
-                    // If this is a diver type, mark it on the original image
-                    int radius = 3;
-                    cv::circle(original, cv::Point(point.x,point.y), 
-                               radius, cv::Scalar(0,0,0), 2, 8, 0);
+                    // If this is a diver type, mark it on the original image                    
+                    Ellipse ell = it->error_ellipse(0.9973); // 3 std
+                    cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
+                    cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));                    
+                    cv::ellipse(detection_img, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+                    
+                    cv::Point p = it->estimated_pixel_centroid();
+                    
+                    std::ostringstream convert;
+                    convert << it->id();
+                    const std::string& text = "Diver:" + convert.str();
+                    cv::putText(detection_img, text, cv::Point(p.x+10,p.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(21,243,243), 1, 8, false);
                }
           }     
           // Save frame to parser
           parser_tracks.frames[frame_number] = frame;
 
           if (!hide_window_flag) { 
-               cv::imshow("Detection", original);
+               cv::imshow("Detection", detection_img);
                
                if (step_flag) {
                     int key = cv::waitKey(0);                                            

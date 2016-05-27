@@ -1,13 +1,13 @@
-#ifndef OBJECTTRACKER_H_
-#define OBJECTTRACKER_H_
+#ifndef DIVERCLASSIFIER_H_
+#define DIVERCLASSIFIER_H_
 /// ---------------------------------------------------------------------------
-/// @file ObjectTracker.h
+/// @file DiverClassifier.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-26 14:52:17 syllogismrxs>
+/// Time-stamp: <2016-05-26 14:20:09 syllogismrxs>
 ///
 /// @version 1.0
-/// Created: 21 Mar 2016
+/// Created: 26 May 2016
 ///
 /// ---------------------------------------------------------------------------
 /// @section LICENSE
@@ -35,44 +35,30 @@
 /// ---------------------------------------------------------------------------
 /// @section DESCRIPTION
 /// 
-/// The ObjectTracker class ...
+/// The DiverClassifier class ...
 /// 
 /// ---------------------------------------------------------------------------
-#include <opencv_workbench/wb/PositionTracker.h>
+#include <vector>
 #include <opencv_workbench/wb/Blob.h>
-#include <opencv_workbench/wb/MatrixTracker.h>
 
-
-class ObjectTracker {
+class DiverClassifier {
 public:
-     ObjectTracker();
-     void process_frame(cv::Mat &src, std::vector<wb::Blob> &blobs);
-     int next_available_id();
+     DiverClassifier();     
 
-     void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);
-     void overlay(std::vector<wb::Blob> &tracks, cv::Mat &src, cv::Mat &dst, 
-                  OverlayFlags_t flags);
-     void overlay(std::vector<wb::Blob*> &tracks, cv::Mat &src, cv::Mat &dst, 
-                  OverlayFlags_t flags);
+     void process_frame(cv::Mat &gray,
+                        std::vector<wb::Blob> &tracks, 
+                        std::vector<wb::Blob> &blobs,
+                        int frame_number);                        
 
-     std::vector<wb::Blob> &tracks() { return tracks_; }
+     std::vector<wb::Entity> &estimated_divers()
+     {
+          return estimated_divers_;
+     }
 
-     std::vector<wb::Entity> & estimated_divers() { return estimated_divers_; }
-
-     void diver_classification();
+protected:
      
-     bool is_diver(std::vector<wb::Entity> &objects, int id);     
-     
-protected:          
-     std::vector<wb::Blob> tracks_;
-     std::vector<wb::Blob> prev_tracks_;
-     
-     MatrixTracker covar_tracker_;
-
      std::vector<wb::Entity> estimated_divers_;
-     std::vector<wb::Entity> prev_estimated_divers_;
-     
-     int next_id_;
+
 private:
 };
 
