@@ -193,9 +193,9 @@ void Annotate::mousePressed(QMouseEvent * event)
 
                     // Add it to the parser for this frame
                     parser_.frames[current_frame_].objects[name] = object;                    
-                    //cout << "Current frame: " << current_frame_ << endl;
-                    //cout << "Added object id: " << parser_.frames[current_frame_].objects[name].id() << endl;
-                    //cout << "Added object type: " << parser_.frames[current_frame_].objects[name].type_str() << endl;
+                    cout << "Current frame: " << current_frame_ << endl;
+                    cout << "Added object id: " << parser_.frames[current_frame_].objects[name].id() << endl;
+                    cout << "Added object type: " << parser_.frames[current_frame_].objects[name].type_str() << endl;
 
                     // Find the iterator for this new object
                     for (std::map<std::string, wb::Entity>::iterator it = objects_->begin();

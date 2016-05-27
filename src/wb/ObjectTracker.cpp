@@ -400,7 +400,7 @@ void ObjectTracker::diver_classification()
                               
           // The velocity vector has to be above length threshold
           double v_norm = sqrt(pow(v.x,2) + pow(v.y,2));
-          cout << "ID: " << it_obj->id() << ", v: " << v_norm << endl;
+          //cout << "ID: " << it_obj->id() << ", v: " << v_norm << endl;
           if (v_norm > 9 && v_norm < 20) {
                it_obj->set_type(wb::Entity::Diver);
                estimated_divers_.push_back(*it_obj);

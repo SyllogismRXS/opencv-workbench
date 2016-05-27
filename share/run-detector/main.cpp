@@ -276,7 +276,10 @@ int main(int argc, char *argv[])
      } else {
           detector_->hide_windows(false);
      }
-     
+          
+     std::vector<std::string> class_names;
+     class_names.push_back("diver");          
+
      cv::Mat original;
      while (stream.read(original)) {
 
@@ -320,8 +323,22 @@ int main(int argc, char *argv[])
           detector_->set_frame(frame_number, original);
 
           // Get track list from detector
-          std::vector<wb::Entity> tracks = detector_->tracks();
-               
+          std::vector<wb::Entity> tracks = detector_->tracks();                        
+          
+          // Put all track data in parser for saving and
+          // Draw estimated diver locations on original image
+          Frame frame;
+          frame.set_frame_number(frame_number);
+          std::vector<wb::Entity>::iterator it = tracks.begin();
+          for (; it != tracks.end(); it++) {
+               //cv::Point point = it->centroid();
+               //cv::Point point = it->pixel_centroid();                              
+               frame.objects[it->name()] = *it;               
+          }
+          
+          // Save frame to parser
+          parser_tracks.frames[frame_number] = frame;
+
           if (hand_ann_found) {
                // Score preprocessing, if available
                cv::Mat thresh_img = detector_->thresh_img();
@@ -335,42 +352,18 @@ int main(int argc, char *argv[])
                // the positive object's rectangle.
                parser_tracks.score_preprocessing_2(frame_number, parser_truth, 
                                                    thresh_img, mask_img);
+               
+               parser_tracks.score_classifier(detection_img, detection_img, 
+                                              frame_number, parser_truth, 
+                                              class_names);
 
                // Every pixel is either a TP, FP, TN, or FN
                //parser_tracks.score_preprocessing_3(frame_number, parser_truth, 
                //                                  thresh_img, mask_img);
 
-               std::vector<wb::Entity> frame_ents;
-               detector_->frame_ents(frame_ents);
+               //std::vector<wb::Entity> frame_ents;
+               //detector_->frame_ents(frame_ents);
           }
-          
-          // Put all track data in parser for saving and
-          // Draw estimated diver locations on original image
-          Frame frame;
-          frame.set_frame_number(frame_number);
-          std::vector<wb::Entity>::iterator it = tracks.begin();
-          for (; it != tracks.end(); it++) {
-               //cv::Point point = it->centroid();
-               //cv::Point point = it->pixel_centroid();                              
-               frame.objects[it->name()] = *it;
-
-               if (it->type() == wb::Entity::Diver) {
-                    // If this is a diver type, mark it on the original image                    
-                    Ellipse ell = it->error_ellipse(0.9973); // 3 std
-                    cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
-                    cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));                    
-                    cv::ellipse(detection_img, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
-                    
-                    cv::Point p = it->estimated_pixel_centroid();
-                    
-                    std::ostringstream convert;
-                    convert << it->id();
-                    const std::string& text = "Diver:" + convert.str();
-                    cv::putText(detection_img, text, cv::Point(p.x+10,p.y-3), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(21,243,243), 1, 8, false);
-               }
-          }     
-          // Save frame to parser
-          parser_tracks.frames[frame_number] = frame;
 
           if (!hide_window_flag) { 
                cv::imshow("Detection", detection_img);
@@ -399,14 +392,9 @@ int main(int argc, char *argv[])
      
      // We can only compare the detector to truth data if we have a hand
      // annotated file.
-     if (hand_ann_found) {
-          cout << "Scoring detector..." << endl;     
-          std::vector<std::string> names;
-          //names.push_back("diver:1");
-          names.push_back("diver");
-          //parser_tracks.score_detector(parser_truth, names);          
-          parser_tracks.score_detector_2(parser_truth, names);          
-          parser_tracks.score_preprocessing_final(parser_truth);
+     if (hand_ann_found) {                    
+          parser_tracks.score_preprocessing_final();
+          parser_tracks.score_classifier_final();
      } else {
           cout << "WARNING: Can't score detector because hand annotated "
                << "file is missing" << endl;

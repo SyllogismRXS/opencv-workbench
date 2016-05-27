@@ -366,6 +366,9 @@ namespace wb {
           case Diver:
                name_ = "diver:" + convert.str();
                break;
+          case Fish:
+               name_ = "fish:" + convert.str();
+               break;
           case Clutter:
                name_ = "clutter:" + convert.str();
                break;
@@ -388,6 +391,9 @@ namespace wb {
           case Diver:
                return "diver";
                break;
+          case Fish:
+               return "fish";
+               break;
           case Clutter:
                return "clutter";
                break;
@@ -405,6 +411,8 @@ namespace wb {
                return Unknown;
           } else if (str == "diver") {
                return Diver;
+          } else if (str == "fish") {
+               return Fish;
           } else if (str == "clutter") {
                return Clutter;
           } else if (str == "point") {
@@ -430,8 +438,7 @@ namespace wb {
                     id_  = syllo::str2int(std::string(*tok_iter));
                }
                iter++;
-          }
-
+          }          
           type_ = Entity::str_2_type(type_str);
      }
 }

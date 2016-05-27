@@ -4,7 +4,7 @@
 /// @file AnnotationParser.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-08 14:35:45 syllogismrxs>
+/// Time-stamp: <2016-05-27 11:49:01 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 29 Apr 2015
@@ -88,11 +88,12 @@ public:
 
      void write_gnuplot_data();
 
-     void score_detector(AnnotationParser &truth, 
-                      std::vector<std::string> &names);
+     //void score_detector(AnnotationParser &truth, 
+     //                    std::vector<std::string> &names);
      
-     void score_detector_2(AnnotationParser &truth, 
-                      std::vector<std::string> &names);
+     //void score_detector_2(AnnotationParser &truth, 
+     //                      std::vector<std::string> &names);
+     
 
      void score_preprocessing(int frame, AnnotationParser &truth, 
                               cv::Mat &img);
@@ -103,7 +104,13 @@ public:
      void score_preprocessing_3(int frame, AnnotationParser &truth, 
                                 cv::Mat &img, cv::Mat &mask);
 
-     void score_preprocessing_final(AnnotationParser &truth);
+     void score_preprocessing_final();
+
+     void score_classifier(cv::Mat &src, cv::Mat &dst, int frame_number, 
+                           AnnotationParser &truth,
+                           std::vector<std::string> &names);
+
+     void score_classifier_final();
      
      void set_xml_output_dir(std::string dir);
      void prepend_xml_output_filename(std::string yaml_file);
@@ -149,6 +156,7 @@ protected:
      int FN_;
      double TPR_;
      double FPR_;
+     double Accuracy_;
 
      int PRE_TP_;
      int PRE_TN_;

@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-16 13:07:45 syllogismrxs>
+/// Time-stamp: <2016-05-27 12:33:01 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -78,6 +78,7 @@ namespace wb {
           typedef enum EntityType {
                Unknown = 0,
                Diver,
+               Fish,
                Ground,
                Clutter,
                Rock,
