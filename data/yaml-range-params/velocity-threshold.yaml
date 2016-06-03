@@ -1,0 +1,7 @@
+min_velocity_threshold: [1,5,43]
+#min_velocity_threshold: 9
+max_velocity_threshold: 45
+ratio_threshold: 0.00162001
+threshold_type: 1  # 0=static, 1=ratio, 2=gradient
+
+

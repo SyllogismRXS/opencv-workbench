@@ -2,7 +2,7 @@
 
 #
 # Example usage:
-# ./scripts/learn-test-threshold.sh -y ./data/yaml-range-params/static-threshold.yaml -f ./data/scenarios/threshold-train-test.yaml
+# ./scripts/learn-test-velocity -y ./data/yaml-range-params/static-threshold.yaml -f ./data/scenarios/threshold-train-test.yaml
 #
 
 OUT_DIR_NAME=$(date +"%Y-%m-%d_%H-%M-%S")
@@ -13,6 +13,7 @@ YAML_VIDEO_FILES="empty"
 K_FOLDS="3"
 SWEEP_PARAM="empty"
 NEG_TO_POS_RATIO="3"
+HIDE_WINDOWS=" "
 
 OPENCV_WORKBENCH_ROOT="/home/syllogismrxs/repos/opencv-workbench"
 
@@ -52,6 +53,10 @@ do
             OUT_DIR="$2/${OUT_DIR_NAME}"
             shift # past argument
             ;;
+        -h|--hide_windows)
+            HIDE_WINDOWS="-h"
+            shift # past argument
+            ;;
         --default)
             DEFAULT=YES
             ;;
@@ -77,7 +82,7 @@ if [ "$SWEEP_PARAM" == "empty" ]; then
     exit -1;
 fi
 
-if [[ "$SWEEP_PARAM" != "static_threshold" && "$SWEEP_PARAM" != "ratio_threshold" && "$SWEEP_PARAM" != "gradient_threshold" ]]; then
+if [[ "$SWEEP_PARAM" != "static_threshold" && "$SWEEP_PARAM" != "ratio_threshold" && "$SWEEP_PARAM" != "gradient_threshold" && "$SWEEP_PARAM" != "min_velocity_threshold" ]]; then
     echo "Probably not a valid SWEEP_PARAM. Try again or add it here. -s"
     exit -1;
 fi
@@ -110,7 +115,10 @@ RANGES_FILES=$(find ${RANGES_OUT_DIR} -name "*.yaml")
 
 RUN_DETECTOR_EXEC="${OPENCV_WORKBENCH_ROOT}/bin/run-detector"
 
+###############################################################################
+# Sweep over the yaml range params and "learn" the best threshold
 # For each fold
+###############################################################################
 FOLD_DIRS=$(find ${OUT_DIR} -name "fold-*")
 for FOLD_DIR in $FOLD_DIRS
 do        
@@ -129,20 +137,23 @@ do
             base_no_ext="${filename%.*}"
             K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"
 
-            CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE -h -o ${TRACKS_OUT_DIR} -t -g thresh -m learning -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+            CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE ${HIDE_WINDOWS} -o ${TRACKS_OUT_DIR} -t -g detection -m learning -k ${K_FOLDS_FILE}"
             #echo $CMD
-            ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
-            #${CMD}
+            #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
+            ${CMD}
         done
     done
     
     # Aggregate data and compute ROC curve
     # Compute "optimal" threshold
-    ${OPENCV_WORKBENCH_ROOT}/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -g THRESHOLD -f roc.csv -s ${SWEEP_PARAM}
+    ${OPENCV_WORKBENCH_ROOT}/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -g CLASSIFIER -f roc.csv -s ${SWEEP_PARAM}
     
     # Draw ROC Curve
     ${OPENCV_WORKBENCH_ROOT}/scripts/roc.sh ${TRACKS_OUT_DIR}/roc.csv
     
+    ###########################################################################
+    # Cross Validation for this fold
+    ###########################################################################
     for VIDEO_FILE in "${VIDEO_FILES_ARRAY[@]}"
     do
         # Get the K-folds file for this video file
@@ -153,7 +164,7 @@ do
         # Try threshold on validation set
         echo "============="
         echo "Validating"
-        CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml -h -o ${FOLD_DIR} -t -g thresh -m validating -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+        CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml ${HIDE_WINDOWS} -o ${FOLD_DIR} -t -g detection -m validating -k ${K_FOLDS_FILE}"
         #echo $CMD
         ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
         #${CMD}
@@ -169,6 +180,9 @@ ${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv
 # Plot the Average ROC Curve (Decimated by 10)
 ${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 10
 
+###############################################################################
+# Testing with the resulting "optimal" operating point
+###############################################################################
 for VIDEO_FILE in "${VIDEO_FILES_ARRAY[@]}"
 do
     # Get the K-folds file for this video file (any one of the folds works,
@@ -182,11 +196,11 @@ do
     # Try threshold on validation set
     echo "============="
     echo "Testing"
-    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml -h -o ${OUT_DIR} -t -g thresh -m testing -k ${K_FOLDS_FILE} -r ${NEG_TO_POS_RATIO}"
+    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml ${HIDE_WINDOWS} -o ${OUT_DIR} -t -g detection -m testing -k ${K_FOLDS_FILE}"
     #echo $CMD
     ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
     #${CMD}
 done        
 
 # Compute the final accuracy for the test sets
-${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR}
+${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR} -g CLASSIFIER

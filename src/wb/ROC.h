@@ -4,7 +4,7 @@
 /// @file ROC.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-08 19:21:03 syllogismrxs>
+/// Time-stamp: <2016-06-03 16:29:16 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2016
@@ -63,7 +63,7 @@ public:
           for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
               it != metrics_vector.end(); it++) {                                  
                
-               cv::Point2f p((*it)["PRE_FPR"],(*it)["PRE_TPR"]);
+               cv::Point2f p((*it)["FPR"],(*it)["TPR"]);
                
                cv::Point2f goal(0,1);
                double dist = sqrt( pow(goal.x-p.x,2) + pow(goal.y-p.y,2) );
@@ -104,8 +104,8 @@ public:
                for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
                    it != metrics_vector.end(); it++) {     
                     
-                    int P_count = (*it)["PRE_TP"] + (*it)["PRE_FN"];
-                    int N_count = (*it)["PRE_TN"] + (*it)["PRE_FP"];
+                    int P_count = (*it)["TP"] + (*it)["FN"];
+                    int N_count = (*it)["TN"] + (*it)["FP"];
 
                     //cout << "P_count: " << P_count << endl;
                     //cout << "N_count: " << N_count << endl;                    
@@ -115,7 +115,7 @@ public:
                     cv::Point2f p1(x0, m*x0 + b);
                     cv::Point2f p2(xf, m*xf + b);                    
 
-                    cv::Point2f p3((*it)["PRE_FPR"],(*it)["PRE_TPR"]);
+                    cv::Point2f p3((*it)["FPR"],(*it)["TPR"]);
                     double u = ((p3.x-p1.x)*(p2.x-p1.x) + (p3.y-p1.y)*(p2.y-p1.y)) / pow(cv::norm(p2-p1),2);
           
                     cv::Point2f close_point(p1.x + u*(p2.x-p1.x) , p1.y + u*(p2.y-p1.y));

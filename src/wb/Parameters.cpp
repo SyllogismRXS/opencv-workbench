@@ -12,15 +12,14 @@ Parameters::Parameters()
 {
      history_length = 10;
      history_distance = 15;
-     //ratio_threshold = 0.003;
-     ratio_threshold = 0.00162001;
-     //static_threshold = 150;
-     //static_threshold = 50;
+     ratio_threshold = 0.00162001;     
      static_threshold = 150;
      gradient_threshold = 150;
-     //threshold_type = static_type;
-     threshold_type = ratio_type;
-     //threshold_type = gradient_type;
+     
+     threshold_type = ratio_type;     
+
+     min_velocity_threshold = 9;
+     max_velocity_threshold = 20;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -51,6 +50,14 @@ void Parameters::set_yaml_file(std::string yaml_file)
           
           if(const YAML::Node *p = doc.FindValue("history_distance")) {
                *p >> history_distance;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("min_velocity_threshold")) {
+               *p >> min_velocity_threshold;
+          }
+          
+          if(const YAML::Node *p = doc.FindValue("max_velocity_threshold")) {
+               *p >> max_velocity_threshold;
           }
 
           if(const YAML::Node *p = doc.FindValue("threshold_type")) {

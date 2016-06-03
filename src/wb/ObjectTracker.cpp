@@ -4,6 +4,7 @@
 
 #include <opencv_workbench/wb/BlobProcess.h>
 #include <opencv_workbench/wb/WB.h>
+#include <opencv_workbench/wb/Parameters.h>
 #include <opencv_workbench/utils/OpenCV_Helpers.h>
 
 #include <Eigen/Dense>
@@ -23,7 +24,8 @@ int ObjectTracker::next_available_id()
      return next_id_++;
 }
 
-void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
+void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas, 
+                                  Parameters *params)
 {
      cv::Mat img = src.clone();
      cv::cvtColor(img,img,CV_GRAY2BGR);
@@ -367,7 +369,7 @@ void ObjectTracker::process_frame(cv::Mat &src, std::vector<wb::Blob> &meas)
 
      cv::imshow("Used", img);
 
-     this->diver_classification();
+     this->diver_classification(params);
      
      prev_tracks_ = tracks_;     
 }
@@ -386,7 +388,7 @@ bool ObjectTracker::is_diver(std::vector<wb::Entity> &objects, int id)
      return false;
 }
 
-void ObjectTracker::diver_classification()
+void ObjectTracker::diver_classification(Parameters *params)
 {
      estimated_divers_.clear();
      
@@ -401,13 +403,13 @@ void ObjectTracker::diver_classification()
           // The velocity vector has to be above length threshold
           double v_norm = sqrt(pow(v.x,2) + pow(v.y,2));
           //cout << "ID: " << it_obj->id() << ", v: " << v_norm << endl;
-          if (v_norm > 9 && v_norm < 20) {
+          if (v_norm > params->min_velocity_threshold && v_norm < params->max_velocity_threshold) {
                it_obj->set_type(wb::Entity::Diver);
                estimated_divers_.push_back(*it_obj);
           } else {
                // If it was a diver in the past and it's velocity is below a
                // threshold, it is still a diver:
-               if (v_norm < 20 && is_diver(prev_estimated_divers_,it_obj->id())) {
+               if (v_norm < params->max_velocity_threshold && is_diver(prev_estimated_divers_,it_obj->id())) {
                     it_obj->set_type(wb::Entity::Diver);
                     estimated_divers_.push_back(*it_obj);
                }

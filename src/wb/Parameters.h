@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-02-03 16:30:28 syllogismrxs>
+/// Time-stamp: <2016-06-03 17:07:40 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -56,6 +56,9 @@ public:
      double ratio_threshold;
      double static_threshold;
      double gradient_threshold;
+
+     double min_velocity_threshold;
+     double max_velocity_threshold;
      
      ThresholdType_t threshold_type;
      

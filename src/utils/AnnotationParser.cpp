@@ -304,6 +304,16 @@ void AnnotationParser::write_header()
           xml_node<> *threshold_type_node = doc.allocate_node(node_element, "threshold_type", threshold_type);
           parameters_node->append_node(threshold_type_node);
 
+          ////
+          char * min_velocity_threshold = doc.allocate_string(syllo::double2str(params_.min_velocity_threshold).c_str());
+          xml_node<> *min_velocity_threshold_node = doc.allocate_node(node_element, "min_velocity_threshold", min_velocity_threshold);
+          parameters_node->append_node(min_velocity_threshold_node);
+
+          char * max_velocity_threshold = doc.allocate_string(syllo::double2str(params_.max_velocity_threshold).c_str());
+          xml_node<> *max_velocity_threshold_node = doc.allocate_node(node_element, "max_velocity_threshold", max_velocity_threshold);
+          parameters_node->append_node(max_velocity_threshold_node);
+          
+          
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -710,6 +720,21 @@ int AnnotationParser::ParseFile(std::string file)
           } else {
                cout << xml_filename_ << ": Missing threshold_type node" << endl;
           }
+
+          ///
+          xml_node<> * min_velocity_threshold_node = parameters_node->first_node("min_velocity_threshold");
+          if (min_velocity_threshold_node != 0) {
+               params_.min_velocity_threshold = syllo::str2double(min_velocity_threshold_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing min_velocity_threshold node" << endl;
+          }
+
+          xml_node<> * max_velocity_threshold_node = parameters_node->first_node("max_velocity_threshold");
+          if (max_velocity_threshold_node != 0) {
+               params_.max_velocity_threshold = syllo::str2double(max_velocity_threshold_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing max_velocity_threshold node" << endl;
+          }
      }
 
      // Find <frames>
@@ -1060,6 +1085,9 @@ std::map<std::string,double> AnnotationParser::get_params()
      params["history_length"] = params_.history_length;
      params["history_distance"] = params_.history_distance;
      params["threshold_type"] = params_.threshold_type;
+     
+     params["min_velocity_threshold"] = params_.min_velocity_threshold;
+     params["max_velocity_threshold"] = params_.max_velocity_threshold;
      return params;
 }
 
@@ -1289,31 +1317,46 @@ void AnnotationParser::score_classifier(cv::Mat &src, cv::Mat &dst,
           for (std::map<std::string, wb::Entity>::iterator it_truth = truth_objects.begin();
                it_truth != truth_objects.end(); it_truth++) {
 
-               if (it_truth->second.type() == wb::Entity::Diver) {
-                    truth_diver_count++;
-               }
-               
                // Draw each truth object on dst image
                cv::rectangle(dst, it_truth->second.bbox().rectangle(),cv::Scalar(0,255,0), 1, 8, 0);
+               // Draw object label
+               // Draw the object name
                
-               bool possible_object_found = false;
-               for (std::map<std::string, wb::Entity>::iterator it_possible = possible_objects.begin();
-                    it_possible != possible_objects.end(); it_possible++) {                    
+               cv::putText(dst, it_truth->second.name(), 
+                           cv::Point(it_truth->second.bbox().xmin(), it_truth->second.bbox().ymax()+12),
+                           cv::FONT_HERSHEY_DUPLEX, 0.50, cv::Scalar(72,0,221), 1, 8, false);                    
+               
+               // Is this object type one of the types that care about?
+               if (std::find(names.begin(), names.end(),
+                             it_truth->second.type_str()) != names.end()) {
+               
+                    if (it_truth->second.type() == wb::Entity::Diver) {
+                         truth_diver_count++;
+                    }                                   
+               
+                    bool possible_object_found = false;
+                    for (std::map<std::string, wb::Entity>::iterator it_possible = possible_objects.begin();
+                         it_possible != possible_objects.end(); it_possible++) {                    
                     
-                    // If they are of the same type and the estimated centroid
-                    // of the possible object is within the bounding box of the
-                    // annotated object, it is a truth positive
-                    if (it_truth->second.type() == it_possible->second.type() && 
-                        it_truth->second.bbox().contains(it_possible->second.estimated_pixel_centroid())) {
-                         possible_object_found = true;
-                         TP++;
-                         break;
-                    }                    
-               }
+                         // If they are of the same type and the estimated centroid
+                         // of the possible object is within the bounding box of the
+                         // annotated object, it is a truth positive
+                         if (it_truth->second.type() == it_possible->second.type() && 
+                             it_truth->second.bbox().contains(it_possible->second.estimated_pixel_centroid())) {
+                              possible_object_found = true;
+                              TP++;                              
+                         }                    
+                    }
 
-               if (!possible_object_found) {
-                    FN++;
-               }                              
+                    if (!possible_object_found) {
+                         FN++;
+                    }         
+               }                     
+          }
+
+          if (TP > truth_diver_count) {
+               FP += (TP-truth_diver_count);
+               TP -= (TP-truth_diver_count);
           }
 
           // Determine if there are any False positives. FP if possible objects
@@ -1336,27 +1379,31 @@ void AnnotationParser::score_classifier(cv::Mat &src, cv::Mat &dst,
                            it_possible->second.estimated_pixel_centroid(), 
                            cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(21,243,243), 1, 8, false);                    
 
+               // Is this object type one of the types that care about?
+               if (std::find(names.begin(), names.end(),
+                             it_possible->second.type_str()) != names.end()) {
                
-               if (it_possible->second.type() == wb::Entity::Diver) {
-                    possible_diver_count++;
-               }
+                    if (it_possible->second.type() == wb::Entity::Diver) {
+                         possible_diver_count++;
+                    }
 
-               bool possible_object_found = false;
+                    bool possible_object_found = false;
                
-               for (std::map<std::string, wb::Entity>::iterator it_truth = truth_objects.begin();
-                    it_truth != truth_objects.end(); it_truth++) {
+                    for (std::map<std::string, wb::Entity>::iterator it_truth = truth_objects.begin();
+                         it_truth != truth_objects.end(); it_truth++) {
                     
-                    if (it_truth->second.type() == it_possible->second.type() && 
-                        it_truth->second.bbox().contains(it_possible->second.estimated_pixel_centroid())) {
-                         possible_object_found = true;
-                         break;
-                    }                    
-               }
+                         if (it_truth->second.type() == it_possible->second.type() && 
+                             it_truth->second.bbox().contains(it_possible->second.estimated_pixel_centroid())) {
+                              possible_object_found = true;
+                              break;
+                         }                    
+                    }
 
-               // If the possible object wasn't found in the truth objects, it
-               // was a false positive
-               if (!possible_object_found) {
-                    FP++;
+                    // If the possible object wasn't found in the truth objects, it
+                    // was a false positive
+                    if (!possible_object_found) {
+                         FP++;
+                    }
                }
           }
           
@@ -1369,12 +1416,14 @@ void AnnotationParser::score_classifier(cv::Mat &src, cv::Mat &dst,
           cout << "========> MISSING ANNOTATED FRAME <=======" << endl;
      }
 
+#if 0
      cout << "----------------------" << endl;
      cout << "Frame: " << frame_number << endl;
      cout << "TP: " << TP << endl;
      cout << "FN: " << FN << endl;
      cout << "TN: " << TN << endl;
      cout << "FP: " << FP << endl;
+#endif
 
      TP_ += TP;
      TN_ += TN;

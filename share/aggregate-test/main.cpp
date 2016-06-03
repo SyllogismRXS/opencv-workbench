@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
      int c;          
      std::string output_dir = "";
      std::string param_sweep = "";
-     while ((c = getopt (argc, argv, "o:d:")) != -1) {
+     std::string last_stage_str = "THRESHOLD"; // or "CLASSIFIER"
+     while ((c = getopt (argc, argv, "g:o:d:")) != -1) {
           switch (c) {                         
           case 'o':
                output_dir = std::string(optarg);               
@@ -48,6 +49,9 @@ int main(int argc, char *argv[])
           case 'd':
                xml_dir = std::string(optarg);
                break;          
+          case 'g':
+               last_stage_str = std::string(optarg);
+               break;
           case '?':
                if (optopt == 'd') {
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -91,14 +95,23 @@ int main(int argc, char *argv[])
           
           std::map<std::string,double> metrics = parser.get_metrics();
                
-          TP += metrics["PRE_TP"];
-          TN += metrics["PRE_TN"];
-          FP += metrics["PRE_FP"];
-          FN += metrics["PRE_FN"];
+          if (last_stage_str == "THRESHOLD") {          
+               TP += metrics["PRE_TP"];
+               TN += metrics["PRE_TN"];
+               FP += metrics["PRE_FP"];
+               FN += metrics["PRE_FN"];                    
+          } else if (last_stage_str == "CLASSIFIER") {     
+               TP += metrics["TP"];
+               TN += metrics["TN"];
+               FP += metrics["FP"];
+               FN += metrics["FN"];                    
+          } else {
+               cout << "INVALID LAST STAGE DEFINED!" << endl;
+          }          
      }
 
      double accuracy = (double)(TP + TN) / ((double)(TP + TN + FN + FP));
-     cout << "PRE Accuracy: " << accuracy << endl;
+     cout << "Accuracy: " << accuracy << endl;
 
      double TPR = (double)TP / ((double)TP + (double)FN);
      double FPR = (double)FP / ((double)FP + (double)TN);
@@ -117,23 +130,22 @@ int main(int argc, char *argv[])
      std::string out_filename = output_dir + "/test-results.txt";
      std::ofstream output;
      output.open(out_filename.c_str(), std::ofstream::out);
-     output << "PRE Accuracy: " << syllo::double2str(accuracy) << endl;
-     output << "PRE TPR: " << syllo::double2str(TPR) << endl;
-     output << "PRE FPR: " << syllo::double2str(FPR) << endl;
+     output << "Accuracy: " << syllo::double2str(accuracy) << endl;
+     output << "TPR: " << syllo::double2str(TPR) << endl;
+     output << "FPR: " << syllo::double2str(FPR) << endl;
 
-     output << "PRE TNR: " << syllo::double2str(TNR) << endl;
-     output << "PRE PPV: " << syllo::double2str(PPV) << endl;
-     output << "PRE NPV: " << syllo::double2str(NPV) << endl;
-     output << "PRE FDR: " << syllo::double2str(FDR) << endl;
-     output << "PRE FNR: " << syllo::double2str(FNR) << endl;
-     output << "PRE F1: " << syllo::double2str(F1) << endl;
-     output << "PRE MCC: " << syllo::double2str(MCC) << endl;
-
+     output << "TNR: " << syllo::double2str(TNR) << endl;
+     output << "PPV: " << syllo::double2str(PPV) << endl;
+     output << "NPV: " << syllo::double2str(NPV) << endl;
+     output << "FDR: " << syllo::double2str(FDR) << endl;
+     output << "FNR: " << syllo::double2str(FNR) << endl;
+     output << "F1: " << syllo::double2str(F1) << endl;
+     output << "MCC: " << syllo::double2str(MCC) << endl;
      
-     output << "PRE TP: " << syllo::int2str(TP) << endl;
-     output << "PRE TN: " << syllo::int2str(TN) << endl;
-     output << "PRE FP: " << syllo::int2str(FP) << endl;
-     output << "PRE FN: " << syllo::int2str(FN) << endl;
+     output << "TP: " << syllo::int2str(TP) << endl;
+     output << "TN: " << syllo::int2str(TN) << endl;
+     output << "FP: " << syllo::int2str(FP) << endl;
+     output << "FN: " << syllo::int2str(FN) << endl;
      output.close();          
           
      return 0;

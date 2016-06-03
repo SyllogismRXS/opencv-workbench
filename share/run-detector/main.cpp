@@ -290,6 +290,9 @@ int main(int argc, char *argv[])
           if (print_frame_number) {
                cout << "Frame: " << frame_number << endl;
           }
+
+          // Pass the frame to the detector plugin
+          detector_->set_frame(frame_number, original);
           
           // Was a frame_types yaml file passed?
           if (frame_types.size() > 0) { 
@@ -317,13 +320,10 @@ int main(int argc, char *argv[])
                    ml_stage != learning) {
                     continue;
                }
-          }
-          
-          // Pass the frame to the detector plugin
-          detector_->set_frame(frame_number, original);
+          }                    
 
           // Get track list from detector
-          std::vector<wb::Entity> tracks = detector_->tracks();                        
+          std::vector<wb::Entity> tracks = detector_->tracks();   
           
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
@@ -331,8 +331,6 @@ int main(int argc, char *argv[])
           frame.set_frame_number(frame_number);
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
-               //cv::Point point = it->centroid();
-               //cv::Point point = it->pixel_centroid();                              
                frame.objects[it->name()] = *it;               
           }
           

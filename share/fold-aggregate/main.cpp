@@ -33,7 +33,7 @@ using std::endl;
 
 PluginManager<Detector, Detector_maker_t> plugin_manager_;
 
-bool myfunction (std::map<std::string,double> i, std::map<std::string,double> j) 
+bool myfunction_classifier (std::map<std::string,double> i, std::map<std::string,double> j) 
 {
      if (i["FPR"] == j["FPR"]) {
           return (i["TPR"] < j["TPR"]);     
@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
      std::string output_file = "";
      std::string output_dir = "./";
      std::string param_sweep = "";
-     while ((c = getopt (argc, argv, "s:f:o:d:")) != -1) {
+     std::string last_stage_str = "THRESHOLD"; // or "CLASSIFIER"
+     while ((c = getopt (argc, argv, "g:s:f:o:d:")) != -1) {
           switch (c) {               
           case 's':
                param_sweep = std::string(optarg);
@@ -69,6 +70,9 @@ int main(int argc, char *argv[])
           case 'o':
                output_dir = std::string(optarg);
                create_roc_file = 1;
+               break;
+          case 'g':
+               last_stage_str = std::string(optarg);
                break;
           case 'f':
                output_file = std::string(optarg);
@@ -141,6 +145,11 @@ int main(int argc, char *argv[])
                metrics_counts[param_value_str]["PRE_TN"] += metrics["PRE_TN"];
                metrics_counts[param_value_str]["PRE_FP"] += metrics["PRE_FP"];
                metrics_counts[param_value_str]["PRE_FN"] += metrics["PRE_FN"];
+
+               metrics_counts[param_value_str]["TP"] += metrics["TP"];
+               metrics_counts[param_value_str]["TN"] += metrics["TN"];
+               metrics_counts[param_value_str]["FP"] += metrics["FP"];
+               metrics_counts[param_value_str]["FN"] += metrics["FN"];
           } else {
                cout << "Error: Using invalid param_sweep: " << param_sweep << endl;
                return -1;
@@ -156,13 +165,25 @@ int main(int argc, char *argv[])
           std::map<std::string,double> metrics = it->second;          
           double PRE_TPR = metrics["PRE_TP"] / (metrics["PRE_TP"] + metrics["PRE_FN"]);
           double PRE_FPR = metrics["PRE_FP"] / (metrics["PRE_FP"] + metrics["PRE_TN"]);
+
+          double TPR = metrics["TP"] / (metrics["TP"] + metrics["FN"]);
+          double FPR = metrics["FP"] / (metrics["FP"] + metrics["TN"]);
+          
           metrics["PRE_TPR"] = PRE_TPR;
           metrics["PRE_FPR"] = PRE_FPR;
+          metrics["TPR"] = TPR;
+          metrics["FPR"] = FPR;
           metrics["thresh_value"] = syllo::str2double(it->first);
           metrics_vector.push_back(metrics);
      }     
-     
-     std::sort(metrics_vector.begin(), metrics_vector.end(), myfunction_pre);
+          
+     if (last_stage_str == "THRESHOLD") {          
+          std::sort(metrics_vector.begin(), metrics_vector.end(), myfunction_pre);
+     } else if (last_stage_str == "CLASSIFIER") {          
+          std::sort(metrics_vector.begin(), metrics_vector.end(), myfunction_classifier);
+     } else {
+          cout << "INVALID LAST STAGE DEFINED!" << endl;
+     }     
      
      std::string roc_fn;
      if (output_file_set == 1) {
@@ -190,11 +211,44 @@ int main(int argc, char *argv[])
      
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
          it != metrics_vector.end(); it++) {                              
-          roc_stream << (*it)["PRE_FPR"] <<","<< (*it)["PRE_TPR"] <<","
-                     << (*it)["thresh_value"] <<"," << (*it)["PRE_FP"] <<","
-                     << (*it)["PRE_FN"] <<","
-                     << (*it)["PRE_TP"] <<","<< (*it)["PRE_TN"] << ","
-                     << syllo::int2str(threshold_type) << endl;
+
+
+          double fpr = -1, tpr = -1, thresh = -1, fp = -1, fn = -1, tp = -1, tn = -1;
+          int type = -1;          
+                    
+          if (last_stage_str == "THRESHOLD") {
+               fpr = (*it)["PRE_FPR"];
+               tpr = (*it)["PRE_TPR"];
+               thresh = (*it)["thresh_value"];
+               fp = (*it)["PRE_FP"];
+               fn = (*it)["PRE_FN"];
+               tp = (*it)["PRE_TP"];
+               tn = (*it)["PRE_TN"];
+               type = threshold_type;               
+               //roc_stream << (*it)["PRE_FPR"] <<","<< (*it)["PRE_TPR"] <<","
+               //           << (*it)["thresh_value"] <<"," << (*it)["PRE_FP"] <<","
+               //           << (*it)["PRE_FN"] <<","
+               //           << (*it)["PRE_TP"] <<","<< (*it)["PRE_TN"] << ","
+               //           << syllo::int2str(threshold_type) << endl;
+          } else if (last_stage_str == "CLASSIFIER") {
+               fpr = (*it)["FPR"];
+               tpr = (*it)["TPR"];
+               thresh = (*it)["thresh_value"];
+               fp = (*it)["FP"];
+               fn = (*it)["FN"];
+               tp = (*it)["TP"];
+               tn = (*it)["TN"];
+               type = threshold_type;               
+          } else {
+               cout << "INVALID LAST STAGE DEFINED!" << endl;
+          }
+
+          roc_stream << fpr <<","<< tpr <<","
+                     << thresh <<"," << fp <<","
+                     << fn <<","
+                     << tp <<","<< tn << ","
+                     << syllo::int2str(type) << endl;
+          
      }     
      roc_stream.close();
 

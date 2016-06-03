@@ -256,13 +256,13 @@ int main(int argc, char *argv[])
                      << it->threshold << endl;
 
           std::map<std::string,double> metrics;
-          metrics["PRE_FPR"] = it->FPR;
-          metrics["PRE_TPR"] = it->TPR;
+          metrics["FPR"] = it->FPR;
+          metrics["TPR"] = it->TPR;
           metrics["thresh_value"] = it->threshold;
-          metrics["PRE_FP"] = it->FP;
-          metrics["PRE_FN"] = it->FN;
-          metrics["PRE_TP"] = it->TP;
-          metrics["PRE_TN"] = it->TN;
+          metrics["FP"] = it->FP;
+          metrics["FN"] = it->FN;
+          metrics["TP"] = it->TP;
+          metrics["TN"] = it->TN;
           
           metrics_vector.push_back(metrics);
      }

@@ -242,15 +242,13 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.overlay(original_rects, original_rects, RECTS | IDS);               
 
      // Hand Blobs to high-level ObjectTracker
-     obj_tracker_.process_frame(gray, blob_process_.blobs());
+     obj_tracker_.process_frame(gray, blob_process_.blobs(), params_);
           
      cv::Mat object_img;
-     obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE | VELOCITIES);
-     cv::imshow("Objects", object_img);    
+     obj_tracker_.overlay(gray, object_img, TRACKS | IDS | ERR_ELLIPSE | VELOCITIES);     
 
      cv::Mat fin_img;
-     fin_detector_.process_frame(gray, object_img, fin_img, obj_tracker_.tracks(), blob_process_.blobs(), frame_number, blob_process_.short_lived());
-     cv::imshow("Fins", fin_img);
+     fin_detector_.process_frame(gray, object_img, fin_img, obj_tracker_.tracks(), blob_process_.blobs(), frame_number, blob_process_.short_lived());     
 
      //diver_class_.process_frame(gray, obj_tracker_.tracks(), blob_process_.blobs(), frame_number);     
 
@@ -313,7 +311,9 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           //cv::imshow("Tracking Tracks",short_lived);
           cv::imshow("Consolidate", blob_consolidate);      
           //cv::imshow("Tracks", original_rects);          
-          //cv::imshow("Traj", blob_consolidate);
+          //cv::imshow("Traj", blob_consolidate);          
+          cv::imshow("Objects", object_img);    
+          cv::imshow("Fins", fin_img);
      }
      
      return 0;

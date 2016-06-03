@@ -4,7 +4,7 @@
 /// @file ObjectTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-26 14:52:17 syllogismrxs>
+/// Time-stamp: <2016-06-03 17:06:44 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 Mar 2016
@@ -41,12 +41,13 @@
 #include <opencv_workbench/wb/PositionTracker.h>
 #include <opencv_workbench/wb/Blob.h>
 #include <opencv_workbench/wb/MatrixTracker.h>
+#include <opencv_workbench/wb/Parameters.h>
 
 
 class ObjectTracker {
 public:
      ObjectTracker();
-     void process_frame(cv::Mat &src, std::vector<wb::Blob> &blobs);
+     void process_frame(cv::Mat &src, std::vector<wb::Blob> &blobs, Parameters *params);
      int next_available_id();
 
      void overlay(cv::Mat &src, cv::Mat &dst, OverlayFlags_t flags);
@@ -59,7 +60,7 @@ public:
 
      std::vector<wb::Entity> & estimated_divers() { return estimated_divers_; }
 
-     void diver_classification();
+     void diver_classification(Parameters *params);
      
      bool is_diver(std::vector<wb::Entity> &objects, int id);     
      
