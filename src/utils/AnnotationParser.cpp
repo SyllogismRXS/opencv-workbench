@@ -1298,21 +1298,7 @@ void AnnotationParser::score_classifier(cv::Mat &src, cv::Mat &dst,
                
                bool possible_object_found = false;
                for (std::map<std::string, wb::Entity>::iterator it_possible = possible_objects.begin();
-                    it_possible != possible_objects.end(); it_possible++) {
-
-                    // Draw the object's estimated centroid
-                    wb::drawCross(dst, it_possible->second.estimated_pixel_centroid(), cv::Scalar(0,0,0), 8);
-                    
-                    // Draw each object's ellipse on the dst image
-                    Ellipse ell = it_possible->second.error_ellipse(0.9973); // 3 std
-                    cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
-                    cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));                    
-                    cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
-                    
-                    // Draw the object name
-                    cv::putText(dst, it_possible->second.name(), 
-                                it_possible->second.estimated_pixel_centroid(), 
-                                cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(21,243,243), 1, 8, false);                    
+                    it_possible != possible_objects.end(); it_possible++) {                    
                     
                     // If they are of the same type and the estimated centroid
                     // of the possible object is within the bounding box of the
@@ -1335,6 +1321,21 @@ void AnnotationParser::score_classifier(cv::Mat &src, cv::Mat &dst,
           int possible_diver_count = 0;
           for (std::map<std::string, wb::Entity>::iterator it_possible = possible_objects.begin();
                     it_possible != possible_objects.end(); it_possible++) {
+               
+               // Draw the object's estimated centroid
+               wb::drawCross(dst, it_possible->second.estimated_pixel_centroid(), cv::Scalar(0,0,0), 8);
+                    
+               // Draw each object's ellipse on the dst image
+               Ellipse ell = it_possible->second.error_ellipse(0.9973); // 3 std
+               cv::Point center(cvRound(ell.center().x),cvRound(ell.center().y));
+               cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));                    
+               cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+                    
+               // Draw the object name
+               cv::putText(dst, it_possible->second.name(), 
+                           it_possible->second.estimated_pixel_centroid(), 
+                           cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(21,243,243), 1, 8, false);                    
+
                
                if (it_possible->second.type() == wb::Entity::Diver) {
                     possible_diver_count++;
