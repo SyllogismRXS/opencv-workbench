@@ -1,5 +1,5 @@
 #!/bin/bash
-
+STARTTIME=$(date +%s)
 #
 # Example usage:
 # ./scripts/learn-test-velocity -y ./data/yaml-range-params/static-threshold.yaml -f ./data/scenarios/threshold-train-test.yaml
@@ -23,7 +23,12 @@ run_cmd()
     echo "===================================================================="
     echo $CMD
     echo "===================================================================="
-    ${CMD}    
+
+    if [ $# -eq 2 ]; then
+        ${CMD} >> "$2" 2>&1
+    else
+        ${CMD}
+    fi
 }
 
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
@@ -146,7 +151,7 @@ do
             base_no_ext="${filename%.*}"
             K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"
 
-            run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE ${HIDE_WINDOWS} -o ${TRACKS_OUT_DIR} -t -g detection -m learning -k ${K_FOLDS_FILE}"
+            run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE ${HIDE_WINDOWS} -o ${TRACKS_OUT_DIR} -t -g detection -m learning -k ${K_FOLDS_FILE}" "${OUT_DIR}/detector.txt"
             #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
             #${CMD}
         done
@@ -173,7 +178,7 @@ do
         # Try threshold on validation set
         echo "============="
         echo "Validating"
-        run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml ${HIDE_WINDOWS} -o ${FOLD_DIR} -t -g detection -m validating -k ${K_FOLDS_FILE}"
+        run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml ${HIDE_WINDOWS} -o ${FOLD_DIR} -t -g detection -m validating -k ${K_FOLDS_FILE}" "${OUT_DIR}/detector.txt"
         #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1        
     done        
 done
@@ -203,7 +208,7 @@ do
     # Try threshold on validation set
     echo "============="
     echo "Testing"
-    run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml ${HIDE_WINDOWS} -o ${OUT_DIR} -t -g detection -m testing -k ${K_FOLDS_FILE}"
+    run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml ${HIDE_WINDOWS} -o ${OUT_DIR} -t -g detection -m testing -k ${K_FOLDS_FILE}" "${OUT_DIR}/detector.txt"
     #echo $CMD
     #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
     #${CMD}
@@ -211,3 +216,8 @@ done
 
 # Compute the final accuracy for the test sets
 run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR} -g CLASSIFIER"
+
+ENDTIME=$(date +%s)
+
+echo "Elapsed time: $(($ENDTIME - $STARTTIME)) seconds"
+echo "Elapsed time: $(($ENDTIME - $STARTTIME)/60.0) minutes"
