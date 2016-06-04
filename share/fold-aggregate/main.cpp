@@ -1,11 +1,13 @@
 #include <iostream>
 #include <fstream>
+
 #include <string>
 #include <stdio.h>
 #include <time.h>
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <cmath>
 
 // OpenCV headers
 #include <cv.h>
@@ -62,7 +64,8 @@ int main(int argc, char *argv[])
      std::string output_dir = "./";
      std::string param_sweep = "";
      std::string last_stage_str = "THRESHOLD"; // or "CLASSIFIER"
-     while ((c = getopt (argc, argv, "g:s:f:o:d:")) != -1) {
+     std::string ranges_dir = "NONE";
+     while ((c = getopt (argc, argv, "r:g:s:f:o:d:")) != -1) {
           switch (c) {               
           case 's':
                param_sweep = std::string(optarg);
@@ -80,6 +83,9 @@ int main(int argc, char *argv[])
                break;
           case 'd':
                xml_dir = std::string(optarg);
+               break;          
+          case 'r':
+               ranges_dir = std::string(optarg);
                break;          
           case '?':
                if (optopt == 'd') {
@@ -105,6 +111,12 @@ int main(int argc, char *argv[])
      // Check existence of xml directory
      if ( !boost::filesystem::exists( fs::path(xml_dir) ) ) {
           cout << "Error: XML Directory doesn't exist." << endl;
+          return -1;
+     }
+
+     // Check existence of parameter ranges directory
+     if ( !boost::filesystem::exists( fs::path(ranges_dir) ) ) {
+          cout << "Error: Range Directory doesn't exist:" << ranges_dir << endl;
           return -1;
      }
      
@@ -149,7 +161,7 @@ int main(int argc, char *argv[])
                metrics_counts[param_value_str]["TP"] += metrics["TP"];
                metrics_counts[param_value_str]["TN"] += metrics["TN"];
                metrics_counts[param_value_str]["FP"] += metrics["FP"];
-               metrics_counts[param_value_str]["FN"] += metrics["FN"];
+               metrics_counts[param_value_str]["FN"] += metrics["FN"];               
           } else {
                cout << "Error: Using invalid param_sweep: " << param_sweep << endl;
                return -1;
@@ -174,6 +186,7 @@ int main(int argc, char *argv[])
           metrics["TPR"] = TPR;
           metrics["FPR"] = FPR;
           metrics["thresh_value"] = syllo::str2double(it->first);
+          
           metrics_vector.push_back(metrics);
      }     
           
@@ -211,7 +224,6 @@ int main(int argc, char *argv[])
      
      for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
          it != metrics_vector.end(); it++) {                              
-
 
           double fpr = -1, tpr = -1, thresh = -1, fp = -1, fn = -1, tp = -1, tn = -1;
           int type = -1;          
@@ -256,21 +268,28 @@ int main(int argc, char *argv[])
      std::vector< std::map<std::string,double> >::iterator it_oppt;
      ROC::OperatingPoint(metrics_vector, it_oppt);
      
-     // Write out the threshold to a yaml param file for the last validation
-     // fold
-     YAML::Emitter out;
-     out << YAML::BeginMap;
-     out << YAML::Key << param_sweep;
-     out << YAML::Value << syllo::double2str((*it_oppt)["thresh_value"]);
-     out << YAML::Key << "threshold_type";
-     out << YAML::Value << syllo::int2str(threshold_type);     
-     out << YAML::EndMap;
-
-     std::string out_filename = output_dir + "/validate.yaml";
-     std::ofstream output;
-     output.open(out_filename.c_str(), std::ofstream::out);
-     output << out.c_str();
-     output.close();
+     // Find the yaml file that produced the operating point and copy it to the 
+     // validate.yaml
+     std::string output_yaml = output_dir + "/validate.yaml";
+     if (!syllo::copy_file_with_value(ranges_dir, output_yaml, param_sweep, (*it_oppt)["thresh_value"])) {
+          return -1;
+     }
+     
+     //// Write out the threshold to a yaml param file for the last validation
+     //// fold
+     //YAML::Emitter out;
+     //out << YAML::BeginMap;
+     //out << YAML::Key << param_sweep;
+     //out << YAML::Value << syllo::double2str((*it_oppt)["thresh_value"]);
+     //out << YAML::Key << "threshold_type";
+     //out << YAML::Value << syllo::int2str(threshold_type);     
+     //out << YAML::EndMap;
+     //
+     //std::string out_filename = output_dir + "/validate.yaml";
+     //std::ofstream output;
+     //output.open(out_filename.c_str(), std::ofstream::out);
+     //output << out.c_str();
+     //output.close();
      
      //double TPR = 0, FPR = 0;
      //TPR = (double)TP / (double)(TP + FN) ; 

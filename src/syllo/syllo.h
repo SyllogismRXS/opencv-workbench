@@ -37,6 +37,11 @@ namespace syllo
      void get_files_with_ext(const fs::path& root, const std::string& ext, 
                              std::vector<fs::path>& ret, bool recursive);
 
+     bool copy_file_with_value(std::string &ranges_dir, 
+                               std::string &output_file,
+                               std::string &param_sweep, 
+                               double search_value);
+     
      void fill_line(std::string ch);
      
      cv::Point getTypeCentroid(EntityType type, std::map<int,syllo::Cluster> &clusters);

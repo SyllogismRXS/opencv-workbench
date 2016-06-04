@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 // OpenCV headers
 #include <cv.h>
@@ -12,6 +13,14 @@
 #include <opencv_workbench/syllo/syllo.h>
 #include <opencv_workbench/track/filters.h>
 #include <opencv_workbench/track/ParticleFilter.h>
+
+#include <yaml-cpp/yaml.h>
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 
 using namespace std;
 
@@ -87,6 +96,52 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
 
 namespace syllo {
 
+     bool copy_file_with_value(std::string &ranges_dir, 
+                               std::string &output_file, 
+                               std::string &param_sweep, 
+                               double search_value)
+     {
+          // Find the ranges/*.yaml file with the appropriate threshold value:
+          // Open each xml file and count metrics
+          std::vector<fs::path> ranges_file_paths;
+          syllo::get_files_with_ext(fs::path(ranges_dir), ".yaml", 
+                                    ranges_file_paths, true);   
+     
+          bool value_found = false;
+          std::string champ_file;
+          for (std::vector<fs::path>::iterator it = ranges_file_paths.begin(); 
+               it != ranges_file_paths.end(); it++) {          
+          
+               std::ifstream fin(it->c_str());
+               YAML::Parser parser(fin);
+               YAML::Node doc;
+               parser.GetNextDocument(doc);
+
+               if(const YAML::Node *node = doc.FindValue(param_sweep)) {
+                    double value;
+                    *node >> value;
+
+                    if (std::abs(search_value - value) < 0.000001) {
+                         value_found = true;
+                         champ_file = it->string();
+                         break;
+                    }
+               } else {
+                    cout << "Using invalid param_sweep: " << param_sweep << endl;
+               }
+          }
+
+          if (value_found) {               
+               std::ifstream src(champ_file, std::ios::binary);
+               std::ofstream dst(output_file, std::ios::binary);
+               dst << src.rdbuf();
+          } else {
+               cout << "ERROR: Couldn't find yaml file with thresh value: " << search_value  << endl;
+               return false;
+          }
+          return true;
+     }
+     
      std::vector<cv::Point3d> point2d_to_point3d_vectors(std::vector<cv::Point2d> &p2)
      {
           std::vector<cv::Point3d> p3;

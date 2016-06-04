@@ -17,6 +17,15 @@ HIDE_WINDOWS=" "
 
 OPENCV_WORKBENCH_ROOT="/home/syllogismrxs/repos/opencv-workbench"
 
+run_cmd()
+{
+    CMD=$1
+    echo "===================================================================="
+    echo $CMD
+    echo "===================================================================="
+    ${CMD}    
+}
+
 # Use > 1 to consume two arguments per pass in the loop (e.g. each
 # argument has a corresponding value to go with it).
 # Use > 0 to consume one or more arguments per pass in the loop (e.g.
@@ -93,7 +102,7 @@ mkdir -p ${OUT_DIR}
 cp ${YAML_PARAMS_FILE} ${OUT_DIR}
 
 # Generate the k-folds scenarios
-${OPENCV_WORKBENCH_ROOT}/bin/k-fold -y ${YAML_VIDEO_FILES} -o ${OUT_DIR} -s 100 -k ${K_FOLDS}
+run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/k-fold -y ${YAML_VIDEO_FILES} -o ${OUT_DIR} -s 100 -k ${K_FOLDS}"
 
 # Put the names of the video files in an array. The k-fold program, puts the
 # file names in ${YAML_VIDEO_FILES} into a simple text file at
@@ -108,7 +117,7 @@ RANGES_OUT_DIR="${OUT_DIR}/ranges"
 mkdir -p ${RANGES_OUT_DIR}
 
 # Expand the Threshold parameter file
-${OPENCV_WORKBENCH_ROOT}/bin/param-range -y ${YAML_PARAMS_FILE} -o ${RANGES_OUT_DIR}
+run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/param-range -y ${YAML_PARAMS_FILE} -o ${RANGES_OUT_DIR}"
 
 # Get list of files that were created
 RANGES_FILES=$(find ${RANGES_OUT_DIR} -name "*.yaml")
@@ -137,19 +146,19 @@ do
             base_no_ext="${filename%.*}"
             K_FOLDS_FILE="${FOLD_DIR}/$base_no_ext.frame_types.yaml"
 
-            CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE ${HIDE_WINDOWS} -o ${TRACKS_OUT_DIR} -t -g detection -m learning -k ${K_FOLDS_FILE}"
-            #echo $CMD
+            run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y $RANGE_FILE ${HIDE_WINDOWS} -o ${TRACKS_OUT_DIR} -t -g detection -m learning -k ${K_FOLDS_FILE}"
             #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
-            ${CMD}
+            #${CMD}
         done
     done
     
     # Aggregate data and compute ROC curve
     # Compute "optimal" threshold
-    ${OPENCV_WORKBENCH_ROOT}/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -g CLASSIFIER -f roc.csv -s ${SWEEP_PARAM}
+    # Generate validate.yaml file
+    run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/fold-aggregate -d ${TRACKS_OUT_DIR} -o ${TRACKS_OUT_DIR} -r ${RANGES_OUT_DIR} -g CLASSIFIER -f roc.csv -s ${SWEEP_PARAM}"
     
     # Draw ROC Curve
-    ${OPENCV_WORKBENCH_ROOT}/scripts/roc.sh ${TRACKS_OUT_DIR}/roc.csv
+    run_cmd "${OPENCV_WORKBENCH_ROOT}/scripts/roc.sh ${TRACKS_OUT_DIR}/roc.csv"        
     
     ###########################################################################
     # Cross Validation for this fold
@@ -164,21 +173,19 @@ do
         # Try threshold on validation set
         echo "============="
         echo "Validating"
-        CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml ${HIDE_WINDOWS} -o ${FOLD_DIR} -t -g detection -m validating -k ${K_FOLDS_FILE}"
-        #echo $CMD
-        ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
-        #${CMD}
+        run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${TRACKS_OUT_DIR}/validate.yaml ${HIDE_WINDOWS} -o ${FOLD_DIR} -t -g detection -m validating -k ${K_FOLDS_FILE}"
+        #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1        
     done        
 done
 
 # Compute Average ROC Curve From K-Folds (output test.yaml file)
-${OPENCV_WORKBENCH_ROOT}/bin/roc-average -s ${SWEEP_PARAM} -d ${OUT_DIR} -o ${OUT_DIR}
+run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/roc-average -s ${SWEEP_PARAM} -d ${OUT_DIR} -o ${OUT_DIR} -r ${RANGES_OUT_DIR}"
 
 # Plot the Average ROC Curve (Full Points)
-${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 
+run_cmd "${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv"
 
 # Plot the Average ROC Curve (Decimated by 10)
-${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 10
+run_cmd "${OPENCV_WORKBENCH_ROOT}/scripts/avg-roc.sh ${OUT_DIR}/avg-roc.csv 10"
 
 ###############################################################################
 # Testing with the resulting "optimal" operating point
@@ -196,11 +203,11 @@ do
     # Try threshold on validation set
     echo "============="
     echo "Testing"
-    CMD="${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml ${HIDE_WINDOWS} -o ${OUT_DIR} -t -g detection -m testing -k ${K_FOLDS_FILE}"
+    run_cmd "${RUN_DETECTOR_EXEC} -f ${VIDEO_FILE} -p relative_detector -y ${OUT_DIR}/test.yaml ${HIDE_WINDOWS} -o ${OUT_DIR} -t -g detection -m testing -k ${K_FOLDS_FILE}"
     #echo $CMD
-    ${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
+    #${CMD} >> "${OUT_DIR}/detector.txt" 2>&1
     #${CMD}
 done        
 
 # Compute the final accuracy for the test sets
-${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR} -g CLASSIFIER
+run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR} -g CLASSIFIER"

@@ -4,7 +4,7 @@
 /// @file ROC.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-03 16:29:16 syllogismrxs>
+/// Time-stamp: <2016-06-04 12:41:23 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2016
@@ -63,7 +63,7 @@ public:
           for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
               it != metrics_vector.end(); it++) {                                  
                
-               cv::Point2f p((*it)["FPR"],(*it)["TPR"]);
+               cv::Point2f p((*it)["FPR"],(*it)["TPR"]);                             
                
                cv::Point2f goal(0,1);
                double dist = sqrt( pow(goal.x-p.x,2) + pow(goal.y-p.y,2) );
@@ -100,7 +100,8 @@ public:
           xf = 100;          
           dist_champ_2 = 1e9;     
           bool iterating = true;
-          while (iterating && b > -0.2) {
+          //while (iterating && b > -0.2) {
+          while (iterating) {
                for(std::vector< std::map<std::string,double> >::iterator it = metrics_vector.begin();
                    it != metrics_vector.end(); it++) {     
                     
@@ -136,9 +137,9 @@ public:
                it_oppt = it_champ_2;
           } else {
                it_oppt = it_champ_3;
+               cout << "Champ Threshold (Iterative): " << (*it_champ_3)["thresh_value"] << endl;          
           }          
-          cout << "Champ Threshold (Iterative)(Used): " << (*it_champ_3)["thresh_value"] << endl;          
-          it_oppt = it_champ_3;          
+          cout << "Champ Threshold (Used): " << (*it_oppt)["thresh_value"] << endl;
      }
 protected:
 private:     

@@ -67,8 +67,12 @@ int main(int argc, char *argv[])
      std::string param_sweep = "";
      std::string output_file = "";
      std::string output_dir = "./";
-     while ((c = getopt (argc, argv, "s:f:o:d:")) != -1) {
+     std::string ranges_dir = "NONE";
+     while ((c = getopt (argc, argv, "r:s:f:o:d:")) != -1) {
           switch (c) {
+          case 'r':
+               ranges_dir = std::string(optarg);
+               break;          
           case 's':
                param_sweep = std::string(optarg);
                break;
@@ -105,6 +109,12 @@ int main(int argc, char *argv[])
      // Check existence of xml directory
      if ( !boost::filesystem::exists( fs::path(work_dir) ) ) {
           cout << "Error: XML Directory doesn't exist." << endl;
+          return -1;
+     }
+
+     // Check existence of parameter ranges directory
+     if ( !boost::filesystem::exists( fs::path(ranges_dir) ) ) {
+          cout << "Error: Range Directory doesn't exist:" << ranges_dir << endl;
           return -1;
      }
 
@@ -271,20 +281,27 @@ int main(int argc, char *argv[])
      std::vector< std::map<std::string,double> >::iterator it_oppt;
      ROC::OperatingPoint(metrics_vector, it_oppt);
 
-     // Write out the threshold to a yaml param file for the final test set
-     YAML::Emitter out;
-     out << YAML::BeginMap;
-     out << YAML::Key << param_sweep;
-     out << YAML::Value << syllo::double2str((*it_oppt)["thresh_value"]);
-     out << YAML::Key << "threshold_type";
-     out << YAML::Value << threshold_type;
-     out << YAML::EndMap;
-
-     std::string out_filename = output_dir + "/test.yaml";
-     std::ofstream output;
-     output.open(out_filename.c_str(), std::ofstream::out);
-     output << out.c_str();
-     output.close();
+     // Find the yaml file that produced the operating point and copy it to the 
+     // test.yaml
+     std::string output_yaml = output_dir + "/test.yaml";
+     if (!syllo::copy_file_with_value(ranges_dir, output_yaml, param_sweep, (*it_oppt)["thresh_value"])) {
+          return -1;
+     }
+     
+     //// Write out the threshold to a yaml param file for the final test set
+     //YAML::Emitter out;
+     //out << YAML::BeginMap;
+     //out << YAML::Key << param_sweep;
+     //out << YAML::Value << syllo::double2str((*it_oppt)["thresh_value"]);
+     //out << YAML::Key << "threshold_type";
+     //out << YAML::Value << threshold_type;
+     //out << YAML::EndMap;
+     //
+     //std::string out_filename = output_dir + "/test.yaml";
+     //std::ofstream output;
+     //output.open(out_filename.c_str(), std::ofstream::out);
+     //output << out.c_str();
+     //output.close();
 
      return 0;
 }
