@@ -96,6 +96,14 @@ void labelNeighbors(cv::Mat &img, std::vector<uchar> &labelTable, uchar label, i
 
 namespace syllo {
 
+     int sign(double v)
+     {
+          if (v >= 0.0) {
+               return 1;
+          }
+          return -1;
+     }
+
      bool copy_file_with_value(std::string &ranges_dir, 
                                std::string &output_file, 
                                std::string &param_sweep, 

@@ -118,7 +118,11 @@ cv::Point2d PositionTracker::velocity()
 
 Ellipse PositionTracker::error_ellipse(double confidence)
 {
-     return kf_.error_ellipse(confidence);
+     if (initialized_) {
+          return kf_.error_ellipse(confidence);
+     } else {
+          return Ellipse(cv::Point2d(0,0),cv::Vec2d(1,1),0);
+     }
 }
 
 bool PositionTracker::is_within_region(cv::Point2d z, double confidence)

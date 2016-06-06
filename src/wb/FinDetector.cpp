@@ -22,14 +22,6 @@ FinDetector::FinDetector()
 
 #define RAD_2_DEG (180.0/3.14159)
 
-int sign(double v)
-{
-     if (v >= 0.0) {
-          return 1;
-     }
-     return -1;
-}
-
 void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst, 
                                 std::vector<wb::Blob> &tracks, 
                                 std::vector<wb::Blob> &blobs,
@@ -185,7 +177,7 @@ void FinDetector::process_frame(cv::Mat &gray, cv::Mat &src, cv::Mat &dst,
                cv::Vec3d blob_relative_unit_3d(blob_relative_unit[0], blob_relative_unit[1], 0);
                cv::Vec3d cross_value = sep_3d.cross(blob_relative_unit_3d);
                
-               int cross_value_sign = sign(cross_value[2]);
+               int cross_value_sign = syllo::sign(cross_value[2]);
                if (cross_value_sign == left_side_sign_) {
                     lefts.push_back(*it_blob);
                } else {

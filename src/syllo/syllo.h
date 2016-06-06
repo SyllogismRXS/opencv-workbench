@@ -23,6 +23,8 @@ namespace fs = ::boost::filesystem;
 
 namespace syllo
 {
+     int sign(double v);     
+
      int str2int(std::string str);
      double str2double(std::string str);
           
