@@ -1,8 +1,11 @@
-min_velocity_threshold: [5,2,20]
+max_velocity_threshold: [14, 1, 19]
+#max_velocity_threshold: [20, 5, 45]
+min_velocity_threshold: 15
+
+#min_velocity_threshold: [5,2,20]
 #min_velocity_threshold: [1,5,43]
-#min_velocity_threshold: 9
-max_velocity_threshold: 45
+# The min velocity was swept with:
+#max_velocity_threshold: 45
+
 ratio_threshold: 0.00162001
 threshold_type: 1  # 0=static, 1=ratio, 2=gradient
-
-

@@ -1,5 +1,6 @@
 #!/bin/bash
 STARTTIME=$(date +%s)
+
 #
 # Example usage:
 # ./scripts/learn-test-velocity -y ./data/yaml-range-params/static-threshold.yaml -f ./data/scenarios/threshold-train-test.yaml
@@ -96,7 +97,7 @@ if [ "$SWEEP_PARAM" == "empty" ]; then
     exit -1;
 fi
 
-if [[ "$SWEEP_PARAM" != "static_threshold" && "$SWEEP_PARAM" != "ratio_threshold" && "$SWEEP_PARAM" != "gradient_threshold" && "$SWEEP_PARAM" != "min_velocity_threshold" ]]; then
+if [[ "$SWEEP_PARAM" != "static_threshold" && "$SWEEP_PARAM" != "ratio_threshold" && "$SWEEP_PARAM" != "gradient_threshold" && "$SWEEP_PARAM" != "min_velocity_threshold" && "$SWEEP_PARAM" != "max_velocity_threshold" ]]; then
     echo "Probably not a valid SWEEP_PARAM. Try again or add it here. -s"
     exit -1;
 fi
@@ -220,4 +221,3 @@ run_cmd "${OPENCV_WORKBENCH_ROOT}/bin/aggregate-test -d ${OUT_DIR} -o ${OUT_DIR}
 ENDTIME=$(date +%s)
 
 echo "Elapsed time: $(($ENDTIME - $STARTTIME)) seconds"
-echo "Elapsed time: $(($ENDTIME - $STARTTIME)/60.0) minutes"
