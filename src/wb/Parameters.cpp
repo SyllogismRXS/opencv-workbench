@@ -20,6 +20,8 @@ Parameters::Parameters()
 
      min_velocity_threshold = 9;
      max_velocity_threshold = 20;
+
+     covar_threshold = 30;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -58,6 +60,10 @@ void Parameters::set_yaml_file(std::string yaml_file)
           
           if(const YAML::Node *p = doc.FindValue("max_velocity_threshold")) {
                *p >> max_velocity_threshold;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("covar_threshold")) {
+               *p >> covar_threshold;
           }
 
           if(const YAML::Node *p = doc.FindValue("threshold_type")) {

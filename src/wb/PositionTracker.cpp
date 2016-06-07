@@ -51,6 +51,11 @@ PositionTracker::PositionTracker() : initialized_(false)
      kf_.setModel(A_, B_, H_, Q_, R_);
 }
 
+Eigen::MatrixXf PositionTracker::P()
+{
+     return kf_.P();
+}
+
 Eigen::MatrixXf PositionTracker::R()
 {
      return kf_.R();
@@ -59,7 +64,7 @@ Eigen::MatrixXf PositionTracker::R()
 void PositionTracker::set_Q(double q)
 {
      Q_ = Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * q;
-     kf_.setModel(A_, B_, H_, Q_, R_);
+     kf_.set_Q(Q_);
 }
 void PositionTracker::set_R(double r)
 {

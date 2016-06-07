@@ -4,7 +4,7 @@
 /// @file ObjectTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-06 15:48:59 syllogismrxs>
+/// Time-stamp: <2016-06-07 16:46:09 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 Mar 2016
@@ -83,6 +83,9 @@ protected:
      int left_side_sign_;
      
      int next_id_;
+
+     bool left_track_valid_;
+     bool right_track_valid_;
 private:
 };
 

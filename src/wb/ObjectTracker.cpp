@@ -20,6 +20,15 @@ ObjectTracker::ObjectTracker()
      covar_tracker_.init(2,2);
 
      left_side_sign_ = 1;
+
+     left_track_valid_ = false;
+     right_track_valid_ = false;
+
+     left_tracker_.set_P(60);
+     right_tracker_.set_P(60);
+
+     left_tracker_.set_Q(5);
+     right_tracker_.set_Q(5);
 }
 
 int ObjectTracker::next_available_id()
@@ -497,10 +506,10 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                int cross_value_sign = syllo::sign(cross_value[2]);
 
                cv::Point2d rel_p = it_blob->estimated_pixel_centroid() - it_obj->estimated_pixel_centroid();
-               //cv::Point2d rel_p = it_obj->estimated_pixel_centroid() - it_blob->estimated_pixel_centroid();               
-               
+               //cv::Point2d rel_p = it_obj->estimated_pixel_centroid() - it_blob->estimated_pixel_centroid();
+
                //// Rotate point based on object's velocity
-               double theta = -atan2(vel_unit[1], vel_unit[0]);               
+               double theta = -atan2(vel_unit[1], vel_unit[0]);
                cv::Point2d rel_rot_p;
                rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
                rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
@@ -509,19 +518,19 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                it_blob->set_pixel_centroid(rel_rot_p);
                it_blob->set_estimated_centroid(rel_rot_p);
                it_blob->set_centroid(rel_rot_p);
-               
-               if (cross_value_sign == left_side_sign_) {                    
+
+               if (cross_value_sign == left_side_sign_) {
                     lefts.push_back(*it_blob);
                } else {
                     rights.push_back(*it_blob);
-               }                              
+               }
 
           } // For each blob
 
           // Using the collected lefts and rights, determine which measurement
           // in each lefts and rights is "closest" to the left and right
           // tracker
-          
+
           // TODO: Using oldest for now
           std::vector<wb::Blob>::iterator it_left = lefts.begin();
           for (std::vector<wb::Blob>::iterator it = lefts.begin();
@@ -541,13 +550,27 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           // Predict left and right
           left_tracker_.predict();
           right_tracker_.predict();
-          
+
           if (lefts.size() > 0) {
-               left_tracker_.set_measurement(it_left->estimated_pixel_centroid());                             
+               left_tracker_.set_measurement(it_left->estimated_pixel_centroid());
           }
 
           if (rights.size() > 0) {
                right_tracker_.set_measurement(it_right->estimated_pixel_centroid());
+          }
+
+          double left_P_norm = left_tracker_.P().norm();
+          double right_P_norm = right_tracker_.P().norm();
+
+          cout << "----------" << endl;
+          cout << "Left Norm: " << left_P_norm << endl;
+          cout << "Right Norm: " << right_P_norm << endl;
+                    
+          if (left_P_norm < params->covar_threshold && 
+              right_P_norm < params->covar_threshold) {
+               
+               it_obj->set_type(wb::Entity::Diver);
+               estimated_divers_.push_back(*it_obj);
           }
 
           // Overlay left tracker...
@@ -556,27 +579,27 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                // Rotate point based on object's velocity
                cv::Point2d rel_p = left_tracker_.position();
                double theta = atan2(vel_unit[1], vel_unit[0]);
-               
-               cv::Point2d rel_rot_p;               
+
+               cv::Point2d rel_rot_p;
                rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
-               rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;               
-               
+               rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
+
                cv::Point2d pos;
                pos.x = rel_rot_p.x + it_obj->estimated_pixel_centroid().x;
-               pos.y = rel_rot_p.y + it_obj->estimated_pixel_centroid().y;                             
-               
+               pos.y = rel_rot_p.y + it_obj->estimated_pixel_centroid().y;
+
                // Draw text
                cv::putText(dst, "L", cv::Point(pos.x-3,pos.y-3), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255,255,255), 2, 8, false);
-               
+
                // Draw centroid
-               wb::drawCross(dst, pos, cv::Scalar(212,173,70), 3);     
-               
-               //// Draw error ellipse
+               wb::drawCross(dst, pos, cv::Scalar(212,173,70), 3);
+
+               // Draw error ellipse
                Ellipse ell = left_tracker_.error_ellipse(0.9973); // 3 std
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
-          }          
+          }
 
           // Overlay right tracker...
           {
@@ -584,29 +607,30 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                // Rotate point based on object's velocity
                cv::Point2d rel_p = right_tracker_.position();
                double theta = atan2(vel_unit[1], vel_unit[0]);
-               
-               cv::Point2d rel_rot_p;               
+
+               cv::Point2d rel_rot_p;
                rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
-               rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;               
-               
+               rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
+
                cv::Point2d pos;
                pos.x = rel_rot_p.x + it_obj->estimated_pixel_centroid().x;
-               pos.y = rel_rot_p.y + it_obj->estimated_pixel_centroid().y;                             
-               
+               pos.y = rel_rot_p.y + it_obj->estimated_pixel_centroid().y;
+
                // Draw text
                cv::putText(dst, "R", cv::Point(pos.x-3,pos.y-3), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255,255,255), 2, 8, false);
-               
-               // Draw centroid
-               wb::drawCross(dst, pos, cv::Scalar(255,173,70), 3);     
 
-               //// Draw error ellipse
+               // Draw centroid
+               wb::drawCross(dst, pos, cv::Scalar(255,173,70), 3);
+
+               // Draw error ellipse
                Ellipse ell = right_tracker_.error_ellipse(0.9973); // 3 std
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
-          }          
-     } // For each object          
+          }
+     } // For each object
 
+#if 0
      //////////////////////////////////////////////////////////////////////////
      // Velocity Based Detection:
      // Diver objects have a velocity within a threshold
@@ -630,8 +654,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                }
           }
      }
-
      prev_estimated_divers_ = estimated_divers_;
+#endif
 }
 
 

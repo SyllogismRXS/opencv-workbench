@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-03 17:07:40 syllogismrxs>
+/// Time-stamp: <2016-06-07 17:05:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -61,6 +61,8 @@ public:
      double max_velocity_threshold;
      
      ThresholdType_t threshold_type;
+
+     double covar_threshold;
      
 protected:
 
