@@ -27,8 +27,10 @@ ObjectTracker::ObjectTracker()
      left_tracker_.set_P(60);
      right_tracker_.set_P(60);
 
-     left_tracker_.set_Q(5);
-     right_tracker_.set_Q(5);
+     double T = 0.066666667; // dt
+     double q= T * 1;
+     left_tracker_.set_Q(q);
+     right_tracker_.set_Q(q);
 }
 
 int ObjectTracker::next_available_id()
