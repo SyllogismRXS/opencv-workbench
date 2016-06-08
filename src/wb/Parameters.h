@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-07 17:05:56 syllogismrxs>
+/// Time-stamp: <2016-06-08 15:31:54 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -63,6 +63,8 @@ public:
      ThresholdType_t threshold_type;
 
      double covar_threshold;
+     double covar_norm_threshold;
+     double min_velocity_threshold_2;
      
 protected:
 

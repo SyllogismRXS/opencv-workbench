@@ -1,0 +1,9 @@
+covar_threshold: [10, 10, 50]  #30
+covar_norm_threshold: 10
+min_velocity_threshold_2: 5
+
+max_velocity_threshold: 18
+min_velocity_threshold: 15
+
+ratio_threshold: 0.00162001
+threshold_type: 1  # 0=static, 1=ratio, 2=gradient

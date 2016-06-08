@@ -312,6 +312,18 @@ void AnnotationParser::write_header()
           char * max_velocity_threshold = doc.allocate_string(syllo::double2str(params_.max_velocity_threshold).c_str());
           xml_node<> *max_velocity_threshold_node = doc.allocate_node(node_element, "max_velocity_threshold", max_velocity_threshold);
           parameters_node->append_node(max_velocity_threshold_node);
+
+          char * min_velocity_threshold_2 = doc.allocate_string(syllo::double2str(params_.min_velocity_threshold_2).c_str());
+          xml_node<> *min_velocity_threshold_2_node = doc.allocate_node(node_element, "min_velocity_threshold_2", min_velocity_threshold_2);
+          parameters_node->append_node(min_velocity_threshold_2_node);
+
+          char * covar_threshold = doc.allocate_string(syllo::double2str(params_.covar_threshold).c_str());
+          xml_node<> *covar_threshold_node = doc.allocate_node(node_element, "covar_threshold", covar_threshold);
+          parameters_node->append_node(covar_threshold_node);
+
+          char * covar_norm_threshold = doc.allocate_string(syllo::double2str(params_.covar_norm_threshold).c_str());
+          xml_node<> *covar_norm_threshold_node = doc.allocate_node(node_element, "covar_norm_threshold", covar_norm_threshold);
+          parameters_node->append_node(covar_norm_threshold_node);
           
           
      }
@@ -735,6 +747,27 @@ int AnnotationParser::ParseFile(std::string file)
           } else {
                cout << xml_filename_ << ": Missing max_velocity_threshold node" << endl;
           }
+
+          xml_node<> * min_velocity_threshold_2_node = parameters_node->first_node("min_velocity_threshold_2");
+          if (min_velocity_threshold_2_node != 0) {
+               params_.min_velocity_threshold_2 = syllo::str2double(min_velocity_threshold_2_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing min_velocity_threshold_2 node" << endl;
+          }
+
+          xml_node<> * covar_threshold_node = parameters_node->first_node("covar_threshold");
+          if (covar_threshold_node != 0) {
+               params_.covar_threshold = syllo::str2double(covar_threshold_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing covar_threshold node" << endl;
+          }
+
+          xml_node<> * covar_norm_threshold_node = parameters_node->first_node("covar_norm_threshold");
+          if (covar_norm_threshold_node != 0) {
+               params_.covar_norm_threshold = syllo::str2double(covar_norm_threshold_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing covar_norm_threshold node" << endl;
+          }
      }
 
      // Find <frames>
@@ -1088,6 +1121,11 @@ std::map<std::string,double> AnnotationParser::get_params()
      
      params["min_velocity_threshold"] = params_.min_velocity_threshold;
      params["max_velocity_threshold"] = params_.max_velocity_threshold;
+
+     params["min_velocity_threshold_2"] = params_.min_velocity_threshold_2;
+     params["covar_threshold"] = params_.covar_threshold;
+     params["covar_norm_threshold"] = params_.covar_norm_threshold;
+
      return params;
 }
 

@@ -1381,7 +1381,7 @@ int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
 
      //std::vector<wb::Blob> new_blobs;
      frame_blobs_.clear();
-     this->find_blobs(input, frame_blobs_, min_blob_size_, true);
+     this->find_blobs(input, frame_blobs_, min_blob_size_, false);
      //this->find_clusters(input, frame_blobs_, 1);
 
      //cv::Mat out;

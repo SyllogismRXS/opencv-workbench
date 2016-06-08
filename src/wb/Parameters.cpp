@@ -18,10 +18,12 @@ Parameters::Parameters()
      
      threshold_type = ratio_type;     
 
-     min_velocity_threshold = 9;
-     max_velocity_threshold = 20;
+     min_velocity_threshold = 15;
+     max_velocity_threshold = 18;
 
      covar_threshold = 30;
+     covar_norm_threshold = 10;
+     min_velocity_threshold_2 = 5;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -53,7 +55,7 @@ void Parameters::set_yaml_file(std::string yaml_file)
           if(const YAML::Node *p = doc.FindValue("history_distance")) {
                *p >> history_distance;
           }
-
+          
           if(const YAML::Node *p = doc.FindValue("min_velocity_threshold")) {
                *p >> min_velocity_threshold;
           }
@@ -65,6 +67,14 @@ void Parameters::set_yaml_file(std::string yaml_file)
           if(const YAML::Node *p = doc.FindValue("covar_threshold")) {
                *p >> covar_threshold;
           }
+
+          if(const YAML::Node *p = doc.FindValue("covar_norm_threshold")) {
+               *p >> covar_norm_threshold;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("min_velocity_threshold_2")) {
+               *p >> min_velocity_threshold_2;
+          }                    
 
           if(const YAML::Node *p = doc.FindValue("threshold_type")) {
                int type;
