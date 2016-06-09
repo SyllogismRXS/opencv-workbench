@@ -1,13 +1,12 @@
-covar_norm_threshold: [0,2,20]
+covar_threshold: [20,2,40]
 
-class_age_confirmed: 2
-
-min_velocity_threshold_2: 5
-
-covar_threshold: 30
+covar_norm_threshold: 10   # make it not matter
+class_age_confirmed: 0        # make it not matter
+min_velocity_threshold_2: 5   #original check?
 
 max_velocity_threshold: 18
 min_velocity_threshold: 15
 
 ratio_threshold: 0.00162001
 threshold_type: 1  # 0=static, 1=ratio, 2=gradient
+
