@@ -324,8 +324,10 @@ void AnnotationParser::write_header()
           char * covar_norm_threshold = doc.allocate_string(syllo::double2str(params_.covar_norm_threshold).c_str());
           xml_node<> *covar_norm_threshold_node = doc.allocate_node(node_element, "covar_norm_threshold", covar_norm_threshold);
           parameters_node->append_node(covar_norm_threshold_node);
-          
-          
+
+          char * class_age_confirmed = doc.allocate_string(syllo::double2str(params_.class_age_confirmed).c_str());
+          xml_node<> *class_age_confirmed_node = doc.allocate_node(node_element, "class_age_confirmed", class_age_confirmed);
+          parameters_node->append_node(class_age_confirmed_node);                    
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -768,6 +770,13 @@ int AnnotationParser::ParseFile(std::string file)
           } else {
                cout << xml_filename_ << ": Missing covar_norm_threshold node" << endl;
           }
+
+          xml_node<> * class_age_confirmed_node = parameters_node->first_node("class_age_confirmed");
+          if (class_age_confirmed_node != 0) {
+               params_.class_age_confirmed = syllo::str2double(class_age_confirmed_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing class_age_confirmed node" << endl;
+          }
      }
 
      // Find <frames>
@@ -1125,6 +1134,7 @@ std::map<std::string,double> AnnotationParser::get_params()
      params["min_velocity_threshold_2"] = params_.min_velocity_threshold_2;
      params["covar_threshold"] = params_.covar_threshold;
      params["covar_norm_threshold"] = params_.covar_norm_threshold;
+     params["class_age_confirmed"] = params_.class_age_confirmed;
 
      return params;
 }

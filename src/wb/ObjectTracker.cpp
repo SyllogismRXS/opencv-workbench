@@ -705,7 +705,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           }
 
           if (!classified_as_diver) {
-               if (is_diver(prev_estimated_divers_,it_obj->id()) && it_obj->class_age() > 5 ) {
+               if (is_diver(prev_estimated_divers_,it_obj->id()) && it_obj->class_age() > params->class_age_confirmed) {
                     it_obj->set_type(wb::Entity::Diver);
                     estimated_divers_.push_back(*it_obj);
                }

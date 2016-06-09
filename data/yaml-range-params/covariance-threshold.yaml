@@ -1,6 +1,10 @@
-covar_threshold: [10, 20, 100]  #30
+min_velocity_threshold_2: [1, 2, 20]
+
+covar_threshold: 30
+#covar_threshold: [10, 20, 100]  #30
 covar_norm_threshold: 10
-min_velocity_threshold_2: 5
+#min_velocity_threshold_2: 5
+class_age_confirmed: 5
 
 max_velocity_threshold: 18
 min_velocity_threshold: 15
