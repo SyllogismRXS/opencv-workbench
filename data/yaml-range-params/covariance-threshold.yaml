@@ -1,7 +1,7 @@
 covar_threshold: [20,2,40]
 
-covar_norm_threshold: 10   # make it not matter
-class_age_confirmed: 0        # make it not matter
+covar_norm_threshold: 10      # make it not matter
+class_age_confirmed: -5       # make it not matter
 min_velocity_threshold_2: 5   #original check?
 
 max_velocity_threshold: 18
