@@ -36,7 +36,8 @@ int main(int argc, char *argv[])
      int min_blob_size = 1;
 
      BlobProcess blob_process;
-     blob_process.find_blobs(gray, blobs, min_blob_size, false);          
+     cv::Mat frame_blob_img;
+     blob_process.find_blobs(gray, frame_blob_img, blobs, min_blob_size, false);          
 
      cv::Mat blob_img;
      blob_process.overlay(blobs, gray, blob_img, BLOBS | IDS | RECTS);     

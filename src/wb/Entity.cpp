@@ -22,6 +22,8 @@ namespace wb {
 
           confirmed_age_ = 3;
           dead_occluded_age_ = 11;
+
+          class_age_ = 0;
      }     
 
      void Entity::set_estimated_pixel_centroid(cv::Point p)

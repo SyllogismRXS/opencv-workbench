@@ -223,7 +223,8 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //cv::imshow("ndt", ndt_img);
       
      blob_process_.set_mask(mask_);
-     blob_process_.process_frame(dilate, median, thresh_value_);
+     cv::Mat frame_blobs_img;
+     blob_process_.process_frame(dilate, frame_blobs_img, median, thresh_value_);
 
      //blob_process_.process_frame(ndt_img, median, thresh_value_);
           
@@ -307,6 +308,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
           //cv::imshow("blend", blend);
           cv::imshow("Erode", erode);
           cv::imshow("Dilate", dilate);      
+          cv::imshow("FrameBlobs", frame_blobs_img);
           cv::imshow("BlobTracks", blob_img);        
           //cv::imshow("Tracking Tracks",short_lived);
           cv::imshow("Consolidate", blob_consolidate);      

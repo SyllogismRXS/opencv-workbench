@@ -4,7 +4,7 @@
 /// @file BlobProcess.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-05-20 16:41:20 syllogismrxs>
+/// Time-stamp: <2016-06-08 18:56:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 10 Sep 2015
@@ -86,8 +86,11 @@ public:
      
      BlobProcess();
      
-     int process_frame(cv::Mat &input, cv::Mat &original, int thresh);
-     void find_blobs(cv::Mat &input, std::vector<wb::Blob> &blobs, 
+     int process_frame(cv::Mat &input, cv::Mat &dst, cv::Mat &original, 
+                       int thresh);
+
+     void find_blobs(cv::Mat &input, cv::Mat &dst,
+                     std::vector<wb::Blob> &blobs,
                      int min_blob_size, bool show);
 
      void find_clusters(cv::Mat &input, std::vector<wb::Blob> &clusters, 

@@ -49,7 +49,7 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
 
      // Predict each KF
      for (std::vector<wb::Blob>::iterator it_prev = prev_tracks_.begin();
-               it_prev != prev_tracks_.end(); it_prev++) {
+          it_prev != prev_tracks_.end(); it_prev++) {
           it_prev->predict_tracker();
      }
 
@@ -60,6 +60,9 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
      // Key<int>     : ID of previous track
      // Value <list> : Measurement blob pointers that match track ID
      std::map<int, std::list<wb::Blob*> > track_matches;
+
+     wb::Blob left_blob;
+     wb::Blob right_blob;
 
      for (std::vector<wb::Blob>::iterator it_meas = meas.begin();
           it_meas != meas.end(); it_meas++) {
@@ -100,12 +103,73 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
                intermediate.push_back(&(*it_meas));
           }
      }
-
+     
      // For each track ID with matches, use kalman filter to integrate position
      for (std::vector<wb::Blob>::iterator it_prev = prev_tracks_.begin();
           it_prev != prev_tracks_.end(); it_prev++) {
 
           if (track_matches.count(it_prev->id()) > 0) {
+
+               //// If the left and right fin detectors are strong tracks, add
+               //// them to the measurements.
+               //double left_P_norm = left_tracker_.P().norm();
+               //double right_P_norm = right_tracker_.P().norm();
+               //
+               //if (left_P_norm < params->covar_threshold && 
+               //    right_P_norm < params->covar_threshold) {
+               //     
+               //     // Transform left and right trackers to diver object's
+               //     // frame of reference
+               //     cv::Point v = it_prev->estimated_pixel_velocity();
+               //     cv::Vec2d vel2d(v.x, v.y);
+               //     cv::Vec2d vel_unit = vel2d / sqrt(pow(vel2d[0],2) + pow(vel2d[1],2));                                       
+               //
+               //     {
+               //          left_blob.set_age(1);
+               //          left_blob.set_id(-1);
+               //
+               //          // Get relative position to diver's centroid:
+               //          // Rotate point based on object's velocity
+               //          cv::Point2d rel_p = left_tracker_.position();
+               //          double theta = atan2(vel_unit[1], vel_unit[0]);
+               //
+               //          cv::Point2d rel_rot_p;
+               //          rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
+               //          rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
+               //
+               //          cv::Point2d pos;
+               //          pos.x = rel_rot_p.x + it_prev->estimated_pixel_centroid().x;
+               //          pos.y = rel_rot_p.y + it_prev->estimated_pixel_centroid().y;
+               //
+               //          left_blob.set_estimated_pixel_centroid(pos);
+               //     }
+               //
+               //     {
+               //          right_blob.set_age(1);
+               //          right_blob.set_id(-1);
+               //
+               //          // Get relative position to diver's centroid:
+               //          // Rotate point based on object's velocity
+               //          cv::Point2d rel_p = right_tracker_.position();
+               //          double theta = atan2(vel_unit[1], vel_unit[0]);
+               //
+               //          cv::Point2d rel_rot_p;
+               //          rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
+               //          rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
+               //
+               //          cv::Point2d pos;
+               //          pos.x = rel_rot_p.x + it_prev->estimated_pixel_centroid().x;
+               //          pos.y = rel_rot_p.y + it_prev->estimated_pixel_centroid().y;
+               //
+               //          right_blob.set_estimated_pixel_centroid(pos);
+               //     }                    
+               //
+               //     cout << "Using right and left" << endl;
+               //                         
+               //     track_matches[it_prev->id()].push_back(&left_blob);
+               //     track_matches[it_prev->id()].push_back(&right_blob);
+               //}
+                              
                cv::Point2d sum_weighted(0,0);
                int count_weighted = 0;
 
@@ -161,7 +225,7 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
 
                     Eigen::MatrixXd diff(2,1);
                     diff << (*it_match)->estimated_pixel_centroid().x - avg.x,
-                            (*it_match)->estimated_pixel_centroid().y - avg.y;
+                         (*it_match)->estimated_pixel_centroid().y - avg.y;
 
                     covar_sum += (diff * diff.transpose());
 
@@ -238,6 +302,7 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
                          covar = ev_real * eigs_corrected * ev_real.inverse();
 
                     } else {
+                         //eig2 *= 0.90;
                          eig2 *= 0.90;
                          eig1 = eig2;
                          Eigen::EigenSolver<Eigen::MatrixXd> es(covar);
@@ -424,6 +489,12 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
 
           //cout << "==================================================" << endl;
 
+          // Predict left and right
+          left_tracker_.predict();
+          right_tracker_.predict();
+
+          bool classified_as_diver = false;
+          
           cv::Point track_centroid = it_obj->estimated_pixel_centroid();
           cv::Point v = it_obj->estimated_pixel_velocity();
 
@@ -434,191 +505,214 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
 
           // TODO: Velocity needed?
           // The velocity vector has to be above length threshold
-          double v_norm = sqrt(pow(v3[0],2) + pow(v3[1],2));
-          if (v_norm < params->min_velocity_threshold_2) {          
+          double v_norm = sqrt(pow(v3[0],2) + pow(v3[1],2));          
+          bool has_velocity = false;
+          if (v_norm >= params->min_velocity_threshold_2) {          
                //cout << "Too Slow: " << v_norm << endl;
-               continue;
+               has_velocity = true;               
           }
 
-          // Get major and minor axes of error ellipse
-          Ellipse ell = it_obj->error_ellipse(0.9973); // 3 std
+          if (has_velocity) {
+
+               // Get major and minor axes of error ellipse
+               Ellipse ell = it_obj->error_ellipse(0.9973); // 3 std
           
-          // Get rectangle around object
-          double theta = atan2(vel_unit[1], vel_unit[0]);
-          cv::RotatedRect rrect(cv::Point(track_centroid.x,track_centroid.y), cv::Size2f(2*ell.axes()(0),2*ell.axes()(1)), theta * RAD_2_DEG);
+#if 0
+               // Get rectangle around object
+               double theta = atan2(vel_unit[1], vel_unit[0]);
+               cv::RotatedRect rrect(cv::Point(track_centroid.x,track_centroid.y), cv::Size2f(2*ell.axes()(0),2*ell.axes()(1)), theta * RAD_2_DEG);
 
-          // Line separating fins:
-          cv::Vec2d sep = vel_unit * -1 * ell.axes()(0);
-
-          //cv::line(dst,cv::Point(track_centroid.x,track_centroid.y),
-          //         cv::Point(track_centroid.x + sep[0],
-          //                   track_centroid.y + sep[1]),
-          //         cv::Scalar(255,255,255), 1, 8, 0);
-
-          cv::Point2f vertices[4];
-          rrect.points(vertices);
-          for (int i = 0; i < 4; i++) {
-               cv::line(dst, vertices[i], vertices[(i+1)%4], cv::Scalar(0,255,0));
-          }
-
-          std::vector<wb::Blob> lefts;
-          std::vector<wb::Blob> rights;
-
-          std::vector<wb::Blob> lefts_out;
-          std::vector<wb::Blob> rights_out;
-
-          for (std::vector<wb::Blob>::iterator it_blob = meas.begin();
-               it_blob != meas.end(); it_blob++) {
-
-               //cout << "-----------------" << endl;
-
-               if (it_blob->occluded()) {
-                    continue;
+               cv::Point2f vertices[4];
+               rrect.points(vertices);
+               for (int i = 0; i < 4; i++) {
+                    cv::line(dst, vertices[i], vertices[(i+1)%4], cv::Scalar(0,255,0));
                }
+#endif
+          
+               // Line separating fins:
+               cv::Vec2d sep = vel_unit * -1 * ell.axes()(0) * 4;
 
-               //// TODO: age needed?
-               //if (it_blob->age() < 3) {
-               //     cout << "Too Young" << endl;
-               //     continue;
-               //}
+               cv::line(dst,cv::Point(track_centroid.x,track_centroid.y),
+                        cv::Point(track_centroid.x + sep[0],
+                                  track_centroid.y + sep[1]),
+                        cv::Scalar(255,255,255), 1, 8, 0);          
 
-               cv::Point blob_centroid = it_blob->estimated_pixel_centroid();
+               std::vector<wb::Blob> lefts;
+               std::vector<wb::Blob> rights;
 
-               // Is the blob within the error ellipse?
-               bool in_ellipse = false;
-               if (it_obj->pixel_tracker().is_within_region(blob_centroid,0.9973)) {
-                    in_ellipse = true;
-               }
+               std::vector<wb::Blob> lefts_out;
+               std::vector<wb::Blob> rights_out;
 
-               // Is the blob on the side of the ellipse, opposite the track's
-               // estimated velocity?
+               for (std::vector<wb::Blob>::iterator it_blob = meas.begin();
+                    it_blob != meas.end(); it_blob++) {
 
-               // Find blob centroid relative to the track's centroid
-               cv::Vec2d blob_relative(blob_centroid.x - track_centroid.x,
-                                       blob_centroid.y - track_centroid.y);
+                    if (it_blob->occluded()) {
+                         continue;
+                    }
 
-               // The blob relative norm distance can't be too small.
-               double blob_relative_norm = sqrt(pow(blob_relative[0],2) + pow(blob_relative[1],2));
-               if (blob_relative_norm < 20) {
-                    continue;
-               }
+                    //// TODO: age needed?
+                    //if (it_blob->age() < 3) {
+                    //     cout << "Too Young" << endl;
+                    //     continue;
+                    //}
 
-               cv::Vec2d blob_relative_unit = blob_relative / blob_relative_norm;
-               // The dot product of the velocity and the relative position of
-               // the blob's centroid is negative if they are in "opposite
-               // directions"
-               double dot = vel_unit.dot(blob_relative_unit);
-               if (dot >= 0) {
-                    continue;
-               }
+                    cv::Point blob_centroid = it_blob->estimated_pixel_centroid();
 
-               if (in_ellipse) {
-                    // Plot the used points on the image
-                    wb::drawCross(dst, it_blob->estimated_pixel_centroid(), cv::Scalar(0,0,255), 8);
-               }
+                    // Is the blob within the error ellipse?
+                    bool in_ellipse = false;
+                    if (it_obj->pixel_tracker().is_within_region(blob_centroid,0.9973)) {
+                         in_ellipse = true;
+                    }
 
-               cv::Vec3d sep_3d(sep[0],sep[1],0);
-               cv::Vec3d blob_relative_unit_3d(blob_relative_unit[0], blob_relative_unit[1], 0);
-               cv::Vec3d cross_value = sep_3d.cross(blob_relative_unit_3d);
-               int cross_value_sign = syllo::sign(cross_value[2]);
+                    // Is the blob on the side of the ellipse, opposite the track's
+                    // estimated velocity?
 
-               cv::Point2d rel_p = it_blob->estimated_pixel_centroid() - it_obj->estimated_pixel_centroid();
-               //cv::Point2d rel_p = it_obj->estimated_pixel_centroid() - it_blob->estimated_pixel_centroid();
+                    // Find blob centroid relative to the track's centroid
+                    cv::Vec2d blob_relative(blob_centroid.x - track_centroid.x,
+                                            blob_centroid.y - track_centroid.y);
 
-               //// Rotate point based on object's velocity
-               double theta = -atan2(vel_unit[1], vel_unit[0]);
-               cv::Point2d rel_rot_p;
-               rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
-               rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
+                    // The blob relative norm distance can't be too small.
+                    double blob_relative_norm = sqrt(pow(blob_relative[0],2) + pow(blob_relative[1],2));
+                    if (blob_relative_norm < 20) {
+                         continue;
+                    }
 
-               it_blob->set_estimated_pixel_centroid(rel_rot_p);
-               it_blob->set_pixel_centroid(rel_rot_p);
-               it_blob->set_estimated_centroid(rel_rot_p);
-               it_blob->set_centroid(rel_rot_p);
+                    cv::Vec2d blob_relative_unit = blob_relative / blob_relative_norm;
+                    // The dot product of the velocity and the relative position of
+                    // the blob's centroid is negative if they are in "opposite
+                    // directions"
+                    double dot = vel_unit.dot(blob_relative_unit);
+                    if (dot >= 0) {
+                         continue;
+                    }
 
-               //// If the blob isn't inside of the ellipse, is it within
-               //// rectangle behind the object, with bounds defined by
-               //// 4xMajorAxis and 2xMinor Axis, rotated to velocity?
-               //if (!in_ellipse) {               
-               //     // Make a copy of the current object track and offset it behind the object:
-               //     PositionTracker track_behind = it_obj->pixel_tracker();
-               //     cv::Point2d pt_behind = track_behind.position();        
-               //     pt_behind.x = pt_behind.x + vel_unit[0] * ell.axes()(0) * -2;
-               //     pt_behind.y = pt_behind.y + vel_unit[1] * ell.axes()(0) * -2;                    
-               //     track_behind.set_position(pt_behind);                    
-               //
-               //     // Draw error ellipse
-               //     Ellipse ell_offset = track_behind.error_ellipse(0.9973); // 3 std
-               //     cv::Point center = track_behind.position();                    
-               //     cv::Size axes(cvRound(ell_offset.axes()(0)), cvRound(ell_offset.axes()(1)));
-               //     cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
-               //
-               //     if (track_behind.is_within_region(blob_centroid, 0.9973)) {                         
-               //          in_ellipse = true;
-               //     }
-               //}
-               
-               if (cross_value_sign == left_side_sign_) {
                     if (in_ellipse) {
-                         lefts.push_back(*it_blob);
+                         // Plot the used points on the image
+                         wb::drawCross(dst, it_blob->estimated_pixel_centroid(), cv::Scalar(0,0,255), 8);
                     }
-               } else {
-                    if (in_ellipse) {                         
-                         rights.push_back(*it_blob);
-                    }
-               }
 
-          } // For each blob
+                    cv::Vec3d sep_3d(sep[0],sep[1],0);
+                    cv::Vec3d blob_relative_unit_3d(blob_relative_unit[0], blob_relative_unit[1], 0);
+                    cv::Vec3d cross_value = sep_3d.cross(blob_relative_unit_3d);
+                    int cross_value_sign = syllo::sign(cross_value[2]);
 
-          // Using the collected lefts and rights, determine which measurement
-          // in each lefts and rights is "closest" to the left and right
-          // tracker
+                    cv::Point2d rel_p = it_blob->estimated_pixel_centroid() - it_obj->estimated_pixel_centroid();
+                    //cv::Point2d rel_p = it_obj->estimated_pixel_centroid() - it_blob->estimated_pixel_centroid();
 
-          // TODO: Using oldest for now
-          std::vector<wb::Blob>::iterator it_left = lefts.begin();
-          for (std::vector<wb::Blob>::iterator it = lefts.begin();
-               it != lefts.end(); it++) {
-               if (it->age() > it_left->age()) {
-                    it_left = it;
-               }
-          }
-          std::vector<wb::Blob>::iterator it_right = rights.begin();
-          for (std::vector<wb::Blob>::iterator it = rights.begin();
-               it != rights.end(); it++) {
-               if (it->age() > it_right->age()) {
-                    it_right = it;
-               }
-          }
+                    //// Rotate point based on object's velocity
+                    double theta = -atan2(vel_unit[1], vel_unit[0]);
+                    cv::Point2d rel_rot_p;
+                    rel_rot_p.x = cos(theta) * rel_p.x - sin(theta) * rel_p.y;
+                    rel_rot_p.y = sin(theta) * rel_p.x + cos(theta) * rel_p.y;
 
-          // Predict left and right
-          left_tracker_.predict();
-          right_tracker_.predict();
+                    it_blob->set_estimated_pixel_centroid(rel_rot_p);
+                    it_blob->set_pixel_centroid(rel_rot_p);
+                    it_blob->set_estimated_centroid(rel_rot_p);
+                    it_blob->set_centroid(rel_rot_p);
 
-          if (lefts.size() > 0) {
-               left_tracker_.set_measurement(it_left->estimated_pixel_centroid());
-          }
-
-          if (rights.size() > 0) {
-               right_tracker_.set_measurement(it_right->estimated_pixel_centroid());
-          }
-
-          double left_P_norm = left_tracker_.P().norm();
-          double right_P_norm = right_tracker_.P().norm();
-
-          //cout << "----------" << endl;
-          //cout << "Left Norm: " << left_P_norm << endl;
-          //cout << "Right Norm: " << right_P_norm << endl;
-          
-          if (left_P_norm < params->covar_threshold && 
-              right_P_norm < params->covar_threshold && 
-              std::abs(left_P_norm - right_P_norm) < params->covar_norm_threshold) {
+                    // If the blob isn't inside of the ellipse, is it within
+                    // rectangle behind the object, with bounds defined by
+                    // 4xMajorAxis and 2xMinor Axis, rotated to velocity?
+                    cv::Vec2d down_vel(0,1);
+                    int dir_vel = syllo::sign((down_vel.dot(vel_unit)));               
                
-               it_obj->set_type(wb::Entity::Diver);
-               estimated_divers_.push_back(*it_obj);
-          }          
+                    // Dot product is greater than 0 if the vectors lie in the same
+                    // direction:
+                    if (!in_ellipse && dir_vel > 0) {
+                         // Make a copy of the current object track and offset it behind the object:
+                         PositionTracker track_behind = it_obj->pixel_tracker();
+                         cv::Point2d pt_behind = track_behind.position();        
+                         pt_behind.x = pt_behind.x + vel_unit[0] * ell.axes()(0) * -2;
+                         pt_behind.y = pt_behind.y + vel_unit[1] * ell.axes()(0) * -2;                    
+                         track_behind.set_position(pt_behind);                    
+               
+                         // Draw error ellipse
+                         Ellipse ell_offset = track_behind.error_ellipse(0.9973); // 3 std
+                         cv::Point center = track_behind.position();                    
+                         cv::Size axes(cvRound(ell_offset.axes()(0)), cvRound(ell_offset.axes()(1)));
+                         cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
+               
+                         if (track_behind.is_within_region(blob_centroid, 0.9973)) {                         
+                              in_ellipse = true;
+                         }
+                    }
+               
+                    if (cross_value_sign == left_side_sign_) {
+                         if (in_ellipse) {
+                              lefts.push_back(*it_blob);
+                         }
+                    } else {
+                         if (in_ellipse) {                         
+                              rights.push_back(*it_blob);
+                         }
+                    }
+
+               } // For each blob
+
+               // Using the collected lefts and rights, determine which measurement
+               // in each lefts and rights is "closest" to the left and right
+               // tracker
+
+               // Find tracks with smallest mahalanobis distance
+               double min_dist = 1e9;          
+               std::vector<wb::Blob>::iterator it_left = lefts.begin();
+               for (std::vector<wb::Blob>::iterator it = lefts.begin();
+                    it != lefts.end(); it++) {
+
+                    double mahal_dist = left_tracker_.mahalanobis(it->estimated_pixel_centroid());
+                    if (mahal_dist < min_dist) {
+                         mahal_dist = min_dist;
+                         it_left = it;
+                    }                              
+               }
+          
+               min_dist = 1e9;
+               std::vector<wb::Blob>::iterator it_right = rights.begin();
+               for (std::vector<wb::Blob>::iterator it = rights.begin();
+                    it != rights.end(); it++) {
+               
+                    double mahal_dist = right_tracker_.mahalanobis(it->estimated_pixel_centroid());
+                    if (mahal_dist < min_dist) {
+                         mahal_dist = min_dist;
+                         it_right = it;
+                    }               
+               }               
+
+               if (lefts.size() > 0) {
+                    left_tracker_.set_measurement(it_left->estimated_pixel_centroid());
+               }
+
+               if (rights.size() > 0) {
+                    right_tracker_.set_measurement(it_right->estimated_pixel_centroid());
+               }
+
+               double left_P_norm = left_tracker_.P().norm();
+               double right_P_norm = right_tracker_.P().norm();
+
+               //cout << "----------" << endl;
+               //cout << "Left Norm: " << left_P_norm << endl;
+               //cout << "Right Norm: " << right_P_norm << endl;
+          
+               if (left_P_norm < params->covar_threshold && 
+                   right_P_norm < params->covar_threshold && 
+                   std::abs(left_P_norm - right_P_norm) < params->covar_norm_threshold) {
+               
+                    it_obj->inc_class_age();
+                    it_obj->set_type(wb::Entity::Diver);
+                    estimated_divers_.push_back(*it_obj);
+                    classified_as_diver = true;
+               }
+          }
+
+          if (!classified_as_diver) {
+               if (is_diver(prev_estimated_divers_,it_obj->id()) && it_obj->class_age() > 5 ) {
+                    it_obj->set_type(wb::Entity::Diver);
+                    estimated_divers_.push_back(*it_obj);
+               }
+          }
 
           // Overlay left tracker...
-          {
+          if (left_tracker_.initialized()) {
                // Get relative position to diver's centroid:
                // Rotate point based on object's velocity
                cv::Point2d rel_p = left_tracker_.position();
@@ -642,11 +736,14 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                Ellipse ell = left_tracker_.error_ellipse(0.9973); // 3 std
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
-               cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+               cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);               
+
+               // Draw line from tracker to centroid:
+               cv::line(dst, center, it_obj->estimated_pixel_centroid(), cv::Scalar(0,255,0), 1, 8, 0);
           }
 
           // Overlay right tracker...
-          {
+          if (right_tracker_.initialized()) {
                // Get relative position to diver's centroid:
                // Rotate point based on object's velocity
                cv::Point2d rel_p = right_tracker_.position();
@@ -671,6 +768,9 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
+
+               // Draw line from tracker to centroid:
+               cv::line(dst, center, it_obj->estimated_pixel_centroid(), cv::Scalar(0,255,0), 1, 8, 0);
           }
      } // For each object
 #else

@@ -361,7 +361,7 @@ void BlobProcess::find_clusters(cv::Mat &input,
 #endif
 }
 
-void BlobProcess::find_blobs(cv::Mat &input,
+void BlobProcess::find_blobs(cv::Mat &input, cv::Mat &dst,
                              std::vector<wb::Blob> &blobs,
                              int min_blob_size, bool show)
 {
@@ -466,10 +466,12 @@ void BlobProcess::find_blobs(cv::Mat &input,
                blobs.push_back(it_temp->second);
           }
      }
+          
+     cv::Mat temp_img = input.clone();
+     this->overlay_blobs(temp_img, temp_img, blobs);
+     dst = temp_img.clone();
 
-     if (show) {
-          cv::Mat temp_img = input.clone();
-          this->overlay_blobs(temp_img, temp_img, blobs);
+     if (show) {          
           cv::imshow("FrameBlobs", temp_img);
      }
 }
@@ -869,7 +871,8 @@ bool BlobProcess::smaller_blob_search(std::vector<wb::Blob>::iterator prev, wb::
      cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
      cv::imshow("Process", roi_large);
 #endif
-     this->find_blobs(roi,blobs, min_blob_size, false);
+     cv::Mat frame_blobs_img;
+     this->find_blobs(roi,frame_blobs_img, blobs, min_blob_size, false);
      if (blobs.size() == 1) {
           // Found a match, create a temporary blob from the ROI, just
           // for a simple match
@@ -1009,7 +1012,8 @@ void BlobProcess::assign_gate_aggregate(std::vector<wb::Blob> &meas,
                cv::resize(roi, roi_large, cv::Size(0,0),10,10,cv::INTER_NEAREST);
                cv::imshow("Process", roi_large);
 #endif
-               this->find_blobs(roi,blobs, min_blob_size, false);
+               cv::Mat frame_blobs_img;
+               this->find_blobs(roi,frame_blobs_img, blobs,min_blob_size, false);
                if (blobs.size() == 1) {
                     // Found a match, create a temporary blob from the ROI, just
                     // for a simple match
@@ -1374,14 +1378,14 @@ void BlobProcess::assign_hungarian(std::vector<wb::Blob> &meas,
      delete[] assignment;
 }
 
-int BlobProcess::process_frame(cv::Mat &input, cv::Mat &original, int thresh)
+int BlobProcess::process_frame(cv::Mat &input, cv::Mat &dst, cv::Mat &original, int thresh)
 {
      curr_thresh_ = thresh;
      original_ = original;
 
      //std::vector<wb::Blob> new_blobs;
      frame_blobs_.clear();
-     this->find_blobs(input, frame_blobs_, min_blob_size_, false);
+     this->find_blobs(input, dst, frame_blobs_, min_blob_size_, false);
      //this->find_clusters(input, frame_blobs_, 1);
 
      //cv::Mat out;

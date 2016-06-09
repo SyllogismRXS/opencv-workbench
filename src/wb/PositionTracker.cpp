@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <opencv_workbench/wb/WB.h>
+
 #include "PositionTracker.h"
 
 using std::cout;
@@ -49,6 +51,22 @@ PositionTracker::PositionTracker() : initialized_(false)
      P_ << Eigen::MatrixXf::Identity(A_.rows(), A_.cols()) * 10;
      
      kf_.setModel(A_, B_, H_, Q_, R_);
+}
+
+double PositionTracker::mahalanobis(cv::Point2d p)
+{
+     Eigen::MatrixXd Zm;
+     Zm.resize(2,1);
+     Zm << p.x, p.y;
+     
+     cv::Point2d pos = this->position();
+     Eigen::MatrixXd u;
+     u.resize(2,1);
+     u << pos.x, pos.y;
+
+     Eigen::MatrixXd B = this->meas_covariance();
+
+     return wb::gaussian_probability(Zm, u, B);
 }
 
 Eigen::MatrixXf PositionTracker::P()

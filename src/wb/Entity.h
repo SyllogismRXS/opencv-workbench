@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-06 15:20:03 syllogismrxs>
+/// Time-stamp: <2016-06-08 20:01:31 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -135,6 +135,9 @@ namespace wb {
           void add_points( std::vector<wb::Point> &points);
           void remove_point(wb::Point &p);
                
+          int class_age() { return class_age_; }
+          void inc_class_age() { class_age_++; }
+          
           // Age related functions
           void inc_age();
           void dec_age();
@@ -232,7 +235,10 @@ namespace wb {
           void set_confirmed_age(int a) { confirmed_age_ = a; }
           void set_dead_occluded_age(int a) { dead_occluded_age_ = a; }
           
-     protected:          
+     protected:     
+
+          int class_age_;
+          
           bool prob_is_set_;
           std::string name_;
           EntityType_t type_;

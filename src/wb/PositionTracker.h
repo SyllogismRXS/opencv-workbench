@@ -4,7 +4,7 @@
 /// @file PositionTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-07 16:49:25 syllogismrxs>
+/// Time-stamp: <2016-06-08 20:09:26 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 20 Mar 2016
@@ -60,6 +60,10 @@ public:
      Eigen::MatrixXf R();
      Eigen::MatrixXf P();
      void print();
+
+     double mahalanobis(cv::Point2d p);
+
+     bool initialized() { return initialized_; }
      
 protected:
      syllo::KalmanFilter kf_;
