@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-08 20:01:31 syllogismrxs>
+/// Time-stamp: <2016-06-10 16:33:00 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -137,6 +137,7 @@ namespace wb {
                
           int class_age() { return class_age_; }
           void inc_class_age() { class_age_++; }
+          void dec_class_age() { class_age_--; }
           
           // Age related functions
           void inc_age();
