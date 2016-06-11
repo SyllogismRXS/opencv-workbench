@@ -1,12 +1,18 @@
-min_velocity_threshold_2: [0, 2, 20]
+covar_norm_threshold: [0,2,20]
+
+class_age_confirmed: 8
+#class_age_confirmed: [0,1,10]
+
+min_velocity_threshold_2: 4
+#min_velocity_threshold_2: [0, 2, 20]
 
 covar_threshold: 18
 #covar_threshold: [10,2,20]
 #covar_threshold: [5,10,70]
 #covar_threshold: [20,2,40]
 
-covar_norm_threshold: 10
-class_age_confirmed: 5  
+#covar_norm_threshold: 10
+#class_age_confirmed: 5  
 #min_velocity_threshold_2: 5  #original check?
 
 max_velocity_threshold: 18
