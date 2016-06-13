@@ -477,9 +477,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                                          std::vector<wb::Blob> &meas,
                                          Parameters *params)
 {
-     estimated_divers_.clear();
-     
-#if 1
+     estimated_divers_.clear();     
+#if 0
      //////////////////////////////////////////////////////////////////////////
      // Leg Trackers:
      // Find blobs that are within the "back half" of the ellipse, where the
@@ -781,22 +780,32 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
      // Diver objects have a velocity within a threshold
      for (std::vector<wb::Blob>::iterator it_obj = tracks_.begin();
           it_obj != tracks_.end(); it_obj++) {
-
+          
+          bool classified_as_diver = false;
+          
           cv::Point v = it_obj->estimated_pixel_velocity();
 
           // The velocity vector has to be above length threshold
           double v_norm = sqrt(pow(v.x,2) + pow(v.y,2));
           //cout << "ID: " << it_obj->id() << ", v: " << v_norm << endl;
           if (v_norm > params->min_velocity_threshold && v_norm < params->max_velocity_threshold) {
+               it_obj->inc_class_age();
                it_obj->set_type(wb::Entity::Diver);
                estimated_divers_.push_back(*it_obj);
-          } else {
-               // If it was a diver in the past and it's velocity is below a
-               // threshold, it is still a diver:
-               if (v_norm < params->max_velocity_threshold && is_diver(prev_estimated_divers_,it_obj->id())) {
+               classified_as_diver = true;
+          } 
+          //else {
+          // If it was a diver in the past and it's velocity is below a
+          // threshold, it is still a diver:
+          //if (v_norm < params->max_velocity_threshold && 
+          //    is_diver(prev_estimated_divers_,it_obj->id())) {
+          
+          if (!classified_as_diver) {
+               // If it wasn't classified as a diver
+               if (it_obj->class_age() > params->class_age_confirmed) {
                     it_obj->set_type(wb::Entity::Diver);
                     estimated_divers_.push_back(*it_obj);
-               }
+               }    
           }
      }     
 #endif

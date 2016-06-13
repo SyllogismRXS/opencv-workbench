@@ -1,10 +1,17 @@
-max_velocity_threshold: [14, 1, 19]
-#max_velocity_threshold: [20, 5, 45]
-min_velocity_threshold: 15
+class_age_confirmed: [0,1,30]
+
+max_velocity_threshold: 17
+
+#max_velocity_threshold: [14, 1, 19]
+#max_velocity_threshold: [15, 2, 30]
+#min_velocity_threshold: 15
 
 #min_velocity_threshold: [5,2,20]
 #min_velocity_threshold: [1,5,43]
 # The min velocity was swept with:
+
+min_velocity_threshold: 15
+#min_velocity_threshold: [5,2,20]
 #max_velocity_threshold: 45
 
 ratio_threshold: 0.00162001
