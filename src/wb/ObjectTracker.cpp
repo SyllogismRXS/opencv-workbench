@@ -478,7 +478,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                                          Parameters *params)
 {
      estimated_divers_.clear();     
-#if 0
+#if 1
      //////////////////////////////////////////////////////////////////////////
      // Leg Trackers:
      // Find blobs that are within the "back half" of the ellipse, where the
@@ -529,12 +529,12 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
 #endif
           
                // Line separating fins:
-               cv::Vec2d sep = vel_unit * -1 * ell.axes()(0) * 4;
+               cv::Vec2d sep = vel_unit * -1 * ell.axes()(0);// * 4;
 
                cv::line(dst,cv::Point(track_centroid.x,track_centroid.y),
                         cv::Point(track_centroid.x + sep[0],
                                   track_centroid.y + sep[1]),
-                        cv::Scalar(255,255,255), 1, 8, 0);          
+                        cv::Scalar(255,77,77), 1, 8, 0);          
 
                std::vector<wb::Blob> lefts;
                std::vector<wb::Blob> rights;
@@ -614,23 +614,23 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                     // 4xMajorAxis and 2xMinor Axis, rotated to velocity?
                     cv::Vec2d down_vel(0,1);
                     int dir_vel = syllo::sign((down_vel.dot(vel_unit)));               
-               
+                                   
                     // Dot product is greater than 0 if the vectors lie in the same
                     // direction:
-                    if (!in_ellipse && dir_vel > 0) {
+                    if (!in_ellipse && dir_vel > 0) {                          
                          // Make a copy of the current object track and offset it behind the object:
                          PositionTracker track_behind = it_obj->pixel_tracker();
                          cv::Point2d pt_behind = track_behind.position();        
                          pt_behind.x = pt_behind.x + vel_unit[0] * ell.axes()(0) * -2;
                          pt_behind.y = pt_behind.y + vel_unit[1] * ell.axes()(0) * -2;                    
                          track_behind.set_position(pt_behind);                    
-               
+                    
                          // Draw error ellipse
                          Ellipse ell_offset = track_behind.error_ellipse(0.9973); // 3 std
                          cv::Point center = track_behind.position();                    
                          cv::Size axes(cvRound(ell_offset.axes()(0)), cvRound(ell_offset.axes()(1)));
                          cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
-               
+                    
                          if (track_behind.is_within_region(blob_centroid, 0.9973)) {                         
                               in_ellipse = true;
                          }
@@ -693,8 +693,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                //cout << "Right Norm: " << right_P_norm << endl;
           
                if (left_P_norm < params->covar_threshold && 
-                   right_P_norm < params->covar_threshold && 
-                   std::abs(left_P_norm - right_P_norm) < params->covar_norm_threshold) {
+                   right_P_norm < params->covar_threshold ) {
+                   //&& std::abs(left_P_norm - right_P_norm) < params->covar_norm_threshold) {
                
                     it_obj->inc_class_age();
                     it_obj->set_type(wb::Entity::Diver);
