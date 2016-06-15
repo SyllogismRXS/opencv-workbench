@@ -4,7 +4,7 @@
 /// @file Parameters.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-09 00:44:20 syllogismrxs>
+/// Time-stamp: <2016-06-15 16:59:47 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 26 Jan 2016
@@ -63,8 +63,9 @@ public:
      ThresholdType_t threshold_type;
 
      double covar_threshold;
-     double covar_norm_threshold;
+     double max_leg_diff;
      double min_velocity_threshold_2;
+     double min_relative_norm;
 
      int class_age_confirmed;
      

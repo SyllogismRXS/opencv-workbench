@@ -22,10 +22,12 @@ Parameters::Parameters()
      max_velocity_threshold = 18;
 
      covar_threshold = 30;
-     covar_norm_threshold = 10;
+     max_leg_diff = 10000;
      min_velocity_threshold_2 = 5;
 
      class_age_confirmed = 5;
+
+     min_relative_norm = 20;
 }
 
 void Parameters::set_yaml_file(std::string yaml_file)
@@ -70,8 +72,8 @@ void Parameters::set_yaml_file(std::string yaml_file)
                *p >> covar_threshold;
           }
 
-          if(const YAML::Node *p = doc.FindValue("covar_norm_threshold")) {
-               *p >> covar_norm_threshold;
+          if(const YAML::Node *p = doc.FindValue("max_leg_diff")) {
+               *p >> max_leg_diff;
           }
 
           if(const YAML::Node *p = doc.FindValue("min_velocity_threshold_2")) {
@@ -80,6 +82,10 @@ void Parameters::set_yaml_file(std::string yaml_file)
 
           if(const YAML::Node *p = doc.FindValue("class_age_confirmed")) {
                *p >> class_age_confirmed;
+          }
+
+          if(const YAML::Node *p = doc.FindValue("min_relative_norm")) {
+               *p >> min_relative_norm;
           }
 
           if(const YAML::Node *p = doc.FindValue("threshold_type")) {

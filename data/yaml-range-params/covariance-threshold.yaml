@@ -1,9 +1,15 @@
-min_velocity_threshold_2: [0, 2, 30]
+min_relative_norm: [5,3,30]
+#min_relative_norm: [0,5,30]
+
+#class_age_confirmed: [0,1,10]
+class_age_confirmed: 0
+
+min_velocity_threshold_2: 8
 
 covar_threshold: 30
 
-covar_norm_threshold: 10
-class_age_confirmed: 5
+#max_leg_diff: [10,3,30]
+max_leg_diff: 19
 
 max_velocity_threshold: 18
 min_velocity_threshold: 15

@@ -321,13 +321,17 @@ void AnnotationParser::write_header()
           xml_node<> *covar_threshold_node = doc.allocate_node(node_element, "covar_threshold", covar_threshold);
           parameters_node->append_node(covar_threshold_node);
 
-          char * covar_norm_threshold = doc.allocate_string(syllo::double2str(params_.covar_norm_threshold).c_str());
-          xml_node<> *covar_norm_threshold_node = doc.allocate_node(node_element, "covar_norm_threshold", covar_norm_threshold);
-          parameters_node->append_node(covar_norm_threshold_node);
+          char * max_leg_diff = doc.allocate_string(syllo::double2str(params_.max_leg_diff).c_str());
+          xml_node<> *max_leg_diff_node = doc.allocate_node(node_element, "max_leg_diff", max_leg_diff);
+          parameters_node->append_node(max_leg_diff_node);
 
           char * class_age_confirmed = doc.allocate_string(syllo::double2str(params_.class_age_confirmed).c_str());
           xml_node<> *class_age_confirmed_node = doc.allocate_node(node_element, "class_age_confirmed", class_age_confirmed);
           parameters_node->append_node(class_age_confirmed_node);                    
+
+          char * min_relative_norm = doc.allocate_string(syllo::double2str(params_.min_relative_norm).c_str());
+          xml_node<> *min_relative_norm_node = doc.allocate_node(node_element, "min_relative_norm", min_relative_norm);
+          parameters_node->append_node(min_relative_norm_node);                    
      }
 
      xml_node<> *size_node = doc.allocate_node(node_element, "size");
@@ -764,11 +768,11 @@ int AnnotationParser::ParseFile(std::string file)
                cout << xml_filename_ << ": Missing covar_threshold node" << endl;
           }
 
-          xml_node<> * covar_norm_threshold_node = parameters_node->first_node("covar_norm_threshold");
-          if (covar_norm_threshold_node != 0) {
-               params_.covar_norm_threshold = syllo::str2double(covar_norm_threshold_node->value());
+          xml_node<> * max_leg_diff_node = parameters_node->first_node("max_leg_diff");
+          if (max_leg_diff_node != 0) {
+               params_.max_leg_diff = syllo::str2double(max_leg_diff_node->value());
           } else {
-               cout << xml_filename_ << ": Missing covar_norm_threshold node" << endl;
+               cout << xml_filename_ << ": Missing max_leg_diff node" << endl;
           }
 
           xml_node<> * class_age_confirmed_node = parameters_node->first_node("class_age_confirmed");
@@ -776,6 +780,13 @@ int AnnotationParser::ParseFile(std::string file)
                params_.class_age_confirmed = syllo::str2double(class_age_confirmed_node->value());
           } else {
                cout << xml_filename_ << ": Missing class_age_confirmed node" << endl;
+          }
+
+          xml_node<> * min_relative_norm_node = parameters_node->first_node("min_relative_norm");
+          if (min_relative_norm_node != 0) {
+               params_.min_relative_norm = syllo::str2double(min_relative_norm_node->value());
+          } else {
+               cout << xml_filename_ << ": Missing min_relative_norm node" << endl;
           }
      }
 
@@ -1133,8 +1144,9 @@ std::map<std::string,double> AnnotationParser::get_params()
 
      params["min_velocity_threshold_2"] = params_.min_velocity_threshold_2;
      params["covar_threshold"] = params_.covar_threshold;
-     params["covar_norm_threshold"] = params_.covar_norm_threshold;
+     params["max_leg_diff"] = params_.max_leg_diff;
      params["class_age_confirmed"] = params_.class_age_confirmed;
+     params["min_relative_norm"] = params_.min_relative_norm;
 
      return params;
 }

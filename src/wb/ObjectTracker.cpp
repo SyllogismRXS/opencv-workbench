@@ -572,7 +572,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
 
                     // The blob relative norm distance can't be too small.
                     double blob_relative_norm = sqrt(pow(blob_relative[0],2) + pow(blob_relative[1],2));
-                    if (blob_relative_norm < 20) {
+                    //if (blob_relative_norm < 20) {
+                    if (blob_relative_norm < params->min_relative_norm) {
                          continue;
                     }
 
@@ -692,9 +693,15 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                //cout << "Left Norm: " << left_P_norm << endl;
                //cout << "Right Norm: " << right_P_norm << endl;
           
+               double left_length = cv::norm(left_tracker_.position());
+               double right_length = cv::norm(right_tracker_.position());
+
+               //cout << "left: " << left_length << endl;
+               //cout << "right: " << right_length << endl;
+
                if (left_P_norm < params->covar_threshold && 
-                   right_P_norm < params->covar_threshold ) {
-                   //&& std::abs(left_P_norm - right_P_norm) < params->covar_norm_threshold) {
+                   right_P_norm < params->covar_threshold //) {
+                   && std::abs(left_length - right_length) < params->max_leg_diff) {
                
                     it_obj->inc_class_age();
                     it_obj->set_type(wb::Entity::Diver);
