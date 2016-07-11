@@ -325,6 +325,15 @@ int main(int argc, char *argv[])
           // Get track list from detector
           std::vector<wb::Entity> tracks = detector_->tracks();   
           
+          // Get the blob tracks too
+          std::vector<wb::Entity> blob_tracks;
+          detector_->frame_ents(blob_tracks);
+
+          cout << "blob tracks size: " << blob_tracks.size() << endl;
+          
+          tracks.insert(std::end(tracks), std::begin(blob_tracks), 
+                        std::end(blob_tracks));
+          
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
           Frame frame;
@@ -332,7 +341,7 @@ int main(int argc, char *argv[])
           std::vector<wb::Entity>::iterator it = tracks.begin();
           for (; it != tracks.end(); it++) {
                frame.objects[it->name()] = *it;               
-          }
+          }          
           
           // Save frame to parser
           parser_tracks.frames[frame_number] = frame;
