@@ -1090,7 +1090,7 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
 
      options += "set xrange [*:*] reverse\n";
      options += "set yrange [*:*] reverse\n";
-     options += "set zrange [*:*] reverse\n";
+     options += "set zrange [*:*] \n";
 
      options += "set xlabel \"X\"\n";
      options += "set ylabel \"Y\"\n";

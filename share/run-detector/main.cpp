@@ -323,9 +323,10 @@ int main(int argc, char *argv[])
           }                    
 
           // Get track list from detector
-          std::vector<wb::Entity> tracks = detector_->tracks();   
-          
-#if 0 // if we want to plot all blob tracks
+          std::vector<wb::Entity> tracks;          
+#if 1
+          tracks = detector_->tracks();   
+#else // if we want to plot all blob tracks
           // Get the blob tracks too
           std::vector<wb::Entity> blob_tracks;
           detector_->frame_ents(blob_tracks);          

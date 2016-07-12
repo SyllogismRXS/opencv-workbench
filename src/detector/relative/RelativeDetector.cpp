@@ -310,6 +310,17 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      tracks_.insert(std::end(tracks_), std::begin(object_tracks),
                     std::end(object_tracks));
 #endif
+
+#if 0
+     // Convert any "diver" to "unknown"
+     std::vector<wb::Entity>::iterator it_tracks = tracks_.begin();
+     while (it_tracks != tracks_.end()) {
+          if (it_tracks->type() == wb::Entity::Diver) {
+               it_tracks->set_type(wb::Entity::Unknown);
+          } 
+          ++it_tracks;
+     }    
+#endif
       
      ///////////////////////////////////////////////////
      // Display images
