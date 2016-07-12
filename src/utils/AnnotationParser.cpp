@@ -1094,11 +1094,14 @@ void AnnotationParser::plot_tracks(std::vector<std::string> &names,
 
      options += "set xlabel \"X\"\n";
      options += "set ylabel \"Y\"\n";
-     options += "set zlabel \"Frame\"\n";
+     options += "set zlabel \"Frame\" offset 0,10,0\n";
      options += "set ticslevel 0\n";
      //options += "set yrange [" + syllo::int2str(height_)  + ":" + syllo::int2str(0) + "]\n";
-     //options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";
+     //options += "set xrange [" + syllo::int2str(0)  + ":" + syllo::int2str(width_) + "]\n";     
      options += "set key outside\n";
+#if 1
+     options += "unset key\n";
+#endif
      plot.plot(vectors, title, labels, styles, options, true);
 }
 

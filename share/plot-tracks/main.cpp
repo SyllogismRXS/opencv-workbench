@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
           cout << "You entered: " << name_str << endl;
           if (name_str == "a") {
                cout << "Adding all tracks. Using min track length." << endl;
-               min_track_length = 10;
+               min_track_length = 5;//10;
                
                std::vector<std::string>::iterator it_names = names.begin();
                for (; it_names != names.end(); it_names++) {

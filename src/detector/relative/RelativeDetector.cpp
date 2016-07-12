@@ -229,7 +229,7 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      //blob_process_.process_frame(ndt_img, median, thresh_value_);
           
      // Get the current frame's blobs and save to frame's entities
-     blob_process_.frame_ents(frame_ents_);
+     //blob_process_.frame_ents(frame_ents_);
      
      cv::Mat blob_img;     
      blob_process_.overlay(gray, blob_img, BLOBS | RECTS | TRACKS | IDS | ERR_ELLIPSE);
@@ -240,8 +240,11 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      blob_process_.consolidate_tracks(gray, blob_consolidate);     
       
      cv::Mat original_rects = original.clone();
-     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);               
+     blob_process_.overlay(original_rects, original_rects, RECTS | IDS);
 
+     frame_ents_.clear();
+     blob_process_.blobs_to_entities(blob_process_.blobs(), frame_ents_);
+     
      // Hand Blobs to high-level ObjectTracker
      cv::Mat object_img;
      obj_tracker_.process_frame(gray, object_img, blob_process_.blobs(), params_);
@@ -299,6 +302,14 @@ int RelativeDetector::set_frame(int frame_number, const cv::Mat &original)
      tracks_.clear(); // clear out the tracks from previous loop      
      //blob_process_.blobs_to_entities(tracks_);
      tracks_ = obj_tracker_.estimated_divers();
+
+#if 0 // to plot all objects being tracked in object tracker
+     std::vector<wb::Entity> object_tracks;
+     blob_process_.blobs_to_entities(obj_tracker_.tracks(), object_tracks);
+     obj_tracker_.tracks();
+     tracks_.insert(std::end(tracks_), std::begin(object_tracks),
+                    std::end(object_tracks));
+#endif
       
      ///////////////////////////////////////////////////
      // Display images

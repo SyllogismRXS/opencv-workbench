@@ -325,14 +325,14 @@ int main(int argc, char *argv[])
           // Get track list from detector
           std::vector<wb::Entity> tracks = detector_->tracks();   
           
+#if 0 // if we want to plot all blob tracks
           // Get the blob tracks too
           std::vector<wb::Entity> blob_tracks;
-          detector_->frame_ents(blob_tracks);
-
-          cout << "blob tracks size: " << blob_tracks.size() << endl;
+          detector_->frame_ents(blob_tracks);          
           
           tracks.insert(std::end(tracks), std::begin(blob_tracks), 
                         std::end(blob_tracks));
+#endif
           
           // Put all track data in parser for saving and
           // Draw estimated diver locations on original image
