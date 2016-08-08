@@ -4,7 +4,7 @@
 /// @file Entity.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-10 16:33:00 syllogismrxs>
+/// Time-stamp: <2016-08-07 16:48:56 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 25 Sep 2015
@@ -236,6 +236,9 @@ namespace wb {
           void set_confirmed_age(int a) { confirmed_age_ = a; }
           void set_dead_occluded_age(int a) { dead_occluded_age_ = a; }
           
+          PositionTracker left_tracker;
+          PositionTracker right_tracker;
+          
      protected:     
 
           int class_age_;
@@ -259,7 +262,7 @@ namespace wb {
           int matched_id_;          
 
           PositionTracker pixel_tracker_;
-          PositionTracker tracker_;
+          PositionTracker tracker_;          
           
           ////cv::KalmanFilter KF_;
           ////cv::Mat_<float> transition_matrix_;

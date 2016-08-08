@@ -24,6 +24,15 @@ namespace wb {
           dead_occluded_age_ = 11;
 
           class_age_ = 0;
+
+          /////
+          left_tracker.set_P(60);
+          right_tracker.set_P(60);
+
+          double T = 0.066666667; // dt
+          double q= T * 1;
+          left_tracker.set_Q(q);
+          right_tracker.set_Q(q);                    
      }     
 
      void Entity::set_estimated_pixel_centroid(cv::Point p)

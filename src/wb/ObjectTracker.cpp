@@ -19,18 +19,7 @@ ObjectTracker::ObjectTracker()
      next_id_ = 1;
      covar_tracker_.init(2,2);
 
-     left_side_sign_ = 1;
-
-     left_track_valid_ = false;
-     right_track_valid_ = false;
-
-     left_tracker_.set_P(60);
-     right_tracker_.set_P(60);
-
-     double T = 0.066666667; // dt
-     double q= T * 1;
-     left_tracker_.set_Q(q);
-     right_tracker_.set_Q(q);
+     left_side_sign_ = 1;          
 }
 
 int ObjectTracker::next_available_id()
@@ -42,7 +31,7 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
                                   std::vector<wb::Blob> &meas,
                                   Parameters *params)
 {
-     cv::Mat img = src.clone();
+     cv::Mat img = src.clone();     
      cv::cvtColor(img,img,CV_GRAY2BGR);
 
      tracks_.clear();
@@ -356,7 +345,7 @@ void ObjectTracker::process_frame(cv::Mat &src, cv::Mat &dst,
      // Plot intermediate tracks
      cv::Mat intermediate_img;
      this->overlay(intermediate, src, intermediate_img, TRACKS | IDS | ERR_ELLIPSE);
-     //cv::imshow("Intermediate", intermediate_img);
+     cv::imshow("Intermediate", intermediate_img);
 
      // Are any of the tracks very similar? If so, keep the oldest one
      // Determine if the centroids of any tracks are within 1 std of each
@@ -489,8 +478,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           //cout << "==================================================" << endl;
 
           // Predict left and right
-          left_tracker_.predict();
-          right_tracker_.predict();
+          it_obj->left_tracker.predict();
+          it_obj->right_tracker.predict();
 
           bool classified_as_diver = false;
           
@@ -511,8 +500,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                has_velocity = true;               
           }
 
-          if (has_velocity) {
-
+          if (has_velocity) {               
+               
                // Get major and minor axes of error ellipse
                Ellipse ell = it_obj->error_ellipse(0.9973); // 3 std
           
@@ -536,11 +525,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                                   track_centroid.y + sep[1]),
                         cv::Scalar(255,77,77), 1, 8, 0);          
 
-               std::vector<wb::Blob> lefts;
-               std::vector<wb::Blob> rights;
-
-               std::vector<wb::Blob> lefts_out;
-               std::vector<wb::Blob> rights_out;
+               std::vector<wb::Blob> lefts; lefts.clear();
+               std::vector<wb::Blob> rights; rights.clear();
 
                for (std::vector<wb::Blob>::iterator it_blob = meas.begin();
                     it_blob != meas.end(); it_blob++) {
@@ -630,7 +616,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                          Ellipse ell_offset = track_behind.error_ellipse(0.9973); // 3 std
                          cv::Point center = track_behind.position();                    
                          cv::Size axes(cvRound(ell_offset.axes()(0)), cvRound(ell_offset.axes()(1)));
-                         cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
+                         //cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
                     
                          if (track_behind.is_within_region(blob_centroid, 0.9973)) {                         
                               in_ellipse = true;
@@ -642,7 +628,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                               lefts.push_back(*it_blob);
                          }
                     } else {
-                         if (in_ellipse) {                         
+                         if (in_ellipse) {               
                               rights.push_back(*it_blob);
                          }
                     }
@@ -659,7 +645,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                for (std::vector<wb::Blob>::iterator it = lefts.begin();
                     it != lefts.end(); it++) {
 
-                    double mahal_dist = left_tracker_.mahalanobis(it->estimated_pixel_centroid());
+                    double mahal_dist = it_obj->left_tracker.mahalanobis(it->estimated_pixel_centroid());
                     if (mahal_dist < min_dist) {
                          mahal_dist = min_dist;
                          it_left = it;
@@ -671,7 +657,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                for (std::vector<wb::Blob>::iterator it = rights.begin();
                     it != rights.end(); it++) {
                
-                    double mahal_dist = right_tracker_.mahalanobis(it->estimated_pixel_centroid());
+                    double mahal_dist = it_obj->right_tracker.mahalanobis(it->estimated_pixel_centroid());
                     if (mahal_dist < min_dist) {
                          mahal_dist = min_dist;
                          it_right = it;
@@ -679,22 +665,22 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                }               
 
                if (lefts.size() > 0) {
-                    left_tracker_.set_measurement(it_left->estimated_pixel_centroid());
+                    it_obj->left_tracker.set_measurement(it_left->estimated_pixel_centroid());
                }
 
                if (rights.size() > 0) {
-                    right_tracker_.set_measurement(it_right->estimated_pixel_centroid());
+                    it_obj->right_tracker.set_measurement(it_right->estimated_pixel_centroid());
                }
 
-               double left_P_norm = left_tracker_.P().norm();
-               double right_P_norm = right_tracker_.P().norm();
+               double left_P_norm = it_obj->left_tracker.P().norm();
+               double right_P_norm = it_obj->right_tracker.P().norm();
 
                //cout << "----------" << endl;
                //cout << "Left Norm: " << left_P_norm << endl;
                //cout << "Right Norm: " << right_P_norm << endl;
           
-               double left_length = cv::norm(left_tracker_.position());
-               double right_length = cv::norm(right_tracker_.position());
+               double left_length = cv::norm(it_obj->left_tracker.position());
+               double right_length = cv::norm(it_obj->right_tracker.position());
 
                //cout << "left: " << left_length << endl;
                //cout << "right: " << right_length << endl;
@@ -720,10 +706,10 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           }
 
           // Overlay left tracker...
-          if (left_tracker_.initialized()) {
+          if (it_obj->left_tracker.initialized()) {                                            
                // Get relative position to diver's centroid:
                // Rotate point based on object's velocity
-               cv::Point2d rel_p = left_tracker_.position();
+               cv::Point2d rel_p = it_obj->left_tracker.position();
                double theta = atan2(vel_unit[1], vel_unit[0]);
 
                cv::Point2d rel_rot_p;
@@ -741,7 +727,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                wb::drawCross(dst, pos, cv::Scalar(212,173,70), 3);
 
                // Draw error ellipse
-               Ellipse ell = left_tracker_.error_ellipse(0.9973); // 3 std
+               Ellipse ell = it_obj->left_tracker.error_ellipse(0.9973); // 3 std
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);               
@@ -751,10 +737,10 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           }
 
           // Overlay right tracker...
-          if (right_tracker_.initialized()) {
+          if (it_obj->right_tracker.initialized()) {               
                // Get relative position to diver's centroid:
                // Rotate point based on object's velocity
-               cv::Point2d rel_p = right_tracker_.position();
+               cv::Point2d rel_p = it_obj->right_tracker.position();
                double theta = atan2(vel_unit[1], vel_unit[0]);
 
                cv::Point2d rel_rot_p;
@@ -772,7 +758,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                wb::drawCross(dst, pos, cv::Scalar(255,173,70), 3);               
 
                // Draw error ellipse
-               Ellipse ell = right_tracker_.error_ellipse(0.9973); // 3 std
+               Ellipse ell = it_obj->right_tracker.error_ellipse(0.9973); // 3 std
                cv::Point center = pos;
                cv::Size axes(cvRound(ell.axes()(0)), cvRound(ell.axes()(1)));
                cv::ellipse(dst, center, axes, cvRound(ell.angle()), 0, 360, cv::Scalar(255,255,255), 1, 8, 0);
