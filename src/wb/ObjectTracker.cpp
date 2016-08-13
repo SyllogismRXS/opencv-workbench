@@ -466,6 +466,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                                          std::vector<wb::Blob> &meas,
                                          Parameters *params)
 {
+     cv::Mat obj_img = dst.clone();
+     
      estimated_divers_.clear();     
 #if 1
      //////////////////////////////////////////////////////////////////////////
@@ -505,7 +507,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                // Get major and minor axes of error ellipse
                Ellipse ell = it_obj->error_ellipse(0.9973); // 3 std
           
-#if 0
+#if 1                              
                // Get rectangle around object
                double theta = atan2(vel_unit[1], vel_unit[0]);
                cv::RotatedRect rrect(cv::Point(track_centroid.x,track_centroid.y), cv::Size2f(2*ell.axes()(0),2*ell.axes()(1)), theta * RAD_2_DEG);
@@ -513,8 +515,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                cv::Point2f vertices[4];
                rrect.points(vertices);
                for (int i = 0; i < 4; i++) {
-                    cv::line(dst, vertices[i], vertices[(i+1)%4], cv::Scalar(0,255,0));
-               }
+                    cv::line(obj_img, vertices[i], vertices[(i+1)%4], cv::Scalar(0,255,0));
+               }               
 #endif
           
                // Line separating fins:
@@ -614,7 +616,7 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
                     
                          // Draw error ellipse
                          Ellipse ell_offset = track_behind.error_ellipse(0.9973); // 3 std
-                         cv::Point center = track_behind.position();                    
+                         //cv::Point center = track_behind.position();                    
                          cv::Size axes(cvRound(ell_offset.axes()(0)), cvRound(ell_offset.axes()(1)));
                          //cv::ellipse(dst, center, axes, cvRound(ell_offset.angle()), 0, 360, cv::Scalar(255,0,0), 1, 8, 0);
                     
@@ -802,6 +804,8 @@ void ObjectTracker::diver_classification(cv::Mat &src, cv::Mat &dst,
           }
      }     
 #endif
+     
+     cv::imshow("Object-Vel", obj_img);
      prev_estimated_divers_ = estimated_divers_;
 }
 
