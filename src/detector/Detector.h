@@ -1,10 +1,8 @@
-#ifndef DETECTOR_H_
-#define DETECTOR_H_
 /// ---------------------------------------------------------------------------
 /// @file Detector.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-03-23 15:09:50 syllogismrxs>
+/// Time-stamp: <2016-10-12 11:34:02 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 04 Feb 2015
@@ -38,6 +36,8 @@
 /// The Detector class ...
 ///
 /// ---------------------------------------------------------------------------
+#ifndef DETECTOR_H_
+#define DETECTOR_H_
 #include <iostream>
 #include <fstream>
 #include <vector>

@@ -213,3 +213,132 @@ void Dynamics::roomba_model(const state_5d_type &x , state_5d_type &dxdt , doubl
      dxdt[3] = 0;
      dxdt[4] = 0;
 }
+
+
+//void Dynamics::aircraft_6DOF_model(const state_type &x , state_type &dxdt , double t)
+//{
+//     /// 0:  u     : surge velocity
+//     /// 1:  v     : sway velocity
+//     /// 2:  w     : heave velocity
+//     /// 3:  p     : roll rate
+//     /// 4:  q     : pitch rate
+//     /// 5:  r     : yaw rate
+//     /// 6:  xpos  : earth x-pos
+//     /// 7:  ypos  : earth y-pos
+//     /// 8:  zpos  : earth z-pos
+//     /// 9:  phi   : roll angle
+//     /// 10: theta : pitch angle
+//     /// 11: psi   : yaw angle
+//              
+//     // Get current state values
+//     double u     = x[0];
+//     double v     = x[1];
+//     double w     = x[2];
+//     double p     = x[3];
+//     double q     = x[4];
+//     double r     = x[5];
+//     //double xpos  = x[6];
+//     //double ypos  = x[7];
+//     //double zpos  = x[8];
+//     double phi   = (x[9]);
+//     double theta = (x[10]);     
+//     double psi   = (x[11]);
+//     
+//     // Precalculate trig functions
+//     double c1 = cos(phi);
+//     double c2 = cos(theta); 
+//     double c3 = cos(psi); 
+//     double s1 = sin(phi); 
+//     double s2 = sin(theta); 
+//     double s3 = sin(psi); 
+//     double t2 = tan(theta);
+//
+//     //double m = 4536; // mass
+//     double m = 1;
+//
+//     // Thrust is in surge direction
+//     
+//     // Force Inputs
+//     double Fx = u_[0];  
+//     double Fy = 0;
+//     double Fz = 0;
+//     double Fk = u_[1]; // roll
+//     double Fm = u_[2]; // pitch
+//     double Fn = 0; // yaw     
+//
+//     // For x-z symmetry:
+//     // 1.) Ixy = Iyx = 0
+//     // 2.) Iyz = Izy = 0
+//     //double Ixx = 23;
+//     //double Ixy = 0;
+//     //double Ixz = 2.97;
+//     //double Iyy = 15.13;
+//     //double Iyz = 0;
+//     //double Izz = 16.99;
+//
+//     double Ixx = 1;
+//     double Ixy = 0;
+//     double Ixz = 0;
+//     double Iyy = 1;
+//     double Iyz = 0;
+//     double Izz = 1;
+//
+//     //double Ixx = 35926.5;
+//     //double Ixy = 0;
+//     //double Ixz = 3418.17;
+//     //double Iyy = 33940.7;
+//     //double Iyz = 0;
+//     //double Izz = 67085.5;
+//
+//     // Calculate Translational Forces
+//     double X = Fx - m*q*w + m*r*v;
+//     double Y = Fy - m*r*u + m*p*w;
+//     double Z = Fz - m*p*v + m*q*u;
+//
+//     // Calculate Rotational Forces
+//     double K = Fk + Iyz*(pow(q,2)-pow(r,2)) + Ixz*p*q - Ixy*r*p + (Iyy-Izz)*q*r;
+//     double M = Fm + Ixz*(pow(r,2)-pow(p,2)) + Ixy*q*r - Iyz*p*q + (Izz-Ixx)*r*p;
+//     double N = Fn + Ixy*(pow(p,2)-pow(q,2)) + Iyz*r*p - Ixz*q*r + (Ixx-Iyy)*p*q;
+//
+//     // Calculate angles
+//     double P = p + (q*s1 + r*c1)*t2;
+//     double Q = q*c1 - r*s1;
+//     double R = (q*s1 + r*c1)*1.0/c2;
+//     
+//     // Calculate Velocities and Rates
+//     // xdot(1:6) = inv(A)*[X Y Z K M N]'
+//     Eigen::MatrixXd A, Forces, derivs;
+//     A.resize(9,9); Forces.resize(9,1);
+//     
+//     A << m, 0, 0,   0,    0,    0,  0, 0, 0,
+//          0, m, 0,   0,    0,    0,  0, 0, 0,
+//          0, 0, m,   0,    0,    0,  0, 0, 0,
+//          0, 0, 0,  Ixx, -Ixy, -Ixz, 0, 0, 0,
+//          0, 0, 0, -Ixy,  Iyy, -Iyz, 0, 0, 0,
+//          0, 0, 0, -Ixz, -Iyz,  Izz, 0, 0, 0,
+//          0, 0, 0,   0,    0,    0,  1, 0, 0,
+//          0, 0, 0,   0,    0,    0,  0, 1, 0,
+//          0, 0, 0,   0,    0,    0,  0, 0, 1;
+//          
+//
+//     Forces << X, Y, Z, K, M, N, P, Q, R;
+//
+//     derivs = A.inverse() * Forces;         
+//     
+//     dxdt[0] = derivs(0,0);
+//     dxdt[1] = derivs(1,0);
+//     dxdt[2] = derivs(2,0);
+//     dxdt[3] = derivs(3,0);
+//     dxdt[4] = derivs(4,0);
+//     dxdt[5] = derivs(5,0);
+//     
+//     // Calculate Positions
+//     dxdt[6] = c3*c2*u + (c3*s2*s1-s3*c1)*v + (s3*s1+c3*c1*s2)*w;
+//     dxdt[7] = s3*c2*u + (c1*c3+s1*s2*s3)*v + (c1*s2*s3-c3*s1)*w;
+//     dxdt[8] = -s2*u + c2*s1*v + c1*c2*w;
+//
+//     // Calculate Angles
+//     dxdt[9] = derivs(6,0);
+//     dxdt[10] = derivs(7,0);
+//     dxdt[11] = derivs(8,0);
+//}
