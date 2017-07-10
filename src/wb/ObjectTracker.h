@@ -4,7 +4,7 @@
 /// @file ObjectTracker.h
 /// @author Kevin DeMarco <kevin.demarco@gmail.com>
 ///
-/// Time-stamp: <2016-06-07 16:46:09 syllogismrxs>
+/// Time-stamp: <2016-08-07 16:49:34 syllogismrxs>
 ///
 /// @version 1.0
 /// Created: 21 Mar 2016
@@ -77,15 +77,13 @@ protected:
      std::vector<wb::Entity> estimated_divers_;
      std::vector<wb::Entity> prev_estimated_divers_;
      
-     PositionTracker left_tracker_;
-     PositionTracker right_tracker_;
+     //PositionTracker left_tracker_;
+     //PositionTracker right_tracker_;
 
      int left_side_sign_;
      
      int next_id_;
-
-     bool left_track_valid_;
-     bool right_track_valid_;
+     
 private:
 };
 
